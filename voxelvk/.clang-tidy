@@ -1,0 +1,8 @@
+Checks: >
+  bugprone-*,performance-*,readability-*,modernize-*,
+  cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-narrowing-conversions,
+  misc-unused-parameters
+WarningsAsErrors: ''
+HeaderFilterRegex: 'src/.*'
+AnalyzeTemporaryDtors: false
+FormatStyle: file
