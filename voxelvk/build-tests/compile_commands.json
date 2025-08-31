@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/app/voxelvk/build-tests",
+  "command": "/usr/bin/c++ -I/app/voxelvk/build-tests/generated -O2 -g -DNDEBUG -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -std=gnu++20 -o CMakeFiles/smoke_headless.dir/apps/smoke_headless.cpp.o -c /app/voxelvk/apps/smoke_headless.cpp",
+  "file": "/app/voxelvk/apps/smoke_headless.cpp"
+},
+{
+  "directory": "/app/voxelvk/build-tests",
+  "command": "/usr/bin/c++ -I/app/voxelvk/build-tests/generated -O2 -g -DNDEBUG -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -std=gnu++20 -o tools/CMakeFiles/imagediff.dir/imagediff.cpp.o -c /app/voxelvk/tools/imagediff.cpp",
+  "file": "/app/voxelvk/tools/imagediff.cpp"
+}
+]

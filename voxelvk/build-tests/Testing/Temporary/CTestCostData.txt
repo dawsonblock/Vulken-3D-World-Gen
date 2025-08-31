@@ -1,0 +1,3 @@
+smoke_headless 0 0
+---
+smoke_headless
