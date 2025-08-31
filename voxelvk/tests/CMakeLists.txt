@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 
 enable_testing()
-find_package(GTest CONFIG REQUIRED)
+find_package(GTest CONFIG QUIET)
+if(NOT GTest_FOUND)
+  message(WARNING "GTest not found via CONFIG; skipping C++ unit tests build")
+  return()
+endif()
 find_package(yaml-cpp CONFIG QUIET)
 find_package(glm CONFIG QUIET)
 
