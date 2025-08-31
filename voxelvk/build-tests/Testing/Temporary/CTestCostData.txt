@@ -1,3 +1,2 @@
-smoke_headless 0 0
+smoke_headless 1 0.00212872
 ---
-smoke_headless
