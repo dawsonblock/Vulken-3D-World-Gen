@@ -210,7 +210,7 @@ endif()
 if(ENABLE_TESTS)
   include(CTest)
   enable_testing()
-  add_test(NAME smoke_headless COMMAND smoke_headless)
+  add_test(NAME smoke_headless COMMAND $<TARGET_FILE:smoke_headless>)
   set_tests_properties(smoke_headless PROPERTIES TIMEOUT 30)
 endif()
 
