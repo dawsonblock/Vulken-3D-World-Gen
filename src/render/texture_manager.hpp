@@ -1,10 +1,11 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include <string>
-#include <unordered_map>
 #include <vector>
+#include <string>
 #include <memory>
 #include <future>
+#include <glm/vec3.hpp>
+#include <glm/vec2.hpp>
 #include "../vk/memory_manager.hpp"
 
 namespace voxelvk {
