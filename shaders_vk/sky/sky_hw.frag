@@ -1,4 +1,5 @@
 #version 460
+#extension GL_GOOGLE_include_directive : enable
 #include "../common/weather_ubo.glsl"
 layout(location=0) in vec2 vUv;
 layout(location=0) out vec4 outColor;
