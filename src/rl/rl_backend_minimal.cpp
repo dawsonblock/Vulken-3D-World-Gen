@@ -9,6 +9,9 @@ namespace voxelvk::rl {
 
 static Logger g_mlpLogger("MinimalMLP");
 
+// Forward declaration
+std::unique_ptr<IRLBackend> createDummyBackend();
+
 MinimalMLP::MinimalMLP(const MLPConfig& config) 
     : config_(config), rng_(std::random_device{}()), weightInit_(0.0f, 0.1f) {
     
