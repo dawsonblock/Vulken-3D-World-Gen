@@ -2,6 +2,7 @@
 #include <memory>
 #include <chrono>
 #include <thread>
+#include <vector>
 
 // Core VoxelVK systems  
 #include "../src/core/logger.hpp"
