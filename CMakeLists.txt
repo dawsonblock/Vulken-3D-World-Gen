@@ -106,7 +106,7 @@ if(VOXELVK_ENABLE_P1_MEMORY)
   else()
     # Fallback: look for VMA header manually  
     find_path(VMA_INCLUDE_DIR vk_mem_alloc.h 
-      HINTS /usr/include /usr/local/include
+      HINTS /usr/include /usr/local/include ${CMAKE_SOURCE_DIR}/third_party
       PATH_SUFFIXES vma VulkanMemoryAllocator)
       
     if(VMA_INCLUDE_DIR)
