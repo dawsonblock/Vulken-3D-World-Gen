@@ -5,9 +5,6 @@
 #include <chrono>
 #include <cmath>
 
-// Include DummyBackend definition
-#include "rl_backend_dummy.cpp"
-
 namespace voxelvk::rl {
 
 static Logger g_mlpLogger("MinimalMLP");
