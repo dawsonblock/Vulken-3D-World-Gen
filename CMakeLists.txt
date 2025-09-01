@@ -20,6 +20,10 @@ option(VOXELVK_ENABLE_CUDA      "Enable CUDA acceleration" OFF)
 option(VOXELVK_ENABLE_TENSORRT  "Enable TensorRT (requires CUDA)" OFF)
 option(VOXELVK_HEADLESS_ONLY    "Build minimal headless utilities without Vulkan/GLFW" OFF)
 
+# Include shader compilation system
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(CompileShaders)
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Build type" FORCE)
 endif()
