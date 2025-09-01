@@ -441,20 +441,20 @@ bool MinimalMLP::loadModel(const std::string& path) {
 std::unique_ptr<IRLBackend> RLBackendFactory::create(BackendType type) {
     switch (type) {
         case BackendType::DUMMY:
-            return std::make_unique<DummyBackend>();
+            return createDummyBackend();
         case BackendType::MINIMAL_MLP:
             return std::make_unique<MinimalMLP>();
         case BackendType::PYTORCH:
             // TODO: Implement PyTorch backend
             g_mlpLogger.Warn("PyTorch backend not implemented, falling back to dummy");
-            return std::make_unique<DummyBackend>();
+            return createDummyBackend();
         case BackendType::ONNX:
             // TODO: Implement ONNX backend
             g_mlpLogger.Warn("ONNX backend not implemented, falling back to dummy");
-            return std::make_unique<DummyBackend>();
+            return createDummyBackend();
         default:
             g_mlpLogger.Error("Unknown backend type, using dummy");
-            return std::make_unique<DummyBackend>();
+            return createDummyBackend();
     }
 }
 
