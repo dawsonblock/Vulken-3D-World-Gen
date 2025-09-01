@@ -536,7 +536,34 @@ void PipelineCacheManager::destroyShaderModule(VkShaderModule module) {
 }
 
 std::string PipelineCacheManager::getCacheFilePath() const {
-    return cacheDirectory_ + "/pipeline_cache_" + s_buildUuid + ".vkpcache";
+    return cacheDirectory_ + "/" + buildCacheFileName();
+}
+
+std::string PipelineCacheManager::buildCacheFileName() const {
+    // Get device properties for cache keying
+    VkPhysicalDeviceIDProperties idProps{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES};
+    VkPhysicalDeviceProperties2 props2{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
+    props2.pNext = &idProps;
+    vkGetPhysicalDeviceProperties2(physicalDevice_, &props2);
+    
+    auto& deviceProps = props2.properties;
+    
+    // Build UUID hex strings
+    char deviceUuidHex[VK_UUID_SIZE * 2 + 1] = {0};
+    char pipelineCacheUuidHex[VK_UUID_SIZE * 2 + 1] = {0};
+    
+    for (int i = 0; i < VK_UUID_SIZE; i++) {
+        snprintf(&deviceUuidHex[i * 2], 3, "%02x", idProps.deviceUUID[i]);
+        snprintf(&pipelineCacheUuidHex[i * 2], 3, "%02x", deviceProps.pipelineCacheUUID[i]);
+    }
+    
+    // Build filename: vendor_device_uuid_driver.vkpcache
+    char filename[512];
+    snprintf(filename, sizeof(filename), "pipelinecache_%04x_%08x_%s_%s.vkpcache",
+             deviceProps.vendorID, deviceProps.deviceID, 
+             deviceUuidHex, pipelineCacheUuidHex);
+    
+    return std::string(filename);
 }
 
 bool PipelineCacheManager::createCacheDirectory() {
