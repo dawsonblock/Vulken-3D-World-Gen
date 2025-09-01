@@ -93,6 +93,67 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   add_custom_target(VoxelVK_Shaders ALL DEPENDS ${SPV_OUT})
 endif()
 
+# === P1 Memory & Resource Management ===
+set(VOXELVK_ENABLE_P1_MEMORY ON CACHE BOOL "Enable P1 memory management systems")
+
+if(VOXELVK_ENABLE_P1_MEMORY)
+  # Try to find VMA (Vulkan Memory Allocator)
+  find_package(VulkanMemoryAllocator QUIET)
+  
+  if(VulkanMemoryAllocator_FOUND)
+    set(VMA_TARGET GPUOpen::VulkanMemoryAllocator)
+    message(STATUS "VulkanMemoryAllocator found via package")
+  else()
+    # Fallback: look for VMA header manually  
+    find_path(VMA_INCLUDE_DIR vk_mem_alloc.h 
+      HINTS /usr/include /usr/local/include
+      PATH_SUFFIXES vma VulkanMemoryAllocator)
+      
+    if(VMA_INCLUDE_DIR)
+      add_library(vma_header INTERFACE)
+      target_include_directories(vma_header INTERFACE ${VMA_INCLUDE_DIR})
+      set(VMA_TARGET vma_header)
+      message(STATUS "VMA header found at: ${VMA_INCLUDE_DIR}")
+    else()
+      message(WARNING "VMA not found - P1 memory management will use fallback")
+      set(VOXELVK_ENABLE_P1_MEMORY OFF)
+    endif()
+  endif()
+  
+  if(VOXELVK_ENABLE_P1_MEMORY)
+    # P1 memory management sources
+    file(GLOB P1_MEMORY_SRC
+      src/vk/memory_manager.cpp
+      src/vk/frame_allocator.cpp
+      src/render/texture_manager.cpp
+      src/render/mesh_optimizer.cpp
+    )
+    
+    list(APPEND VOXELVK_ELITE_SOURCES ${P1_MEMORY_SRC})
+    
+    # P1 demo application
+    if(NOT VOXELVK_HEADLESS_ONLY)
+      add_executable(p1_memory_demo apps/p1_memory_demo.cpp ${WEATHER_SRC} src/core/logger.cpp)
+      target_include_directories(p1_memory_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
+      target_link_libraries(p1_memory_demo PRIVATE Threads::Threads)
+      
+      if(VMA_TARGET)
+        target_link_libraries(p1_memory_demo PRIVATE ${VMA_TARGET})
+        target_compile_definitions(p1_memory_demo PRIVATE VOXELVK_HAS_VMA=1)
+      endif()
+      
+      if(WEATHER_YAML_LIB)
+        target_link_libraries(p1_memory_demo PRIVATE ${WEATHER_YAML_LIB})
+        target_compile_definitions(p1_memory_demo PRIVATE VOXELVK_ENABLE_WEATHER=1)
+      endif()
+      
+      target_compile_definitions(p1_memory_demo PRIVATE 
+        VOXELVK_ENABLE_P1_MEMORY=1
+      )
+    endif()
+  endif()
+endif()
+
 # === P0 Reliability Core ===
 set(VOXELVK_ENABLE_P0_RELIABILITY ON CACHE BOOL "Enable P0 production reliability systems")
 
