@@ -231,6 +231,17 @@ if(NOT VOXELVK_HEADLESS_ONLY)
       target_link_libraries(weather_demo PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(weather_demo PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
+  
+  # Weather system integration test
+  if(VOXELVK_ENABLE_WEATHER)
+    add_executable(weather_integration_test apps/weather_integration_test.cpp ${WEATHER_SRC})
+    target_include_directories(weather_integration_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(weather_integration_test PRIVATE Threads::Threads)
+    if(WEATHER_YAML_LIB)
+      target_link_libraries(weather_integration_test PRIVATE ${WEATHER_YAML_LIB})
+      target_compile_definitions(weather_integration_test PRIVATE VOXELVK_ENABLE_WEATHER=1)
+    endif()
+  endif()
   endif()
 
 endif()
