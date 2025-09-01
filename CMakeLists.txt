@@ -359,7 +359,7 @@ if(NOT VOXELVK_HEADLESS_ONLY)
 
   if(NOT TARGET VoxelVK_Elite_ALL)
     add_executable(VoxelVK_Elite_ALL apps/smoke_headless.cpp ${VOXELVK_ELITE_SOURCES})
-    add_dependencies(VoxelVK_Elite_ALL VoxelVK_Shaders)
+    add_dependencies(VoxelVK_Elite_ALL ShaderSPV)
     target_include_directories(VoxelVK_Elite_ALL PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(VoxelVK_Elite_ALL PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
     if(VMA_TARGET)
@@ -368,19 +368,19 @@ if(NOT VOXELVK_HEADLESS_ONLY)
     target_compile_definitions(VoxelVK_Elite_ALL PRIVATE
       $<$<BOOL:${ENABLE_VALIDATION_LAYERS}>:ENABLE_VALIDATION_LAYERS=1>
       $<$<BOOL:${ENABLE_IMGUI_OVERLAY}>:ENABLE_IMGUI_OVERLAY=1>)
-    target_compile_definitions(VoxelVK_Elite_ALL PRIVATE
-      $<$<BOOL:${VOXELVK_ENABLE_CUDA}>:VOXELVK_ENABLE_CUDA=1>
-      $<$<BOOL:${VOXELVK_ENABLE_TENSORRT}>:VOXELVK_ENABLE_TENSORRT=1>)
     # Link weather system dependencies
     if(VOXELVK_ENABLE_WEATHER AND WEATHER_YAML_LIB)
       target_link_libraries(VoxelVK_Elite_ALL PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(VoxelVK_Elite_ALL PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
+    target_compile_definitions(VoxelVK_Elite_ALL PRIVATE
+      $<$<BOOL:${VOXELVK_ENABLE_CUDA}>:VOXELVK_ENABLE_CUDA=1>
+      $<$<BOOL:${VOXELVK_ENABLE_TENSORRT}>:VOXELVK_ENABLE_TENSORRT=1>)
   endif()
   # Demo: GUI fullscreen toggle (requires GLFW + OpenGL)
   add_executable(gui_fullscreen_demo apps/gui_fullscreen_demo.cpp)
   target_link_libraries(gui_fullscreen_demo PRIVATE ${GLFW_LIB})
-  add_dependencies(gui_fullscreen_demo VoxelVK_Shaders)
+  add_dependencies(gui_fullscreen_demo ShaderSPV)
 
   # Weather system demo
   if(VOXELVK_ENABLE_WEATHER)
