@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.20)
+project(tools_imagediff CXX)
+
+add_executable(imagediff imagediff.cpp)
+target_compile_features(imagediff PRIVATE cxx_std_20)
+if (MSVC)
+  target_compile_options(imagediff PRIVATE /W3)
+else()
+  target_compile_options(imagediff PRIVATE -Wall -Wextra -Wno-unused-parameter)
+endif()

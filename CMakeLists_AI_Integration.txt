@@ -1,0 +1,236 @@
+# AI Integration CMake Configuration for VoxelRL_All
+# Add this to your main CMakeLists.txt to integrate AI features
+
+# AI Integration Options
+option(VOXELVK_ENABLE_AI_GENERATION "Enable AI content generation features" ON)
+option(VOXELVK_ENABLE_TENSORRT "Enable TensorRT AI inference" ON)
+option(VOXELVK_ENABLE_AI_TRAINING "Enable AI-enhanced training features" ON)
+
+if(VOXELVK_ENABLE_AI_GENERATION)
+    message(STATUS "AI content generation features enabled")
+    
+    # Find required dependencies for AI features
+    find_package(PkgConfig REQUIRED)
+    
+    # TensorRT support (optional but recommended)
+    if(VOXELVK_ENABLE_TENSORRT)
+        find_path(TENSORRT_INCLUDE_DIR NvInfer.h 
+            HINTS 
+            $ENV{TENSORRT_ROOT}/include
+            /usr/include/x86_64-linux-gnu
+            /usr/local/cuda/include
+            /opt/tensorrt/include
+        )
+        
+        find_library(TENSORRT_LIBRARY nvinfer 
+            HINTS 
+            $ENV{TENSORRT_ROOT}/lib
+            /usr/lib/x86_64-linux-gnu
+            /usr/local/cuda/lib64
+            /opt/tensorrt/lib
+        )
+        
+        if(TENSORRT_INCLUDE_DIR AND TENSORRT_LIBRARY)
+            message(STATUS "TensorRT found: ${TENSORRT_LIBRARY}")
+            set(VOXELVK_HAS_TENSORRT ON)
+        else()
+            message(WARNING "TensorRT not found, AI inference features will be limited")
+            set(VOXELVK_HAS_TENSORRT OFF)
+        endif()
+    endif()
+    
+    # GLM for math operations (should already be available)
+    find_package(glm QUIET)
+    if(NOT glm_FOUND)
+        find_path(GLM_INCLUDE_DIR glm/glm.hpp
+            HINTS /usr/include /usr/local/include)
+        if(GLM_INCLUDE_DIR)
+            message(STATUS "GLM found at: ${GLM_INCLUDE_DIR}")
+        else()
+            message(FATAL_ERROR "GLM not found, required for AI features")
+        endif()
+    endif()
+    
+    # AI Enhanced Sources
+    set(VOXELVK_AI_SOURCES
+        # Core AI generation
+        src/ai/ai_enhanced_generator.hpp
+        src/ai/ai_tensorrt_manager.hpp
+        src/ai/ai_tensorrt_manager.cpp
+        
+        # Enhanced biome system
+        src/ai/ai_enhanced_biome_system.hpp
+        src/ai/ai_enhanced_biome_system.cpp
+        
+        # Runtime command system
+        src/ai/ai_runtime_commands.hpp
+        src/ai/ai_runtime_commands.cpp
+        
+        # Training integration
+        src/ai/ai_training_integration.hpp
+        src/ai/ai_training_integration.cpp
+        
+        # Existing AI files (enhanced)
+        src/ai/ai_object_generator.hpp
+        src/ai/ai_biome_palette.hpp
+        src/ai/ai_biome_palette.cpp
+        src/ai/ai_palette_config_io.hpp
+        src/ai/ai_palette_config_io.cpp
+        src/ai/ai_apply_to_engine_native.hpp
+        src/ai/ai_apply_to_engine_native.cpp
+        src/ai/ai_gpu_blockize.hpp
+        src/ai/ai_gpu_blockize.cpp
+        src/ai/ai_palette_to_mesher.hpp
+        src/ai/ai_palette_to_mesher.cpp
+        src/ai/ai_mesher_bridge_voxelvk.hpp
+        src/ai/ai_mesher_bridge_voxelvk.cpp
+        src/ai/ai_imgui_palette_panel.hpp
+        src/ai/ai_imgui_palette_panel.cpp
+    )
+    
+    # Add AI-enhanced target
+    if(NOT VOXELVK_HEADLESS_ONLY)
+        add_library(VoxelVK_AI STATIC ${VOXELVK_AI_SOURCES})
+        
+        target_include_directories(VoxelVK_AI PUBLIC 
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/ai
+        )
+        
+        # Link dependencies
+        target_link_libraries(VoxelVK_AI PRIVATE 
+            Threads::Threads
+            ${VMA_TARGET}
+        )
+        
+        if(VOXELVK_HAS_TENSORRT)
+            target_include_directories(VoxelVK_AI PRIVATE ${TENSORRT_INCLUDE_DIR})
+            target_link_libraries(VoxelVK_AI PRIVATE ${TENSORRT_LIBRARY})
+            target_compile_definitions(VoxelVK_AI PRIVATE VOXELVK_HAS_TENSORRT=1)
+        endif()
+        
+        if(VOXELVK_ENABLE_CUDA)
+            find_package(CUDA REQUIRED)
+            target_link_libraries(VoxelVK_AI PRIVATE ${CUDA_LIBRARIES})
+            target_include_directories(VoxelVK_AI PRIVATE ${CUDA_INCLUDE_DIRS})
+            target_compile_definitions(VoxelVK_AI PRIVATE VOXELVK_ENABLE_CUDA=1)
+        endif()
+        
+        # GLM dependency
+        if(glm_FOUND)
+            target_link_libraries(VoxelVK_AI PRIVATE glm::glm)
+        else()
+            target_include_directories(VoxelVK_AI PRIVATE ${GLM_INCLUDE_DIR})
+        endif()
+        
+        # Compiler features
+        target_compile_features(VoxelVK_AI PRIVATE cxx_std_20)
+        
+        # Compile definitions
+        target_compile_definitions(VoxelVK_AI PRIVATE
+            $<$<BOOL:${VOXELVK_ENABLE_AI_GENERATION}>:VOXELVK_ENABLE_AI_GENERATION=1>
+            $<$<BOOL:${VOXELVK_ENABLE_AI_TRAINING}>:VOXELVK_ENABLE_AI_TRAINING=1>
+        )
+        
+        # Update main executable to link with AI library
+        if(TARGET VoxelVK_Elite_ALL)
+            target_link_libraries(VoxelVK_Elite_ALL PRIVATE VoxelVK_AI)
+            target_compile_definitions(VoxelVK_Elite_ALL PRIVATE
+                $<$<BOOL:${VOXELVK_ENABLE_AI_GENERATION}>:VOXELVK_ENABLE_AI_GENERATION=1>
+                $<$<BOOL:${VOXELVK_ENABLE_AI_TRAINING}>:VOXELVK_ENABLE_AI_TRAINING=1>
+            )
+        endif()
+        
+        # AI Examples executable
+        add_executable(VoxelVK_AI_Examples examples/ai_integration_example.cpp)
+        target_link_libraries(VoxelVK_AI_Examples PRIVATE VoxelVK_AI)
+        target_include_directories(VoxelVK_AI_Examples PRIVATE ${CMAKE_SOURCE_DIR}/src)
+        
+    endif()
+    
+    # AI Tests (if testing is enabled)
+    if(ENABLE_TESTS)
+        # Find Google Test
+        find_package(GTest QUIET)
+        if(GTest_FOUND)
+            add_executable(VoxelVK_AI_Tests tests/test_ai_integration.cpp)
+            target_link_libraries(VoxelVK_AI_Tests PRIVATE 
+                VoxelVK_AI 
+                GTest::gtest 
+                GTest::gtest_main
+            )
+            target_include_directories(VoxelVK_AI_Tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+            
+            # Add test to CTest
+            add_test(NAME VoxelVK_AI_Tests COMMAND VoxelVK_AI_Tests)
+            set_tests_properties(VoxelVK_AI_Tests PROPERTIES TIMEOUT 60)
+            
+            message(STATUS "AI tests enabled")
+        else()
+            message(WARNING "Google Test not found, AI tests disabled")
+        endif()
+    endif()
+    
+    # Install AI configuration files
+    install(FILES 
+        config/ai_enhanced_training.yaml
+        ai_palette.cfg
+        DESTINATION share/voxelvk/config
+    )
+    
+    # Install AI headers (for development)
+    install(FILES 
+        src/ai/ai_enhanced_generator.hpp
+        src/ai/ai_tensorrt_manager.hpp
+        src/ai/ai_enhanced_biome_system.hpp
+        src/ai/ai_runtime_commands.hpp
+        src/ai/ai_training_integration.hpp
+        DESTINATION include/voxelvk/ai
+    )
+    
+    message(STATUS "=== AI Integration Build Summary ===")
+    message(STATUS "AI Content Generation: ${VOXELVK_ENABLE_AI_GENERATION}")
+    message(STATUS "TensorRT Support: ${VOXELVK_HAS_TENSORRT}")
+    message(STATUS "AI Training Features: ${VOXELVK_ENABLE_AI_TRAINING}")
+    message(STATUS "CUDA Support: ${VOXELVK_ENABLE_CUDA}")
+    if(NOT VOXELVK_HEADLESS_ONLY)
+        message(STATUS "AI Library Target: VoxelVK_AI")
+        message(STATUS "AI Examples Target: VoxelVK_AI_Examples")
+    endif()
+    if(ENABLE_TESTS AND GTest_FOUND)
+        message(STATUS "AI Tests Target: VoxelVK_AI_Tests")
+    endif()
+    message(STATUS "=====================================")
+    
+endif()
+
+# Helper function to check AI integration status
+function(voxelvk_check_ai_integration)
+    if(VOXELVK_ENABLE_AI_GENERATION)
+        message(STATUS "✓ AI content generation enabled")
+        
+        if(VOXELVK_HAS_TENSORRT)
+            message(STATUS "✓ TensorRT inference available")
+        else()
+            message(STATUS "⚠ TensorRT not available - using fallback generation")
+        endif()
+        
+        if(VOXELVK_ENABLE_CUDA)
+            message(STATUS "✓ CUDA acceleration available")
+        else()
+            message(STATUS "⚠ CUDA not available - using CPU fallback")
+        endif()
+        
+        if(VOXELVK_ENABLE_AI_TRAINING)
+            message(STATUS "✓ AI-enhanced training enabled")
+        else()
+            message(STATUS "- AI training features disabled")
+        endif()
+        
+    else()
+        message(STATUS "- AI content generation disabled")
+    endif()
+endfunction()
+
+# Call the check function
+voxelvk_check_ai_integration()

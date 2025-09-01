@@ -1,0 +1,6 @@
+{
+  "metric": "mean_frametime_ms",
+  "mean_frametime_ms": null,
+  "p95_frametime_ms": null,
+  "mean_fps": null
+}

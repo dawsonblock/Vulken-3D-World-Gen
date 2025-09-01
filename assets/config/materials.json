@@ -1,0 +1,31 @@
+{
+  "materials": {
+    "GRASS": {
+      "albedo": [
+        0.22,
+        0.35,
+        0.12
+      ],
+      "metallic": 0.0,
+      "roughness": 0.9
+    },
+    "STONE": {
+      "albedo": [
+        0.4,
+        0.4,
+        0.42
+      ],
+      "metallic": 0.0,
+      "roughness": 0.8
+    },
+    "IRON_ORE": {
+      "albedo": [
+        0.45,
+        0.24,
+        0.18
+      ],
+      "metallic": 0.2,
+      "roughness": 0.6
+    }
+  }
+}
