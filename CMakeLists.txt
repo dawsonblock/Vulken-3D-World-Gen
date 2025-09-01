@@ -95,6 +95,55 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   add_custom_target(VoxelVK_Shaders ALL DEPENDS ${SPV_OUT})
 endif()
 
+# === P2 Frame Pacing & Performance ===
+set(VOXELVK_ENABLE_P2_PERFORMANCE ON CACHE BOOL "Enable P2 frame pacing and performance systems")
+
+if(VOXELVK_ENABLE_P2_PERFORMANCE)
+  # P2 frame pacing and performance sources
+  file(GLOB P2_PERFORMANCE_SRC
+    src/render/frame_graph.cpp
+    src/render/taa_system.cpp
+    src/render/screen_space_effects.cpp
+    src/core/performance_monitor.cpp
+  )
+  
+  list(APPEND VOXELVK_ELITE_SOURCES ${P2_PERFORMANCE_SRC})
+  
+  # P2 performance shaders
+  set(P2_SHADERS
+    shaders_vk/taa/motion_vectors.vert
+    shaders_vk/taa/motion_vectors.frag
+    shaders_vk/taa/taa_resolve.frag
+    shaders_vk/taa/weather_taa_blend.frag
+    shaders_vk/post/ssao.frag
+    shaders_vk/post/ssr.frag
+    shaders_vk/post/ssao_blur.frag
+  )
+  
+  # Ensure P2 shaders are in the compilation list
+  foreach(SHADER IN LISTS P2_SHADERS)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/${SHADER}")
+      # Shader will be compiled by existing GLSL_SOURCES glob
+    endif()
+  endforeach()
+  
+  # P2 demo application
+  if(NOT VOXELVK_HEADLESS_ONLY)
+    add_executable(p2_performance_demo apps/p2_performance_demo.cpp ${WEATHER_SRC} src/core/logger.cpp)
+    target_include_directories(p2_performance_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(p2_performance_demo PRIVATE Threads::Threads)
+    
+    if(WEATHER_YAML_LIB)
+      target_link_libraries(p2_performance_demo PRIVATE ${WEATHER_YAML_LIB})
+      target_compile_definitions(p2_performance_demo PRIVATE VOXELVK_ENABLE_WEATHER=1)
+    endif()
+    
+    target_compile_definitions(p2_performance_demo PRIVATE 
+      VOXELVK_ENABLE_P2_PERFORMANCE=1
+    )
+  endif()
+endif()
+
 # === P1 Memory & Resource Management ===
 set(VOXELVK_ENABLE_P1_MEMORY ON CACHE BOOL "Enable P1 memory management systems")
 
