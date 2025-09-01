@@ -80,7 +80,7 @@ void WeatherSystem::loadFromYaml(const std::string& path){
 
 void WeatherSystem::setState(WeatherState s){ P_.state = s; }
 void WeatherSystem::setPrecipRate(float r){ P_.precipRate = r; }
-void WeatherSystem::setCloudCoverage(float c){ P_.cloudCoverage = std::clamp(c,0.f,1.f); }
+void WeatherSystem::setCloudCoverage(float c){ P_.cloudCoverage = std::max(0.f, std::min(1.f, c)); }
 void WeatherSystem::setWind(float sp,float dir,float g){ P_.windSpeed=sp; P_.windDirDeg=dir; P_.gustiness=g; updateDerived_(); }
 void WeatherSystem::setFog(float d){ P_.fogDensity = std::max(0.f, d); }
 void WeatherSystem::setSunAzimuth(float deg){ P_.sunAzimuthDeg = deg; }
