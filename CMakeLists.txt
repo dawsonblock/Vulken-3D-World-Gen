@@ -74,6 +74,48 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   endif()
 endif()
 
+# === RL (Reinforcement Learning) Backend Systems ===
+set(VOXELVK_ENABLE_RL ON CACHE BOOL "Enable reinforcement learning systems")
+set(VOXELVK_RL_MINIMAL ON CACHE BOOL "Enable minimal CPU MLP RL backend")
+
+if(VOXELVK_ENABLE_RL)
+  # RL backend sources
+  file(GLOB RL_BACKEND_SRC
+    src/rl/rl_backend_dummy.cpp
+    src/rl/rl_backend_minimal.cpp
+  )
+  
+  list(APPEND VOXELVK_ELITE_SOURCES ${RL_BACKEND_SRC})
+  
+  # RL navigation demo
+  if(VOXELVK_RL_MINIMAL AND NOT VOXELVK_HEADLESS_ONLY)
+    add_executable(rl_nav_demo apps/rl_nav_demo.cpp ${RL_BACKEND_SRC} src/core/logger.cpp)
+    target_include_directories(rl_nav_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(rl_nav_demo PRIVATE Threads::Threads)
+    target_compile_definitions(rl_nav_demo PRIVATE VOXELVK_ENABLE_RL=1)
+  endif()
+endif()
+
+# === Enhanced Applications ===
+if(NOT VOXELVK_HEADLESS_ONLY)
+  # Production ImGui application with Vulkan backend
+  add_executable(main_imgui_vulkan apps/main_imgui_vulkan.cpp ${WEATHER_SRC} src/core/logger.cpp)
+  target_include_directories(main_imgui_vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src)
+  target_link_libraries(main_imgui_vulkan PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
+  add_dependencies(main_imgui_vulkan ShaderSPV)
+  
+  if(WEATHER_YAML_LIB)
+    target_link_libraries(main_imgui_vulkan PRIVATE ${WEATHER_YAML_LIB})
+    target_compile_definitions(main_imgui_vulkan PRIVATE VOXELVK_ENABLE_WEATHER=1)
+  endif()
+  
+  target_compile_definitions(main_imgui_vulkan PRIVATE
+    VOXELVK_ENABLE_P0_RELIABILITY=1
+    VOXELVK_ENABLE_P1_MEMORY=1
+    VOXELVK_ENABLE_P2_PERFORMANCE=1
+  )
+endif()
+
 # === P2 Frame Pacing & Performance ===
 set(VOXELVK_ENABLE_P2_PERFORMANCE ON CACHE BOOL "Enable P2 frame pacing and performance systems")
 
