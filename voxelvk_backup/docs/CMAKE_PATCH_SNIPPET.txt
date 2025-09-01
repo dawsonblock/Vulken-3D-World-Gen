@@ -1,0 +1,21 @@
+
+# --- Begin VoxelVK Vulkan Upgrades (append into your CMakeLists.txt) ---
+# Sources
+list(APPEND VOXELVK_ELITE_SOURCES
+  src/render/ibl_brdf.cpp
+  src/render/csm.cpp
+)
+# Include VMA if not yet
+target_include_directories(VoxelVK_Elite_ALL PRIVATE ${CMAKE_SOURCE_DIR}/external/vma)
+
+# Shader compile already globs shaders_vk/*.*.glsl → OK
+
+# Optional: ensure runtime path for BRDF LUT SPV
+add_custom_target(mirror_spv_ibl ALL
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/spv/ibl
+  COMMAND ${CMAKE_COMMAND} -E copy
+          ${CMAKE_BINARY_DIR}/spv/ibl/brdf_lut.comp.spv
+          ${CMAKE_BINARY_DIR}/spv/ibl/brdf_lut.comp.spv
+  DEPENDS VoxelVK_Shaders)
+add_dependencies(VoxelVK_Elite_ALL mirror_spv_ibl)
+# --- End ---

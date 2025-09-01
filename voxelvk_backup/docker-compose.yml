@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  headless-trainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      WORLD_CONFIG: /workspace/config/world.yaml
+      TRAINING_CONFIG: /workspace/config/training.yaml
+      OUTPUT_DIR: /workspace/output
+      VCPKG_ROOT: /opt/vcpkg
+    volumes:
+      - ./:/workspace
+      - ./config:/workspace/config:ro
+      - ./output:/workspace/output
+    command: >
+      bash -lc "
+      cmake -S . -B build -G Ninja
+        -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+        -DVOXELVK_HEADLESS_ONLY=ON &&
+      cmake --build build --config Release -j &&
+      if [ -x ./scripts/run_headless.sh ]; then ./scripts/run_headless.sh; else
+        if [ -x ./build/apps/smoke_headless ]; then ./build/apps/smoke_headless; else echo 'No headless runner'; fi
+      fi
+      "

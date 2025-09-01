@@ -1,0 +1,117 @@
+# VoxelRL_All H100 Docker Image
+# Optimized for NVIDIA H100 GPUs with CUDA 12.x, LibTorch, and Vulkan
+FROM nvidia/cuda:12.2-devel-ubuntu22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV VULKAN_SDK_VERSION=1.3.275
+ENV LIBTORCH_VERSION=2.1.0
+ENV CUDA_ARCH=90  # H100 compute capability
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    ninja-build \
+    git \
+    wget \
+    unzip \
+    pkg-config \
+    libglfw3-dev \
+    libxrandr-dev \
+    libxinerama-dev \
+    libxcursor-dev \
+    libxi-dev \
+    libvulkan-dev \
+    vulkan-tools \
+    vulkan-validationlayers-dev \
+    spirv-tools \
+    libwayland-dev \
+    libxkbcommon-dev \
+    python3 \
+    python3-pip \
+    ffmpeg \
+    libavcodec-dev \
+    libavformat-dev \
+    libavutil-dev \
+    libswscale-dev \
+    libyaml-cpp-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Vulkan SDK
+RUN wget -q https://sdk.lunarg.com/sdk/download/${VULKAN_SDK_VERSION}/linux/vulkansdk-linux-x86_64-${VULKAN_SDK_VERSION}.tar.gz \
+    && tar -xzf vulkansdk-linux-x86_64-${VULKAN_SDK_VERSION}.tar.gz \
+    && mv ${VULKAN_SDK_VERSION} /opt/vulkan-sdk \
+    && rm vulkansdk-linux-x86_64-${VULKAN_SDK_VERSION}.tar.gz
+
+# Set Vulkan environment
+ENV VULKAN_SDK=/opt/vulkan-sdk/x86_64
+ENV PATH=$PATH:$VULKAN_SDK/bin
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$VULKAN_SDK/lib
+ENV VK_LAYER_PATH=$VULKAN_SDK/etc/vulkan/explicit_layer.d
+
+# Install vcpkg
+RUN git clone https://github.com/Microsoft/vcpkg.git /opt/vcpkg \
+    && /opt/vcpkg/bootstrap-vcpkg.sh
+ENV VCPKG_ROOT=/opt/vcpkg
+
+# Download and install LibTorch (CUDA)
+RUN wget -q https://download.pytorch.org/libtorch/cu121/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2Bcu121.zip \
+    && unzip -q libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}+cu121.zip \
+    && mv libtorch /opt/libtorch \
+    && rm libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}+cu121.zip
+
+# Set LibTorch environment
+ENV LIBTORCH_ROOT=/opt/libtorch
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LIBTORCH_ROOT/lib
+
+# Install NVIDIA Nsight tools for profiling
+RUN apt-get update && apt-get install -y \
+    nsight-systems-2023.4.4 \
+    nsight-compute-2023.3.1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages for data analysis
+RUN pip3 install \
+    numpy \
+    matplotlib \
+    tensorboard \
+    wandb \
+    pandas \
+    seaborn
+
+# Create working directory
+WORKDIR /workspace
+
+# Copy source code
+COPY . /workspace/
+
+# Install project dependencies via vcpkg
+RUN $VCPKG_ROOT/vcpkg install --triplet=x64-linux
+
+# Build the project
+RUN cmake --preset=headless \
+    && cmake --build build_headless --parallel $(nproc)
+
+# Set up runtime environment
+ENV CUDA_VISIBLE_DEVICES=0
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
+
+# Expose ports for monitoring
+EXPOSE 8888 6006
+
+# Default command
+CMD ["./build_headless/VoxelRL_Trainer"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD nvidia-smi || exit 1
+
+# Labels
+LABEL maintainer="VoxelRL Team"
+LABEL description="VoxelRL_All training environment optimized for H100 GPUs"
+LABEL version="1.0.0"
+LABEL cuda.version="12.2"
+LABEL vulkan.version="1.3.275"
+LABEL libtorch.version="2.1.0"

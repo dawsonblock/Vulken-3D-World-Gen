@@ -1,0 +1,5 @@
+numpy
+zstandard
+lz4
+jsonschema
+types-jsonschema

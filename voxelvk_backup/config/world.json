@@ -1,0 +1,18 @@
+{
+  "chunk_size": 32,
+  "world_height": 256,
+  "sea_level": 64,
+  "render_distance": 8,
+  "simulation_distance": 6,
+  "load_distance": 10,
+  "unload_delay": 30.0,
+  "max_loaded_chunks": 1000,
+  "chunk_cache_size": 500,
+  "compress_chunks": true,
+  "generation_threads": 4,
+  "async_generation": true,
+  "async_lighting": true,
+  "world_radius": 512,
+  "max_chunk_y": 8,
+  "min_chunk_y": -1
+}
