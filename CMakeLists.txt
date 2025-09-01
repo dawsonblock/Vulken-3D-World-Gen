@@ -316,7 +316,7 @@ endif()
 # Minimal smoke target always available
 add_executable(smoke_headless apps/smoke_headless.cpp)
 if(NOT VOXELVK_HEADLESS_ONLY)
-  add_dependencies(smoke_headless VoxelVK_Shaders)
+  add_dependencies(smoke_headless ShaderSPV)
   target_include_directories(smoke_headless PRIVATE ${CMAKE_SOURCE_DIR}/src)
   target_link_libraries(smoke_headless PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
   target_compile_definitions(smoke_headless PRIVATE
