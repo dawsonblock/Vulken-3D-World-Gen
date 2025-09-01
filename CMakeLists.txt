@@ -64,6 +64,7 @@ if(NOT VOXELVK_HEADLESS_ONLY)
     endif()
   endif()
 
+  # Find GLFW
   find_package(glfw3 QUIET)
   if(glfw3_FOUND)
     set(GLFW_LIB glfw)
@@ -71,38 +72,6 @@ if(NOT VOXELVK_HEADLESS_ONLY)
     find_package(GLFW REQUIRED)
     set(GLFW_LIB GLFW::GLFW)
   endif()
-
-  # Shader pipeline (glslc preferred; fallback glslangValidator)
-  find_program(GLSLC_EXECUTABLE NAMES glslc HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin" "/usr/bin" "/usr/local/bin")
-  if(NOT GLSLC_EXECUTABLE)
-    find_program(GLSLANG_VALIDATOR NAMES glslangValidator HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin" "/usr/bin" "/usr/local/bin")
-    if(NOT GLSLANG_VALIDATOR)
-      message(FATAL_ERROR "No shader compiler found (glslc/glslangValidator). Install Vulkan SDK.")
-    endif()
-    set(SHADER_COMPILER ${GLSLANG_VALIDATOR})
-    set(SHADER_FLAGS -V --target-env vulkan1.3 -g)
-  else()
-    set(SHADER_COMPILER ${GLSLC_EXECUTABLE})
-    set(SHADER_FLAGS --target-env=vulkan1.3 -O -g)
-  endif()
-
-  file(GLOB_RECURSE GLSL_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/shaders_vk/*.*.glsl")
-  set(SPV_DIR "${CMAKE_BINARY_DIR}/spv")
-  set(SPV_OUT "")
-  foreach(GLSL_FILE IN LISTS GLSL_SOURCES)
-    get_filename_component(FILE_NAME ${GLSL_FILE} NAME)
-    get_filename_component(FILE_DIR  ${GLSL_FILE} DIRECTORY)
-    file(RELATIVE_PATH REL_DIR "${CMAKE_SOURCE_DIR}/shaders_vk" "${FILE_DIR}")
-    set(OUT_DIR "${SPV_DIR}/${REL_DIR}")
-    file(MAKE_DIRECTORY "${OUT_DIR}")
-    set(SPV_FILE "${OUT_DIR}/${FILE_NAME}.spv")
-    add_custom_command(OUTPUT ${SPV_FILE}
-      COMMAND ${SHADER_COMPILER} ${SHADER_FLAGS} -o ${SPV_FILE} ${GLSL_FILE}
-      DEPENDS ${GLSL_FILE}
-      COMMENT "Compiling ${REL_DIR}/${FILE_NAME}")
-    list(APPEND SPV_OUT ${SPV_FILE})
-  endforeach()
-  add_custom_target(VoxelVK_Shaders ALL DEPENDS ${SPV_OUT})
 endif()
 
 # === P2 Frame Pacing & Performance ===
