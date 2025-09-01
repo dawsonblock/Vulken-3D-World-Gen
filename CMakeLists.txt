@@ -109,7 +109,7 @@ if(VOXELVK_ENABLE_P0_RELIABILITY)
   
   # P0 demo application (simplified)
   if(NOT VOXELVK_HEADLESS_ONLY)
-    add_executable(p0_reliability_test apps/p0_reliability_test.cpp ${WEATHER_SRC})
+    add_executable(p0_reliability_test apps/p0_reliability_test.cpp ${WEATHER_SRC} src/core/logger.cpp)
     target_include_directories(p0_reliability_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(p0_reliability_test PRIVATE Threads::Threads)
     
