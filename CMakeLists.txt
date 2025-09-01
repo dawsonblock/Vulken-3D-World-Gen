@@ -93,6 +93,65 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   add_custom_target(VoxelVK_Shaders ALL DEPENDS ${SPV_OUT})
 endif()
 
+# === Weather System ===
+set(VOXELVK_ENABLE_WEATHER ON CACHE BOOL "Enable weather system")
+
+if(VOXELVK_ENABLE_WEATHER)
+  file(GLOB WEATHER_SRC
+    src/env/weather/weather_system.cpp
+    src/env/weather/sky_model.cpp
+    src/env/weather/lightning.cpp
+    src/render/framegraph/frame_graph_min.cpp
+    src/render/post/temporal_accum.cpp
+    src/render/post/height_fog.cpp
+  )
+  
+  # Find yaml-cpp dependency
+  find_package(yaml-cpp QUIET)
+  if(NOT yaml-cpp_FOUND)
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+      pkg_check_modules(YAML_CPP QUIET yaml-cpp)
+    endif()
+  endif()
+  
+  if(yaml-cpp_FOUND OR YAML_CPP_FOUND)
+    set(WEATHER_YAML_LIB yaml-cpp)
+    if(YAML_CPP_FOUND)
+      set(WEATHER_YAML_LIB ${YAML_CPP_LIBRARIES})
+    endif()
+    message(STATUS "Found yaml-cpp for weather system")
+  else()
+    message(WARNING "yaml-cpp not found - weather system will use fallback config")
+  endif()
+
+  # Weather shaders
+  set(WEATHER_SHADERS
+    shaders_vk/common/weather_ubo.glsl
+    shaders_vk/sky/sky_fullscreen.vert
+    shaders_vk/sky/sky_hw.frag
+    shaders_vk/clouds/clouds_fullscreen.frag
+    shaders_vk/particles/precip_update.comp
+    shaders_vk/particles/precip_render.vert
+    shaders_vk/particles/precip_render.frag
+    shaders_vk/post/temporal_accum.comp
+    shaders_vk/post/height_fog.frag
+    shaders_vk/material/weather_material.glsl
+  )
+  
+  # Ensure weather shaders are compiled
+  foreach(SHADER IN LISTS WEATHER_SHADERS)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/${SHADER}")
+      get_filename_component(SHADER_NAME ${SHADER} NAME)
+      get_filename_component(SHADER_DIR ${SHADER} DIRECTORY)
+      file(RELATIVE_PATH REL_DIR "${CMAKE_SOURCE_DIR}/shaders_vk" "${CMAKE_SOURCE_DIR}/${SHADER_DIR}")
+      set(OUT_DIR "${SPV_DIR}/${REL_DIR}")
+      set(SPV_FILE "${OUT_DIR}/${SHADER_NAME}.spv")
+      # Already handled by existing GLSL_SOURCES glob
+    endif()
+  endforeach()
+endif()
+
 # --- Targets ---
 # Minimal smoke target always available
 add_executable(smoke_headless apps/smoke_headless.cpp)
