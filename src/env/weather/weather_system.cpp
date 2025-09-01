@@ -1,6 +1,7 @@
 #include "weather_system.hpp"
 #include <yaml-cpp/yaml.h>
-#include <glm/geometric.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 #include <cmath>
 
 namespace voxelvk {
