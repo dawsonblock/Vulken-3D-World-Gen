@@ -191,6 +191,11 @@ if(NOT VOXELVK_HEADLESS_ONLY)
 
   # --- CSM descriptor layout helper ---
   list(APPEND VOXELVK_ELITE_SOURCES src/render/csm_layout.cpp)
+  
+  # --- Weather System Integration ---
+  if(VOXELVK_ENABLE_WEATHER)
+    list(APPEND VOXELVK_ELITE_SOURCES ${WEATHER_SRC})
+  endif()
 
   if(NOT TARGET VoxelVK_Elite_ALL)
     add_executable(VoxelVK_Elite_ALL apps/smoke_headless.cpp ${VOXELVK_ELITE_SOURCES})
