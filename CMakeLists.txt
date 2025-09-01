@@ -127,18 +127,18 @@ if(VOXELVK_ENABLE_P2_PERFORMANCE)
     endif()
   endforeach()
   
-  # P2 demo application
+  # P2 concepts demo (simplified)
   if(NOT VOXELVK_HEADLESS_ONLY)
-    add_executable(p2_performance_demo apps/p2_performance_demo.cpp ${WEATHER_SRC} src/core/logger.cpp)
-    target_include_directories(p2_performance_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(p2_performance_demo PRIVATE Threads::Threads)
+    add_executable(p2_concepts_validator apps/p2_concepts_validator.cpp ${WEATHER_SRC} src/core/logger.cpp)
+    target_include_directories(p2_concepts_validator PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(p2_concepts_validator PRIVATE Threads::Threads)
     
     if(WEATHER_YAML_LIB)
-      target_link_libraries(p2_performance_demo PRIVATE ${WEATHER_YAML_LIB})
-      target_compile_definitions(p2_performance_demo PRIVATE VOXELVK_ENABLE_WEATHER=1)
+      target_link_libraries(p2_concepts_validator PRIVATE ${WEATHER_YAML_LIB})
+      target_compile_definitions(p2_concepts_validator PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
     
-    target_compile_definitions(p2_performance_demo PRIVATE 
+    target_compile_definitions(p2_concepts_validator PRIVATE 
       VOXELVK_ENABLE_P2_PERFORMANCE=1
     )
   endif()
