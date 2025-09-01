@@ -1,3 +1,4 @@
+#extension GL_GOOGLE_include_directive : enable
 #include "../common/weather_ubo.glsl"
 
 // Adjust baseColor/roughness for wet and snow overlay. N must be world-space normal.
