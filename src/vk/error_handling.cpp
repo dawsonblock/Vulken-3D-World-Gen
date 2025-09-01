@@ -69,7 +69,7 @@ void VkErrorHandler::handleError(const VkErrorContext& ctx) {
     // Log based on severity 
     if (ctx.result == VK_ERROR_DEVICE_LOST) {
         g_errorLogger.Fatal(errorMsg);
-    } else if (ctx.result == VK_ERROR_OUT_OF_MEMORY) {
+    } else if (ctx.result == VK_ERROR_OUT_OF_HOST_MEMORY || ctx.result == VK_ERROR_OUT_OF_DEVICE_MEMORY) {
         g_errorLogger.Error(errorMsg);
     } else if (ctx.result == VK_ERROR_OUT_OF_DATE_KHR || ctx.result == VK_SUBOPTIMAL_KHR) {
         g_errorLogger.Warn(errorMsg);
