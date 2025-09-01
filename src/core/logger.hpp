@@ -73,7 +73,12 @@ private:
             return;
         }
         
-        std::string formatted_message = FormatString(format, std::forward<Args>(args)...);
+        std::string formatted_message;
+        if constexpr (sizeof...(args) == 0) {
+            formatted_message = format;
+        } else {
+            formatted_message = FormatString(format, std::forward<Args>(args)...);
+        }
         WriteLog(level, formatted_message);
     }
     
