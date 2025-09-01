@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# vcpkg manifest toolchain (if available)
+if(DEFINED ENV{VCPKG_ROOT})
+  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "" FORCE)
+  message(STATUS "Using vcpkg toolchain from: $ENV{VCPKG_ROOT}")
+endif()
+
 option(ENABLE_VALIDATION_LAYERS "Enable Vulkan validation layers" ON)
 option(ENABLE_VK_DEBUG_MARKERS  "Enable VK_EXT_debug_utils markers" ON)
 option(ENABLE_IMGUI_OVERLAY     "Enable ImGui debug HUD overlay" ON)
