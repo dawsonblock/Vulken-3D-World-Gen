@@ -52,7 +52,7 @@ DeviceCaps DeviceCaps::probe(VkInstance instance, VkPhysicalDevice physicalDevic
     // Extension availability checks
     caps.hasDebugUtils = hasExtension(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     caps.hasValidationLayers = hasLayer("VK_LAYER_KHRONOS_validation");
-    caps.hasPortabilitySubset = hasExtension(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
+    caps.hasPortabilitySubset = false; // Disable for compatibility
     
     // Advanced Vulkan 1.2/1.3 feature detection
     if (caps.properties.apiVersion >= VK_API_VERSION_1_2) {
