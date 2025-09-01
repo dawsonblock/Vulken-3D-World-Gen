@@ -131,23 +131,18 @@ if(VOXELVK_ENABLE_P1_MEMORY)
     
     list(APPEND VOXELVK_ELITE_SOURCES ${P1_MEMORY_SRC})
     
-    # P1 demo application
+    # P1 demo application (concepts version without VMA complexity)
     if(NOT VOXELVK_HEADLESS_ONLY)
-      add_executable(p1_memory_demo apps/p1_memory_demo.cpp ${WEATHER_SRC} src/core/logger.cpp)
-      target_include_directories(p1_memory_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
-      target_link_libraries(p1_memory_demo PRIVATE Threads::Threads)
-      
-      if(VMA_TARGET)
-        target_link_libraries(p1_memory_demo PRIVATE ${VMA_TARGET})
-        target_compile_definitions(p1_memory_demo PRIVATE VOXELVK_HAS_VMA=1)
-      endif()
+      add_executable(p1_memory_concepts apps/p1_memory_concepts.cpp ${WEATHER_SRC} src/core/logger.cpp)
+      target_include_directories(p1_memory_concepts PRIVATE ${CMAKE_SOURCE_DIR}/src)
+      target_link_libraries(p1_memory_concepts PRIVATE Threads::Threads)
       
       if(WEATHER_YAML_LIB)
-        target_link_libraries(p1_memory_demo PRIVATE ${WEATHER_YAML_LIB})
-        target_compile_definitions(p1_memory_demo PRIVATE VOXELVK_ENABLE_WEATHER=1)
+        target_link_libraries(p1_memory_concepts PRIVATE ${WEATHER_YAML_LIB})
+        target_compile_definitions(p1_memory_concepts PRIVATE VOXELVK_ENABLE_WEATHER=1)
       endif()
       
-      target_compile_definitions(p1_memory_demo PRIVATE 
+      target_compile_definitions(p1_memory_concepts PRIVATE 
         VOXELVK_ENABLE_P1_MEMORY=1
       )
     endif()
