@@ -141,6 +141,16 @@ if(VOXELVK_ENABLE_P2_PERFORMANCE)
     target_compile_definitions(p2_concepts_validator PRIVATE 
       VOXELVK_ENABLE_P2_PERFORMANCE=1
     )
+    
+    # P2 120 FPS target validator  
+    add_executable(p2_target_validator apps/p2_target_validator.cpp ${WEATHER_SRC} src/core/logger.cpp)
+    target_include_directories(p2_target_validator PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(p2_target_validator PRIVATE Threads::Threads)
+    
+    if(WEATHER_YAML_LIB)
+      target_link_libraries(p2_target_validator PRIVATE ${WEATHER_YAML_LIB})
+      target_compile_definitions(p2_target_validator PRIVATE VOXELVK_ENABLE_WEATHER=1)
+    endif()
   endif()
 endif()
 
