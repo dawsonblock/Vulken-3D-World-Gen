@@ -176,7 +176,7 @@ private:
         logger_.Info("✅ Per-frame allocation concepts validated");
     }
     
-    void testTextureCompressionConcepts() {
+    void testMemoryPressureConcepts() {
         logger_.Info("\n🧪 Testing Texture Compression Concepts");
         
         // Simulate KTX2 + BasisU compression results
