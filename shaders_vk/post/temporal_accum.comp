@@ -3,8 +3,8 @@
 #include "../common/weather_ubo.glsl"
 layout(local_size_x=8, local_size_y=8) in;
 
-layout(binding=0, rgba16f) uniform readonly image2D Curr;      // current overlay (clouds or precip)
-layout(binding=1, rgba16f) uniform readonly image2D History;   // previous accumulated
+layout(binding=0, rgba16f) uniform readonly  image2D Curr;      // current overlay (clouds or precip)
+layout(binding=1, rgba16f) uniform          image2D History;   // previous accumulated
 layout(binding=2, rgba16f) uniform writeonly image2D Out;      // new accumulated
 
 layout(push_constant) uniform PC { vec2 invSize; float dt; float alpha; } pc;
