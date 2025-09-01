@@ -2,6 +2,8 @@
 #include <memory>
 #include <vector>
 #include <chrono>
+#include <thread>
+#include <set>
 
 // VoxelVK P0 Reliability Systems
 #include "../src/vk/device_caps.hpp"
