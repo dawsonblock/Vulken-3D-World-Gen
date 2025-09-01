@@ -1,7 +1,8 @@
 #include "../env/world_manager.hpp"
 #include "../core/logger.hpp"
 #include "../core/timer.hpp"
-#include "../world/persistence.py"
+// TODO: Replace with pybind11 integration for persistence
+// #include "../world/persistence.py"
 #include <filesystem>
 #include <future>
 #include <queue>
