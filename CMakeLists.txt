@@ -222,6 +222,17 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   target_link_libraries(gui_fullscreen_demo PRIVATE ${GLFW_LIB})
   add_dependencies(gui_fullscreen_demo VoxelVK_Shaders)
 
+  # Weather system demo
+  if(VOXELVK_ENABLE_WEATHER)
+    add_executable(weather_demo apps/weather_demo.cpp ${WEATHER_SRC})
+    target_include_directories(weather_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(weather_demo PRIVATE Threads::Threads)
+    if(WEATHER_YAML_LIB)
+      target_link_libraries(weather_demo PRIVATE ${WEATHER_YAML_LIB})
+      target_compile_definitions(weather_demo PRIVATE VOXELVK_ENABLE_WEATHER=1)
+    endif()
+  endif()
+
 endif()
 
   # Optional RAG integrations (FAISS, ONNX Runtime)
