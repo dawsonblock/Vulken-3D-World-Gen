@@ -1,0 +1,27 @@
+state: CLEAR          # CLEAR | CLOUDY | RAIN | SNOW | STORM | FOG
+wind:
+  speed: 6.0          # m/s
+  direction_deg: 245  # meteo degrees
+  gustiness: 0.35     # 0..1 noise amplitude
+precip:
+  rate: 0.0           # mm/hr (auto-set for RAIN/SNOW if zero)
+  max_particles: 200000
+clouds:
+  coverage: 0.25      # 0..1
+  speed: 20.0         # km/h drift
+  density: 0.6        # visual thickness
+sky:
+  turbidity: 2.0      # 1.8..10 (higher = hazy)
+  sun_elevation_deg: 45
+time:
+  enable_day_night: true
+  day_seconds: 720.0  # 12 min per day
+material:
+  wet_roughness: 0.08
+  wet_darkening: 0.85
+  snow_albedo: [0.85, 0.88, 0.92]
+  snow_threshold_dot: 0.65   # apply snow if dot(N, up) >= threshold
+fog:
+  density: 0.02
+sun:
+  azimuth_deg: 90
