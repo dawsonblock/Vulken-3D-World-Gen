@@ -1,14 +1,27 @@
 {
-  "name": "voxelvk-elite-all",
-  "version-string": "1.0.0",
-  "builtin-baseline": "6719d6e7b2c0f7c5f232f4c0b9e3c1d441c8b7d0",
+  "name": "voxelvk",
+  "version-string": "2025.09",
+  "description": "VoxelVK - High-performance voxel engine with Vulkan rendering, weather systems, and RL training",
   "dependencies": [
     "glfw3",
     "glm",
-    "gtest",
+    "yaml-cpp",
+    "shaderc",
     "imgui",
-    "spirv-tools",
-    "stb",
-    "yaml-cpp"
-  ]
+    "vulkan-memory-allocator",
+    "nlohmann-json",
+    "curl"
+  ],
+  "features": {
+    "rl": {
+      "description": "Reinforcement Learning support",
+      "dependencies": []
+    },
+    "tests": {
+      "description": "Testing framework",
+      "dependencies": [
+        "gtest"
+      ]
+    }
+  }
 }
