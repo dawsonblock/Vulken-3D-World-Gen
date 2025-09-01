@@ -163,6 +163,11 @@ private:
     std::string getCacheFilePath() const;
     bool createCacheDirectory();
     
+    // Enhanced cache management
+    std::string buildCacheFileName() const;
+    bool validateCacheHeader(const std::vector<char>& data) const;
+    void writeCacheHeader(std::vector<char>& data) const;
+    
     uint64_t getFileTimestamp(const std::string& filePath);
     void updateShaderTimestamp(const std::string& shaderPath);
     
