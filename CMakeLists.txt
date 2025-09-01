@@ -107,23 +107,20 @@ if(VOXELVK_ENABLE_P0_RELIABILITY)
   
   list(APPEND VOXELVK_ELITE_SOURCES ${P0_RELIABILITY_SRC})
   
-  # P0 demo application
+  # P0 demo application (simplified)
   if(NOT VOXELVK_HEADLESS_ONLY)
-    add_executable(p0_reliability_demo apps/p0_reliability_demo.cpp ${P0_RELIABILITY_SRC} ${WEATHER_SRC})
-    target_include_directories(p0_reliability_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(p0_reliability_demo PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
+    add_executable(p0_reliability_test apps/p0_reliability_test.cpp ${WEATHER_SRC})
+    target_include_directories(p0_reliability_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(p0_reliability_test PRIVATE Threads::Threads)
     
     if(WEATHER_YAML_LIB)
-      target_link_libraries(p0_reliability_demo PRIVATE ${WEATHER_YAML_LIB})
-      target_compile_definitions(p0_reliability_demo PRIVATE VOXELVK_ENABLE_WEATHER=1)
+      target_link_libraries(p0_reliability_test PRIVATE ${WEATHER_YAML_LIB})
+      target_compile_definitions(p0_reliability_test PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
     
-    target_compile_definitions(p0_reliability_demo PRIVATE 
+    target_compile_definitions(p0_reliability_test PRIVATE 
       VOXELVK_ENABLE_P0_RELIABILITY=1
-      VK_USE_PLATFORM_GLFW=1
     )
-    
-    add_dependencies(p0_reliability_demo VoxelVK_Shaders)
   endif()
 endif()
 
