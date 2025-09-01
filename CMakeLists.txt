@@ -472,8 +472,70 @@ endif()
 if(ENABLE_TESTS)
   include(CTest)
   enable_testing()
-  add_test(NAME smoke_headless COMMAND smoke_headless)
-  set_tests_properties(smoke_headless PROPERTIES TIMEOUT 30)
+  
+  # Core functionality tests
+  add_executable(test_shaders_compile tests/test_shaders_compile.cpp)
+  add_dependencies(test_shaders_compile ShaderSPV)
+  add_test(NAME test_shaders_compile COMMAND test_shaders_compile)
+  set_tests_properties(test_shaders_compile PROPERTIES TIMEOUT 30)
+  
+  add_test(NAME test_smoke_headless COMMAND smoke_headless)
+  set_tests_properties(test_smoke_headless PROPERTIES TIMEOUT 10)
+  
+  # Weather system tests
+  if(VOXELVK_ENABLE_WEATHER)
+    add_executable(test_weather_system tests/test_weather_system.cpp ${WEATHER_SRC} src/core/logger.cpp)
+    target_include_directories(test_weather_system PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_weather_system PRIVATE Threads::Threads)
+    
+    if(WEATHER_YAML_LIB)
+      target_link_libraries(test_weather_system PRIVATE ${WEATHER_YAML_LIB})
+      target_compile_definitions(test_weather_system PRIVATE VOXELVK_ENABLE_WEATHER=1)
+    endif()
+    
+    add_test(NAME test_weather_system COMMAND test_weather_system)
+    set_tests_properties(test_weather_system PROPERTIES TIMEOUT 30)
+  endif()
+  
+  # RL backend tests
+  if(VOXELVK_ENABLE_RL)
+    add_executable(test_rl_backend tests/test_rl_backend.cpp ${RL_BACKEND_SRC} src/core/logger.cpp)
+    target_include_directories(test_rl_backend PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_rl_backend PRIVATE Threads::Threads)
+    target_compile_definitions(test_rl_backend PRIVATE VOXELVK_ENABLE_RL=1)
+    
+    add_test(NAME test_rl_backend COMMAND test_rl_backend)
+    set_tests_properties(test_rl_backend PROPERTIES TIMEOUT 30)
+  endif()
+  
+  # Performance monitoring tests
+  if(VOXELVK_ENABLE_P2_PERFORMANCE)
+    add_executable(test_performance_monitoring tests/test_performance_monitoring.cpp src/core/logger.cpp)
+    target_include_directories(test_performance_monitoring PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_performance_monitoring PRIVATE Threads::Threads)
+    target_compile_definitions(test_performance_monitoring PRIVATE VOXELVK_ENABLE_P2_PERFORMANCE=1)
+    
+    add_test(NAME test_performance_monitoring COMMAND test_performance_monitoring)
+    set_tests_properties(test_performance_monitoring PROPERTIES TIMEOUT 30)
+  endif()
+  
+  # Integration tests
+  add_executable(test_integration tests/test_integration.cpp ${WEATHER_SRC} src/core/logger.cpp)
+  target_include_directories(test_integration PRIVATE ${CMAKE_SOURCE_DIR}/src)
+  target_link_libraries(test_integration PRIVATE Threads::Threads)
+  
+  if(WEATHER_YAML_LIB)
+    target_link_libraries(test_integration PRIVATE ${WEATHER_YAML_LIB})
+    target_compile_definitions(test_integration PRIVATE VOXELVK_ENABLE_WEATHER=1)
+  endif()
+  
+  if(VOXELVK_ENABLE_RL)
+    target_sources(test_integration PRIVATE ${RL_BACKEND_SRC})
+    target_compile_definitions(test_integration PRIVATE VOXELVK_ENABLE_RL=1)
+  endif()
+  
+  add_test(NAME test_integration COMMAND test_integration)
+  set_tests_properties(test_integration PROPERTIES TIMEOUT 60)
 endif()
 
 message(STATUS "=== Build Summary ===")
