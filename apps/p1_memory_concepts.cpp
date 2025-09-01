@@ -177,7 +177,48 @@ private:
     }
     
     void testMemoryPressureConcepts() {
-        logger_.Info("\n🧪 Testing Texture Compression Concepts");
+        logger_.Info("\n🧪 Testing Memory Pressure Concepts");
+        
+        // Simulate memory budget enforcement
+        struct MemoryCategory {
+            const char* name;
+            size_t budgetMB;
+            size_t currentUsageMB;
+            bool canEvict;
+        };
+        
+        MemoryCategory categories[] = {
+            {"Geometry", 640, 576, true},        // 90% usage, can evict via LOD
+            {"Textures", 1024, 921, true},       // 90% usage, can evict via streaming
+            {"RenderTargets", 384, 192, false},  // 50% usage, cannot evict
+            {"Uniforms", 128, 64, false},        // 50% usage, cannot evict
+            {"Weather", 128, 96, true},          // 75% usage, can evict particles
+        };
+        
+        logger_.Info("Memory Pressure Analysis:");
+        
+        float totalPressure = 0.0f;
+        
+        for (const auto& cat : categories) {
+            float utilization = static_cast<float>(cat.currentUsageMB) / cat.budgetMB * 100.0f;
+            totalPressure += utilization;
+            
+            const char* status = "OK";
+            if (utilization > 90.0f) status = "CRITICAL";
+            else if (utilization > 80.0f) status = "HIGH";
+            else if (utilization > 60.0f) status = "MEDIUM";
+            
+            logger_.Info("  {}: {} MB / {} MB ({:.1f}%) - {} {}",
+                cat.name, cat.currentUsageMB, cat.budgetMB, utilization, status,
+                cat.canEvict ? "[Evictable]" : "[Protected]");
+        }
+        
+        logger_.Info("Average memory pressure: {:.1f}%", totalPressure / 5.0f);
+        
+        logger_.Info("✅ Memory pressure concepts validated");
+    }
+    
+    void testTextureCompressionConcepts() {
         
         // Simulate KTX2 + BasisU compression results
         struct CompressionTest {
