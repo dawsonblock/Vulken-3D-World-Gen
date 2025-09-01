@@ -93,6 +93,40 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   add_custom_target(VoxelVK_Shaders ALL DEPENDS ${SPV_OUT})
 endif()
 
+# === P0 Reliability Core ===
+set(VOXELVK_ENABLE_P0_RELIABILITY ON CACHE BOOL "Enable P0 production reliability systems")
+
+if(VOXELVK_ENABLE_P0_RELIABILITY)
+  # P0 reliability sources
+  file(GLOB P0_RELIABILITY_SRC
+    src/vk/device_caps.cpp
+    src/vk/error_handling.cpp
+    src/vk/swapchain_manager.cpp
+    src/vk/pipeline_cache_manager.cpp
+  )
+  
+  list(APPEND VOXELVK_ELITE_SOURCES ${P0_RELIABILITY_SRC})
+  
+  # P0 demo application
+  if(NOT VOXELVK_HEADLESS_ONLY)
+    add_executable(p0_reliability_demo apps/p0_reliability_demo.cpp ${P0_RELIABILITY_SRC} ${WEATHER_SRC})
+    target_include_directories(p0_reliability_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(p0_reliability_demo PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
+    
+    if(WEATHER_YAML_LIB)
+      target_link_libraries(p0_reliability_demo PRIVATE ${WEATHER_YAML_LIB})
+      target_compile_definitions(p0_reliability_demo PRIVATE VOXELVK_ENABLE_WEATHER=1)
+    endif()
+    
+    target_compile_definitions(p0_reliability_demo PRIVATE 
+      VOXELVK_ENABLE_P0_RELIABILITY=1
+      VK_USE_PLATFORM_GLFW=1
+    )
+    
+    add_dependencies(p0_reliability_demo VoxelVK_Shaders)
+  endif()
+endif()
+
 # === Weather System ===
 set(VOXELVK_ENABLE_WEATHER ON CACHE BOOL "Enable weather system")
 
