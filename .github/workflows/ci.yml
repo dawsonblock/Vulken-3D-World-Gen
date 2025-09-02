@@ -166,6 +166,20 @@ jobs:
           vcpkgGitCommitId: 1b5a7a7e1aee5b287f2e7a9e0f9a8f9510b5c3f8
           appendedCacheKey: ${{ matrix.os }}
 
+      - name: Bootstrap local vcpkg (toolchain under repo)
+        shell: bash
+        run: |
+          set -e
+          VCPKG_DIR="${GITHUB_WORKSPACE}/vcpkg"
+          if [ ! -d "$VCPKG_DIR" ]; then
+            git clone --depth 1 https://github.com/microsoft/vcpkg "$VCPKG_DIR"
+          fi
+          if [ ! -x "$VCPKG_DIR/vcpkg" ]; then
+            "$VCPKG_DIR/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+          echo "VCPKG_ROOT=$VCPKG_DIR" >> $GITHUB_ENV
+          echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $GITHUB_ENV
+
       - name: vcpkg install
         run: |
           "${{ env.VCPKG_ROOT }}/vcpkg" install
@@ -321,6 +335,19 @@ jobs:
         with:
           vcpkgGitCommitId: 1b5a7a7e1aee5b287f2e7a9e0f9a8f9510b5c3f8
           appendedCacheKey: ${{ matrix.os }}
+      - name: Bootstrap local vcpkg (toolchain under repo)
+        shell: bash
+        run: |
+          set -e
+          VCPKG_DIR="${GITHUB_WORKSPACE}/vcpkg"
+          if [ ! -d "$VCPKG_DIR" ]; then
+            git clone --depth 1 https://github.com/microsoft/vcpkg "$VCPKG_DIR"
+          fi
+          if [ ! -x "$VCPKG_DIR/vcpkg" ]; then
+            "$VCPKG_DIR/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+          echo "VCPKG_ROOT=$VCPKG_DIR" >> $GITHUB_ENV
+          echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $GITHUB_ENV
       - name: vcpkg install
         run: |
           "${{ env.VCPKG_ROOT }}/vcpkg" install
