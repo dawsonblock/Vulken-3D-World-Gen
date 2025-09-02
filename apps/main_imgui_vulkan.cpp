@@ -27,16 +27,26 @@
 // Utils
 #include "../src/util/vk_pipeline_cache_utils.hpp"
 
-// ImGui with Vulkan backend
-#if __has_include(<imgui.h>) && __has_include(<imgui/backends/imgui_impl_glfw.h>) && __has_include(<imgui/backends/imgui_impl_vulkan.h>)
-  #include <imgui.h>
-  #include <imgui/backends/imgui_impl_glfw.h>
-  #include <imgui/backends/imgui_impl_vulkan.h>
-  #define MAIN_HAS_IMGUI_VULKAN 1
-#elif __has_include(<imgui.h>)
-  // Fallback to minimal ImGui without backend
-  #include <imgui.h>
-  #define MAIN_HAS_IMGUI_MINIMAL 1
+// ImGui with Vulkan backend (support both vcpkg and upstream header layouts)
+#if __has_include(<imgui.h>)
+    #include <imgui.h>
+        #if __has_include(<imgui/backends/imgui_impl_glfw.h>) && __has_include(<imgui/backends/imgui_impl_vulkan.h>)
+        #include <imgui/backends/imgui_impl_glfw.h>
+        #include <imgui/backends/imgui_impl_vulkan.h>
+        #define MAIN_HAS_IMGUI_VULKAN 1
+    #elif __has_include(<backends/imgui_impl_glfw.h>) && __has_include(<backends/imgui_impl_vulkan.h>)
+        #include <backends/imgui_impl_glfw.h>
+        #include <backends/imgui_impl_vulkan.h>
+        #define MAIN_HAS_IMGUI_VULKAN 1
+        #elif __has_include(<imgui_impl_glfw.h>) && __has_include(<imgui_impl_vulkan.h>)
+            // vcpkg installs backends at top-level include directory
+            #include <imgui_impl_glfw.h>
+            #include <imgui_impl_vulkan.h>
+            #define MAIN_HAS_IMGUI_VULKAN 1
+    #else
+        // Fallback to minimal ImGui without backend
+        #define MAIN_HAS_IMGUI_MINIMAL 1
+    #endif
 #endif
 
 using namespace voxelvk;
@@ -702,10 +712,15 @@ int main(int argc, char** argv) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    // Enable docking/viewports only if backend has those features
+    #ifdef IMGUI_HAS_DOCKING
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    #endif
     // Optional multi-viewport: enabled by flag/env to avoid quirks on some WMs
     const bool enableViewports = hasArg(argc, argv, "--viewports") || std::getenv("VOXELVK_VIEWPORTS");
+    #ifdef IMGUI_HAS_VIEWPORT
     if (enableViewports) io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    #endif
 
     // Ini path & UI scale from arg/env
     if (const char* ini = getArgValue(argc, argv, "--imgui-ini")) { ImGui::GetIO().IniFilename = ini; }
@@ -753,7 +768,9 @@ int main(int argc, char** argv) {
         c[ImGuiCol_TabHovered]      = ImVec4(0.20f,0.45f,0.85f,0.45f);
         c[ImGuiCol_TabActive]       = ImVec4(0.18f,0.20f,0.25f,1.00f);
         c[ImGuiCol_NavHighlight]    = ImVec4(0.20f,0.45f,0.85f,0.60f);
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) { s.WindowRounding = 8.0f; s.Colors[ImGuiCol_WindowBg].w = 1.0f; }
+    #ifdef IMGUI_HAS_VIEWPORT
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) { s.WindowRounding = 8.0f; s.Colors[ImGuiCol_WindowBg].w = 1.0f; }
+    #endif
     };
     auto ApplyLightTheme = [](){
         ImGui::StyleColorsLight();
@@ -790,27 +807,16 @@ int main(int argc, char** argv) {
 #endif
     
     // Initialize ImGui Vulkan backend with our render pass
-    ImGui_ImplVulkan_Init(&init_info, g_RenderPass);
+    // In current backend headers, RenderPass is part of init_info
+    init_info.RenderPass = g_RenderPass;
+    ImGui_ImplVulkan_Init(&init_info);
 
     // Upload ImGui fonts
     {
-    VkCommandBufferAllocateInfo cbai{}; cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        cbai.commandPool = g_CommandPool;
-        cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        cbai.commandBufferCount = 1;
-        VkCommandBuffer cmd;
-        vkAllocateCommandBuffers(g_Device, &cbai, &cmd);
-    VkCommandBufferBeginInfo bi{}; bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        vkBeginCommandBuffer(cmd, &bi);
-        ImGui_ImplVulkan_CreateFontsTexture(cmd);
-        vkEndCommandBuffer(cmd);
-    VkSubmitInfo si{}; si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        si.commandBufferCount = 1; si.pCommandBuffers = &cmd;
-        vkQueueSubmit(g_GraphicsQueue, 1, &si, VK_NULL_HANDLE);
-        vkQueueWaitIdle(g_GraphicsQueue);
-        ImGui_ImplVulkan_DestroyFontUploadObjects();
-        vkFreeCommandBuffers(g_Device, g_CommandPool, 1, &cmd);
+    // Newer backend API creates fonts texture without explicit command buffer
+    ImGui_ImplVulkan_CreateFontsTexture();
+    vkQueueWaitIdle(g_GraphicsQueue);
+    ImGui_ImplVulkan_DestroyFontsTexture();
     }
 
     g_logger.Info("ImGui Vulkan backend initialized");
@@ -919,9 +925,11 @@ int main(int argc, char** argv) {
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            // Dockspace & main menu
+            // Dockspace & main menu (only when docking is available)
+            #ifdef IMGUI_HAS_DOCKING
             ImGuiViewport* vp = ImGui::GetMainViewport();
-            ImGui::DockSpaceOverViewport(vp, ImGuiDockNodeFlags_PassthruCentralNode);
+            ImGui::DockSpaceOverViewport(vp);
+            #endif
         if (ImGui::BeginMainMenuBar()) {
                 if (ImGui::BeginMenu("View")) {
                     static bool showOverview = true, showCamera = true, showSystems = true, showPerf = true;
@@ -932,10 +940,10 @@ int main(int argc, char** argv) {
                     ImGui::Separator();
                     ImGui::Text("UI Scale"); ImGui::SameLine();
                     static float uiScaleRuntime = io.FontGlobalScale; if (ImGui::SliderFloat("##uiscale", &uiScaleRuntime, 0.75f, 1.75f, "%.2fx")) io.FontGlobalScale = uiScaleRuntime;
-            ImGui::Separator();
-            bool tDark = (themeKind == ThemeKind::Dark);
-            if (ImGui::MenuItem("Dark Theme", nullptr, tDark)) { themeKind = ThemeKind::Dark; ApplyDarkTheme(); }
-            if (ImGui::MenuItem("Light Theme", nullptr, !tDark)) { themeKind = ThemeKind::Light; ApplyLightTheme(); }
+                    ImGui::Separator();
+                    bool tDark = (themeKind == ThemeKind::Dark);
+                    if (ImGui::MenuItem("Dark Theme", nullptr, tDark)) { themeKind = ThemeKind::Dark; ApplyDarkTheme(); }
+                    if (ImGui::MenuItem("Light Theme", nullptr, !tDark)) { themeKind = ThemeKind::Light; ApplyLightTheme(); }
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("Actions")) {
@@ -957,7 +965,9 @@ int main(int argc, char** argv) {
 #endif
                 }},
                 {"Export Perf JSON", [&](){ voxelvk::PerformanceMonitor::instance().exportPerformanceData("."); }},
+                #ifdef IMGUI_HAS_VIEWPORT
                 {"Toggle Viewports", [&](){ io.ConfigFlags ^= ImGuiConfigFlags_ViewportsEnable; }},
+                #endif
             };
             if (paletteOpen) {
                 ImGui::SetNextWindowSize(ImVec2(520, 300), ImGuiCond_Always);
@@ -1038,10 +1048,12 @@ int main(int argc, char** argv) {
             ImGui::End();
         }
         ImGui::Render();
+        #ifdef IMGUI_HAS_VIEWPORT
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
         }
+        #endif
 #elif defined(MAIN_HAS_IMGUI_MINIMAL)
         // Minimal ImGui without backend: just ensure we log once
         static bool firstRun = true;

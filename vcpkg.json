@@ -7,7 +7,7 @@
     "glm",
     "yaml-cpp",
     "shaderc",
-    "imgui",
+  { "name": "imgui", "features": ["glfw-binding", "vulkan-binding"] },
   "vulkan-memory-allocator",
   "vulkan-loader",
     "nlohmann-json",
