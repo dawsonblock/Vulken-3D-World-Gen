@@ -44,6 +44,12 @@ void CSMShadowPass::destroy(){
     for(auto v: layerViews) vkDestroyImageView(device, v, nullptr);
     if(depthArrayView) vkDestroyImageView(device, depthArrayView, nullptr);
     if(depthImage){ vmaDestroyImage(allocator, depthImage, depthAlloc); depthImage=VK_NULL_HANDLE; }
+    // Persist pipeline cache if present
+    if (g_csm_pipeline_cache != VK_NULL_HANDLE) {
+        voxelvk::util::save_pipeline_cache_to_env(device, g_csm_pipeline_cache);
+        vkDestroyPipelineCache(device, g_csm_pipeline_cache, nullptr);
+        g_csm_pipeline_cache = VK_NULL_HANDLE;
+    }
 }
 
 bool CSMShadowPass::createDepthArray(VkPhysicalDevice phys){

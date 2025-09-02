@@ -1,5 +1,13 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#if defined(__linux__)
+    #define GLFW_EXPOSE_NATIVE_X11
+    #include <GLFW/glfw3native.h>
+    #include <X11/Xlib.h>
+    // stb image write for screenshots (header-only implementation here)
+    #define STB_IMAGE_WRITE_IMPLEMENTATION
+    #include <stb/stb_image_write.h>
+#endif
 #include <vulkan/vulkan.h>
 #include <cstdio>
 #include <cstdlib>
@@ -15,6 +23,8 @@
 #include "../src/ai/rag_runtime_bridge.hpp"
 #include "../src/core/logger.hpp"
 #include "../src/env/weather/weather_system.hpp"
+// Utils
+#include "../src/util/vk_pipeline_cache_utils.hpp"
 
 // ImGui with Vulkan backend
 #if __has_include(<imgui.h>) && __has_include(<imgui/backends/imgui_impl_glfw.h>) && __has_include(<imgui/backends/imgui_impl_vulkan.h>)
@@ -54,6 +64,7 @@ static VkSemaphore g_ImageAvailableSemaphore = VK_NULL_HANDLE;
 static VkSemaphore g_RenderFinishedSemaphore = VK_NULL_HANDLE;
 static std::vector<VkFence> g_InFlightFences;
 static bool g_FramebufferResized = false;
+static VkPipelineCache g_PipelineCache = VK_NULL_HANDLE;
 
 // ImGui descriptor pool (if used)
 static VkDescriptorPool g_ImGuiDescriptorPool = VK_NULL_HANDLE;
@@ -91,7 +102,17 @@ static bool initializeVulkan(GLFWwindow* window) {
     const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-    extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    // Add debug utils only if available (avoid instance creation failure on minimal drivers)
+    {
+        uint32_t instExtCount = 0; vkEnumerateInstanceExtensionProperties(nullptr, &instExtCount, nullptr);
+        std::vector<VkExtensionProperties> instExts(instExtCount);
+        vkEnumerateInstanceExtensionProperties(nullptr, &instExtCount, instExts.data());
+        bool hasDebugUtils = false;
+        for (const auto& e : instExts) {
+            if (std::string(e.extensionName) == VK_EXT_DEBUG_UTILS_EXTENSION_NAME) { hasDebugUtils = true; break; }
+        }
+        if (hasDebugUtils) extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    }
     
     std::vector<const char*> layers;
 #ifndef NDEBUG
@@ -180,6 +201,9 @@ static bool initializeVulkan(GLFWwindow* window) {
         return false;
     }
     
+    // Create/load pipeline cache (best-effort)
+    g_PipelineCache = voxelvk::util::create_pipeline_cache_from_env(g_Device);
+
     // Get queues
     vkGetDeviceQueue(g_Device, g_GraphicsQueueFamily, 0, &g_GraphicsQueue);
     vkGetDeviceQueue(g_Device, g_PresentQueueFamily, 0, &g_PresentQueue);
@@ -222,6 +246,13 @@ static bool createImGuiDescriptorPool() {
 static void shutdownVulkan() {
     if (g_Device != VK_NULL_HANDLE) {
         vkDeviceWaitIdle(g_Device);
+    }
+
+    // Persist pipeline cache if configured
+    if (g_PipelineCache != VK_NULL_HANDLE) {
+        voxelvk::util::save_pipeline_cache_to_env(g_Device, g_PipelineCache);
+        vkDestroyPipelineCache(g_Device, g_PipelineCache, nullptr);
+        g_PipelineCache = VK_NULL_HANDLE;
     }
 
     if (g_RenderPass != VK_NULL_HANDLE) {
@@ -491,7 +522,8 @@ static void updateCameraInput(FlyCamera& cam, GLFWwindow* window, float dt) {
     }
     auto forward = [&](){ return std::array<float,3>{ std::cos(cam.yaw)*std::cos(cam.pitch), std::sin(cam.pitch), std::sin(cam.yaw)*std::cos(cam.pitch) }; };
     auto rightv  = [&](){ return std::array<float,3>{ std::sin(cam.yaw-3.1415926f/2.0f), 0.0f, std::cos(cam.yaw-3.1415926f/2.0f) }; };
-    float s = cam.moveSpeed * dt;
+    float speedMul = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) ? 2.5f : 1.0f;
+    float s = cam.moveSpeed * speedMul * dt;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) { auto f=forward(); cam.x += f[0]*s; cam.y += f[1]*s; cam.z += f[2]*s; }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) { auto f=forward(); cam.x -= f[0]*s; cam.y -= f[1]*s; cam.z -= f[2]*s; }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) { auto r=rightv();  cam.x -= r[0]*s;                 cam.z -= r[2]*s; }
@@ -499,6 +531,48 @@ static void updateCameraInput(FlyCamera& cam, GLFWwindow* window, float dt) {
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) { cam.y -= s; }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) { cam.y += s; }
 }
+
+#if defined(__linux__)
+// Simple X11-based screenshot of the window contents; avoids Vulkan readbacks
+static bool SaveWindowScreenshot(GLFWwindow* window, const char* path) {
+    int w=0,h=0; glfwGetFramebufferSize(window, &w, &h);
+    if (w<=0 || h<=0) return false;
+    Display* dpy = glfwGetX11Display();
+    if (!dpy) return false;
+    Window xw = glfwGetX11Window(window);
+    XImage* img = XGetImage(dpy, xw, 0, 0, (unsigned)w, (unsigned)h, AllPlanes, ZPixmap);
+    if (!img) return false;
+
+    auto popcount = [](unsigned long x){ int c=0; while(x){ c += (x&1ul); x >>= 1; } return c; };
+    auto firstbit = [](unsigned long x){ int s=0; if(!x) return 0; while((x & 1ul)==0){ x >>= 1; ++s; } return s; };
+
+    int rbits = popcount(img->red_mask);
+    int gbits = popcount(img->green_mask);
+    int bbits = popcount(img->blue_mask);
+    int rshift = firstbit(img->red_mask);
+    int gshift = firstbit(img->green_mask);
+    int bshift = firstbit(img->blue_mask);
+
+    std::vector<unsigned char> rgba(static_cast<size_t>(w*h*4));
+    for (int y=0; y<h; ++y) {
+        for (int x=0; x<w; ++x) {
+            unsigned long p = XGetPixel(img, x, h-1-y); // flip vertically
+            unsigned long rv = (p & img->red_mask) >> rshift;
+            unsigned long gv = (p & img->green_mask) >> gshift;
+            unsigned long bv = (p & img->blue_mask) >> bshift;
+            auto scale = [](unsigned long v, int bits){ if(bits<=0) return (unsigned char)0; unsigned long maxv = (1ul<<bits) - 1ul; double f = maxv ? (double)v / (double)maxv : 0.0; int u = (int)std::round(f * 255.0); if(u<0) u=0; if(u>255) u=255; return (unsigned char)u; };
+            unsigned char R = scale(rv, rbits);
+            unsigned char G = scale(gv, gbits);
+            unsigned char B = scale(bv, bbits);
+            size_t idx = static_cast<size_t>((y*w + x) * 4);
+            rgba[idx+0] = R; rgba[idx+1] = G; rgba[idx+2] = B; rgba[idx+3] = 255;
+        }
+    }
+    int ok = stbi_write_png(path, w, h, 4, rgba.data(), w*4);
+    XDestroyImage(img);
+    return ok != 0;
+}
+#endif
 
 static bool hasArg(int argc, char** argv, const char* flag) {
     for (int i=0;i<argc;++i) if (std::string(argv[i]) == flag) return true; return false;
@@ -600,6 +674,10 @@ int main(int argc, char** argv) {
     init_info.MinImageCount = (uint32_t)g_SwapchainImages.size();
     init_info.ImageCount = (uint32_t)g_SwapchainImages.size();
     init_info.UseDynamicRendering = false;
+    // Some backends provide PipelineCache in init info; ignore if not present in this version.
+#ifdef IMGUI_IMPL_VULKAN_HAS_PIPELINE_CACHE
+    init_info.PipelineCache = g_PipelineCache;
+#endif
     
     // Initialize ImGui Vulkan backend with our render pass
     ImGui_ImplVulkan_Init(&init_info, g_RenderPass);
@@ -723,11 +801,27 @@ int main(int argc, char** argv) {
         // Simple demo UI
     ImGui::Begin("VoxelVK UI");
         ImGui::Text("FPS: %.1f", fps);
+        ImGui::Text("Frame time: %.2f ms", 1000.0 * (fps > 0.0 ? 1.0 / fps : 0.0));
         ImGui::Text("Window: %dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
     ImGui::Separator();
     ImGui::Text("Camera pos: (%.2f, %.2f, %.2f)", cam.x, cam.y, cam.z);
     ImGui::Text("Yaw/Pitch: (%.2f, %.2f)", cam.yaw, cam.pitch);
     ImGui::SliderFloat("Move speed", &cam.moveSpeed, 0.5f, 20.0f);
+        ImGui::TextDisabled("Controls: WASD/QE move, hold RMB to look, Shift to sprint, F11 toggle fullscreen");
+#if defined(__linux__)
+        static bool screenshot_ok = false; static double screenshot_msg_t = 0;
+        if (ImGui::Button("Save Screenshot (P)")) {
+            screenshot_ok = SaveWindowScreenshot(window, "screenshot.png");
+            screenshot_msg_t = glfwGetTime();
+        }
+        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+            static bool ppressed=false; if(!ppressed){ screenshot_ok = SaveWindowScreenshot(window, "screenshot.png"); screenshot_msg_t = glfwGetTime(); ppressed=true; }
+        } else { static bool ppressed=false; ppressed=false; }
+        if (glfwGetTime() - screenshot_msg_t < 2.0) {
+            ImGui::TextColored(screenshot_ok ? ImVec4(0.3f,1,0.3f,1) : ImVec4(1,0.3f,0.3f,1),
+                               screenshot_ok ? "Saved to screenshot.png" : "Screenshot failed");
+        }
+#endif
         static bool rag_enabled = last_rag_enabled;
         static int rag_top_k = last_rag_top_k;
         if (ImGui::Checkbox("Enable RAG", &rag_enabled)) {
