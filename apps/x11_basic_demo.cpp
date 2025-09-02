@@ -30,7 +30,7 @@ int main(){
     GC gc = XCreateGC(d, win, 0, nullptr);
 
     bool running = true;
-    auto last = std::chrono::steady_clock::now();
+    // keep animation simple; no need to track time precisely here
     int hue = 0;
 
     while(running){
@@ -44,11 +44,11 @@ int main(){
         hue = (hue + 1) % 360;
         // simple HSV->RGB like effect via sine waves
         auto cs = [](double t){ return (int)((0.5 + 0.5 * std::sin(t)) * 65535); };
-        int r = cs(hue * 0.0174533);
-        int g = cs(hue * 0.0174533 + 2.0944);
-        int b = cs(hue * 0.0174533 + 4.1888);
+    int r = cs(hue * 0.0174533);
+    int g = cs(hue * 0.0174533 + 2.0944);
+    int b = cs(hue * 0.0174533 + 4.1888);
 
-        XColor color; color.flags = DoRed | DoGreen | DoBlue; color.red = r; color.green = g; color.blue = b;
+    XColor color; color.flags = DoRed | DoGreen | DoBlue; color.red = static_cast<unsigned short>(r); color.green = static_cast<unsigned short>(g); color.blue = static_cast<unsigned short>(b);
         Colormap cmap = DefaultColormap(d, screen);
         if(XAllocColor(d, cmap, &color)){
             XSetForeground(d, gc, color.pixel);

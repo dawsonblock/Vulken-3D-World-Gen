@@ -138,15 +138,15 @@ private:
         }
         
         // Step count (normalized)
-        obs[7] = static_cast<float>(stepCount_) / maxSteps_;
+    obs[7] = static_cast<float>(stepCount_) / static_cast<float>(maxSteps_);
         
         // Simple grid representation (8x8 downsampled)
         for (uint32_t y = 0; y < 8; y++) {
             for (uint32_t x = 0; x < 8; x++) {
                 uint32_t obsIdx = 8 + y * 8 + x;
                 if (obsIdx < OBS_SIZE) {
-                    float gridX = x * 2.0f;
-                    float gridY = y * 2.0f;
+                    float gridX = static_cast<float>(x) * 2.0f;
+                    float gridY = static_cast<float>(y) * 2.0f;
                     
                     // Mark agent position
                     if (std::abs(gridX - agentX_) < 1.5f && std::abs(gridY - agentY_) < 1.5f) {
@@ -250,7 +250,7 @@ int main() {
         if (episode % 10 == 0 || episode == NUM_EPISODES - 1) {
             float avgReward = 0.0f;
             for (float r : recentRewards) avgReward += r;
-            avgReward /= recentRewards.size();
+            avgReward /= static_cast<float>(recentRewards.size());
             
             auto stats = backend->getTrainingStats();
             
@@ -262,7 +262,7 @@ int main() {
         if (recentRewards.size() >= 5) {
             float avgRecent = 0.0f;
             for (float r : recentRewards) avgRecent += r;
-            avgRecent /= recentRewards.size();
+            avgRecent /= static_cast<float>(recentRewards.size());
             
             if (avgRecent > 8.0f) { // High performance threshold
                 logger.Info("🎉 Training converged! Average reward: {:.2f}", avgRecent);

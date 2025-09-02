@@ -6,11 +6,13 @@
 #include <cstdint>
 #include <limits>
 
+#ifndef NDEBUG
 static bool has_layer(const char* name){
     uint32_t n=0; vkEnumerateInstanceLayerProperties(&n,nullptr);
     std::vector<VkLayerProperties> L(n); vkEnumerateInstanceLayerProperties(&n,L.data());
     for(auto& p:L){ if(std::strcmp(p.layerName,name)==0) return true; } return false;
 }
+#endif
 static uint32_t find_memory_type(VkPhysicalDevice phys, uint32_t typeBits, VkMemoryPropertyFlags req){
     VkPhysicalDeviceMemoryProperties mp; vkGetPhysicalDeviceMemoryProperties(phys,&mp);
     for(uint32_t i=0;i<mp.memoryTypeCount;i++){
@@ -25,10 +27,10 @@ int main(){
 #ifndef NDEBUG
     if(has_layer("VK_LAYER_KHRONOS_validation")) layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
-    VkApplicationInfo app{VK_STRUCTURE_TYPE_APPLICATION_INFO};
+    VkApplicationInfo app{}; app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     app.pApplicationName = "smoke_graphics_headless";
     app.apiVersion = VK_API_VERSION_1_2;
-    VkInstanceCreateInfo ici{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
+    VkInstanceCreateInfo ici{}; ici.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     ici.pApplicationInfo = &app;
     ici.enabledLayerCount = (uint32_t)layers.size();
     ici.ppEnabledLayerNames = layers.empty()? nullptr : layers.data();
@@ -47,12 +49,12 @@ int main(){
     uint32_t qg = UINT32_MAX;
     for(uint32_t i=0;i<qn;i++){ if(qprops[i].queueFlags & VK_QUEUE_GRAPHICS_BIT){ qg=i; break; } }
     if(qg==UINT32_MAX){ std::puts("no graphics q"); return 4; }
-    float prio=1.f; VkDeviceQueueCreateInfo dq{VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO}; dq.queueFamilyIndex=qg; dq.queueCount=1; dq.pQueuePriorities=&prio;
+    float prio=1.f; VkDeviceQueueCreateInfo dq{}; dq.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO; dq.queueFamilyIndex=qg; dq.queueCount=1; dq.pQueuePriorities=&prio;
     std::vector<const char*> devExts;
 #ifdef VK_KHR_portability_subset
     devExts.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
 #endif
-    VkDeviceCreateInfo dci{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO}; dci.queueCreateInfoCount=1; dci.pQueueCreateInfos=&dq;
+    VkDeviceCreateInfo dci{}; dci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO; dci.queueCreateInfoCount=1; dci.pQueueCreateInfos=&dq;
     dci.enabledExtensionCount = (uint32_t)devExts.size();
     dci.ppEnabledExtensionNames = devExts.empty() ? nullptr : devExts.data();
     VkDevice device; if(vkCreateDevice(phys,&dci,nullptr,&device)!=VK_SUCCESS){ std::puts("vkCreateDevice failed"); return 5; }
@@ -61,13 +63,13 @@ int main(){
     VkQueue q; vkGetDeviceQueue(device,qg,0,&q);
 
     // Command buffer
-    VkCommandPoolCreateInfo cpci{VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO}; cpci.queueFamilyIndex=qg;
+    VkCommandPoolCreateInfo cpci{}; cpci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO; cpci.queueFamilyIndex=qg;
     VkCommandPool pool; vkCreateCommandPool(device,&cpci,nullptr,&pool);
-    VkCommandBufferAllocateInfo cbai{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO}; cbai.commandPool=pool; cbai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY; cbai.commandBufferCount=1;
+    VkCommandBufferAllocateInfo cbai{}; cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO; cbai.commandPool=pool; cbai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY; cbai.commandBufferCount=1;
     VkCommandBuffer cmd; vkAllocateCommandBuffers(device,&cbai,&cmd);
 
     // Create 1x1 color attachment image + memory
-    VkImageCreateInfo ici2{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+    VkImageCreateInfo ici2{}; ici2.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     ici2.imageType = VK_IMAGE_TYPE_2D;
     ici2.extent = {1,1,1};
     ici2.mipLevels = 1; ici2.arrayLayers = 1;
@@ -80,12 +82,12 @@ int main(){
     VkMemoryRequirements mr; vkGetImageMemoryRequirements(device,img,&mr);
     uint32_t memIdx = find_memory_type(phys, mr.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     if(memIdx==UINT32_MAX){ std::puts("no mem type"); return 7; }
-    VkMemoryAllocateInfo mai{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO}; mai.allocationSize = mr.size; mai.memoryTypeIndex = memIdx;
+    VkMemoryAllocateInfo mai{}; mai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO; mai.allocationSize = mr.size; mai.memoryTypeIndex = memIdx;
     VkDeviceMemory mem; if(vkAllocateMemory(device,&mai,nullptr,&mem)!=VK_SUCCESS){ std::puts("alloc fail"); return 8; }
     vkBindImageMemory(device,img,mem,0);
 
     // View
-    VkImageViewCreateInfo ivci{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+    VkImageViewCreateInfo ivci{}; ivci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     ivci.image = img; ivci.viewType = VK_IMAGE_VIEW_TYPE_2D; ivci.format = ici2.format;
     ivci.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; ivci.subresourceRange.levelCount=1; ivci.subresourceRange.layerCount=1;
     VkImageView view; vkCreateImageView(device,&ivci,nullptr,&view);
@@ -100,17 +102,17 @@ int main(){
     att.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     VkAttachmentReference ref{0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
     VkSubpassDescription sub{}; sub.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS; sub.colorAttachmentCount=1; sub.pColorAttachments=&ref;
-    VkRenderPassCreateInfo rpci{VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO}; rpci.attachmentCount=1; rpci.pAttachments=&att; rpci.subpassCount=1; rpci.pSubpasses=&sub;
+    VkRenderPassCreateInfo rpci{}; rpci.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO; rpci.attachmentCount=1; rpci.pAttachments=&att; rpci.subpassCount=1; rpci.pSubpasses=&sub;
     VkRenderPass rp; vkCreateRenderPass(device,&rpci,nullptr,&rp);
 
     // Framebuffer
-    VkFramebufferCreateInfo fbci{VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO};
+    VkFramebufferCreateInfo fbci{}; fbci.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     fbci.renderPass = rp; fbci.attachmentCount = 1; fbci.pAttachments = &view; fbci.width = 1; fbci.height = 1; fbci.layers = 1;
     VkFramebuffer fb; vkCreateFramebuffer(device,&fbci,nullptr,&fb);
 
     // Record: transition to COLOR_ATTACHMENT_OPTIMAL, begin render pass (clear), end
-    VkCommandBufferBeginInfo bi{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO}; vkBeginCommandBuffer(cmd,&bi);
-    VkImageMemoryBarrier barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+    VkCommandBufferBeginInfo bi{}; bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO; vkBeginCommandBuffer(cmd,&bi);
+    VkImageMemoryBarrier barrier{}; barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.srcAccessMask = 0; barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
     barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED; barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED; barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -119,13 +121,13 @@ int main(){
     vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
     VkClearValue clear; clear.color = { {0.1f, 0.2f, 0.3f, 1.0f} };
-    VkRenderPassBeginInfo rbi{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+    VkRenderPassBeginInfo rbi{}; rbi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rbi.renderPass = rp; rbi.framebuffer = fb; rbi.renderArea.offset = {0,0}; rbi.renderArea.extent = {1,1}; rbi.clearValueCount = 1; rbi.pClearValues = &clear;
     vkCmdBeginRenderPass(cmd, &rbi, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdEndRenderPass(cmd);
     vkEndCommandBuffer(cmd);
 
-    VkSubmitInfo si{VK_STRUCTURE_TYPE_SUBMIT_INFO}; si.commandBufferCount=1; si.pCommandBuffers=&cmd;
+    VkSubmitInfo si{}; si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO; si.commandBufferCount=1; si.pCommandBuffers=&cmd;
     vkQueueSubmit(q,1,&si,VK_NULL_HANDLE); vkQueueWaitIdle(q);
 
     // Cleanup

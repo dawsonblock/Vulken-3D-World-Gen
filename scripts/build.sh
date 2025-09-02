@@ -234,7 +234,8 @@ print_summary() {
     
     if [[ -d "$BUILD_DIR" ]]; then
         echo "Built executables:"
-        find "$BUILD_DIR" -type f -executable -name "*" | grep -E "(VoxelRL|Trainer|Evaluate|Preview)" | head -10
+        # Tolerate no matches to avoid failing under 'set -euo pipefail'
+        find "$BUILD_DIR" -type f -executable -name "*" | grep -E "(VoxelRL|Trainer|Evaluate|Preview)" | head -10 || true
     fi
     
     echo "====================="

@@ -31,7 +31,9 @@ static void toggle_fullscreen(GLFWwindow* win, bool on){
 }
 
 static bool point_in_rect(double x, double y, float rx, float ry, float rw, float rh){
-    return x >= rx && x <= rx+rw && y >= ry && y <= ry+rh;
+    float fx = static_cast<float>(x);
+    float fy = static_cast<float>(y);
+    return fx >= rx && fx <= rx+rw && fy >= ry && fy <= ry+rh;
 }
 
 int main(){

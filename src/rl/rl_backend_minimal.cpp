@@ -84,19 +84,19 @@ bool MinimalMLP::update(const std::vector<float>& observations,
     for (float grad : policyGradients) {
         stats_.lastPolicyLoss += grad * grad;
     }
-    stats_.lastPolicyLoss = std::sqrt(stats_.lastPolicyLoss / policyGradients.size());
+    stats_.lastPolicyLoss = std::sqrt(stats_.lastPolicyLoss / static_cast<float>(policyGradients.size()));
     
     stats_.lastValueLoss = 0.0f;
     for (float grad : valueGradients) {
         stats_.lastValueLoss += grad * grad;
     }
-    stats_.lastValueLoss = std::sqrt(stats_.lastValueLoss / valueGradients.size());
+    stats_.lastValueLoss = std::sqrt(stats_.lastValueLoss / static_cast<float>(valueGradients.size()));
     
     // Update average reward
     if (!rewards.empty()) {
         float avgReward = 0.0f;
         for (float reward : rewards) avgReward += reward;
-        avgReward /= rewards.size();
+    avgReward /= static_cast<float>(rewards.size());
         
         const float alpha = 0.01f;
         stats_.averageReward = stats_.averageReward * (1.0f - alpha) + avgReward * alpha;
@@ -277,8 +277,8 @@ void MinimalMLP::applyAdamUpdate(std::vector<float>& weights,
     float epsilon = config_.epsilon;
     
     // Bias correction
-    float bias1Correction = 1.0f - std::pow(beta1, adamStep_ + 1);
-    float bias2Correction = 1.0f - std::pow(beta2, adamStep_ + 1);
+    float bias1Correction = 1.0f - std::pow(beta1, static_cast<float>(adamStep_ + 1));
+    float bias2Correction = 1.0f - std::pow(beta2, static_cast<float>(adamStep_ + 1));
     
     for (size_t i = 0; i < weights.size(); i++) {
         // Update biased first moment estimate

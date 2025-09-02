@@ -70,6 +70,8 @@ option(ENABLE_TESTS             "Enable CTest targets" ON)
 option(VOXELVK_ENABLE_CUDA      "Enable CUDA acceleration" OFF)
 option(VOXELVK_ENABLE_TENSORRT  "Enable TensorRT (requires CUDA)" OFF)
 option(VOXELVK_HEADLESS_ONLY    "Build minimal headless utilities without Vulkan/GLFW" OFF)
+option(VOXELVK_DEMO_WERROR      "Treat warnings as errors for demo/sample apps only" OFF)
+set(VOXELVK_WERROR_TARGETS "" CACHE STRING "Semicolon-separated list of targets to build with -Werror; defaults to core demos if empty")
 
 # Propagate debug markers flag to all targets when enabled
 add_compile_definitions(
@@ -720,4 +722,38 @@ if(TARGET vulkan_fullscreen_demo)
 endif()
 if(TARGET smoke_graphics_headless)
   target_link_libraries(smoke_graphics_headless PRIVATE redis_assets)
+endif()
+
+# Optionally enforce warnings-as-errors on demo/sample executables only
+if(VOXELVK_DEMO_WERROR)
+  set(_WX_FLAG "")
+  if(MSVC)
+    set(_WX_FLAG "/WX")
+  else()
+    set(_WX_FLAG "-Werror")
+  endif()
+
+  # Default set kept lightweight to preserve green builds
+  set(_DEFAULT_WERROR_TARGETS
+    smoke_headless
+    smoke_graphics_headless
+    vulkan_fullscreen_demo
+    gui_fullscreen_demo
+    x11_basic_demo)
+
+  # Allow callers to expand/override via VOXELVK_WERROR_TARGETS (semicolon-separated list)
+  set(_WERROR_TARGETS ${_DEFAULT_WERROR_TARGETS})
+  if(DEFINED VOXELVK_WERROR_TARGETS AND NOT "${VOXELVK_WERROR_TARGETS}" STREQUAL "")
+    set(_WERROR_TARGETS ${VOXELVK_WERROR_TARGETS})
+  endif()
+
+  # Apply -Werror to selected targets if they exist
+  foreach(TGT IN LISTS _WERROR_TARGETS)
+    if(TARGET ${TGT})
+      target_compile_options(${TGT} PRIVATE ${_WX_FLAG})
+    endif()
+  endforeach()
+
+  string(JOIN ", " _WERROR_TARGETS_STR ${_WERROR_TARGETS})
+  message(STATUS "Werror enabled for targets: ${_WERROR_TARGETS_STR}")
 endif()

@@ -48,7 +48,8 @@ static bool parse_bool(const std::string& v){ return v=="1"||v=="true"||v=="True
 bool parse_ini_to_palette(const std::string& text, PaletteConfig& out){
   std::istringstream in(text); std::string line; std::string section;
   while(std::getline(in,line)){
-    if(line.empty()) continue; if(line[0]=='#'||line[0]==';') continue;
+  if(line.empty()) continue;
+  if(line[0]=='#'||line[0]==';') continue;
     if(line.front()=='[' && line.back()==']'){ section=line.substr(1,line.size()-2); continue; }
     auto eq = line.find('='); if(eq==std::string::npos) continue; std::string key=line.substr(0,eq), val=line.substr(eq+1);
     if(section=="biome"){
