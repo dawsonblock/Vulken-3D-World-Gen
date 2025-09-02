@@ -399,6 +399,16 @@ else()
   target_link_libraries(smoke_headless PRIVATE Threads::Threads)
 endif()
 
+if(NOT VOXELVK_HEADLESS_ONLY)
+  add_executable(smoke_graphics_headless apps/smoke_graphics_headless.cpp)
+  add_dependencies(smoke_graphics_headless ShaderSPV)
+  target_include_directories(smoke_graphics_headless PRIVATE ${CMAKE_SOURCE_DIR}/src)
+  target_link_libraries(smoke_graphics_headless PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
+  target_compile_definitions(smoke_graphics_headless PRIVATE
+    $<$<BOOL:${ENABLE_VALIDATION_LAYERS}>:ENABLE_VALIDATION_LAYERS=1>
+    $<$<BOOL:${ENABLE_IMGUI_OVERLAY}>:ENABLE_IMGUI_OVERLAY=1>)
+endif()
+
 # CUDA/TRT guards if you later add GPU/AI targets
 if(NOT VOXELVK_HEADLESS_ONLY)
   target_compile_definitions(smoke_headless PRIVATE
@@ -516,7 +526,7 @@ endif() # NOT VOXELVK_HEADLESS_ONLY
   endif()
 
   # Vulkan fullscreen demo (optional): GLFW Vulkan window + swapchain recreate on toggle
-  option(VOXELVK_BUILD_VULKAN_FULLSCREEN_DEMO "Build the simple Vulkan fullscreen demo" OFF)
+  option(VOXELVK_BUILD_VULKAN_FULLSCREEN_DEMO "Build the simple Vulkan fullscreen demo" ON)
   if(VOXELVK_BUILD_VULKAN_FULLSCREEN_DEMO)
     add_executable(vulkan_fullscreen_demo apps/vulkan_fullscreen_demo.cpp ${AI_SRC})
     target_link_libraries(vulkan_fullscreen_demo PRIVATE ${GLFW_LIB} Vulkan::Vulkan)
@@ -645,3 +655,21 @@ endif()
 
 # Tools
 add_subdirectory(tools)
+
+# Redis dependencies
+find_path(REDISPLUSPLUS_INCLUDE_DIR sw)
+find_library(REDISPLUSPLUS_LIBRARY NAMES redis++ redisplusplus)
+find_library(HIREDIS_LIBRARY NAMES hiredis)
+if(NOT REDISPLUSPLUS_INCLUDE_DIR OR NOT REDISPLUSPLUS_LIBRARY OR NOT HIREDIS_LIBRARY)
+  message(FATAL_ERROR "redis-plus-plus / hiredis not found. Install via vcpkg.")
+endif()
+
+add_library(redis_assets src/redis_asset_store.cpp)
+target_include_directories(redis_assets PUBLIC ${REDISPLUSPLUS_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(redis_assets PUBLIC ${REDISPLUSPLUS_LIBRARY} ${HIREDIS_LIBRARY})
+target_compile_features(redis_assets PUBLIC cxx_std_20)
+
+# Link into chosen apps for hot-reload
+target_link_libraries(gui_fullscreen_demo PRIVATE redis_assets)
+target_link_libraries(vulkan_fullscreen_demo PRIVATE redis_assets)
+target_link_libraries(smoke_graphics_headless PRIVATE redis_assets)

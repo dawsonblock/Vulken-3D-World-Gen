@@ -1,0 +1,12 @@
+redis:
+  uri: "tcp://127.0.0.1:6379"
+  pool_size: 8
+  connect_timeout_ms: 200
+  socket_timeout_ms: 200
+  enable_pubsub: true
+  channels: ["assets.mesh","assets.voxel","assets.material"]
+namespaces:
+  mesh: "mesh:"
+  voxel: "voxel:"
+  mat: "mat:"
+  meta: "meta:"

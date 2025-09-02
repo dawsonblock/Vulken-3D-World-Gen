@@ -1,0 +1,45 @@
+{
+  "timestamp": "1756780011243384416",
+  "performance_gates": true,
+  "budget_config": {
+    "target_frame_time_ms": 16.67,
+    "max_frame_time_ms": 20
+  },
+  "timings": {
+    "frame_total": {
+      "average_ms": 1.23904,
+      "p95_ms": 4.15322
+    },
+    "weather_system": {
+      "average_ms": 0.00167682,
+      "p95_ms": 0.002605
+    },
+    "screen_space": {
+      "average_ms": 0,
+      "p95_ms": 0
+    },
+    "taa_resolve": {
+      "average_ms": 0,
+      "p95_ms": 0
+    },
+    "geometry_pass": {
+      "average_ms": 0,
+      "p95_ms": 0
+    },
+    "lighting_pass": {
+      "average_ms": 0,
+      "p95_ms": 0
+    },
+    "post_process": {
+      "average_ms": 0,
+      "p95_ms": 0
+    },
+    "gpu_memory_copy": {
+      "average_ms": 0,
+      "p95_ms": 0
+    }
+  },
+  "gpu_timings": {
+    "RenderPass": 1.09853
+  }
+}
