@@ -48,13 +48,13 @@ int main(){
     for(uint32_t i=0;i<qn;i++){ if(qprops[i].queueFlags & VK_QUEUE_GRAPHICS_BIT){ qg=i; break; } }
     if(qg==UINT32_MAX){ std::puts("no graphics q"); return 4; }
     float prio=1.f; VkDeviceQueueCreateInfo dq{VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO}; dq.queueFamilyIndex=qg; dq.queueCount=1; dq.pQueuePriorities=&prio;
-    const char* devExts[] = {
+    std::vector<const char*> devExts;
 #ifdef VK_KHR_portability_subset
-        VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME,
+    devExts.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
 #endif
-    };
     VkDeviceCreateInfo dci{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO}; dci.queueCreateInfoCount=1; dci.pQueueCreateInfos=&dq;
-    dci.enabledExtensionCount = (uint32_t)(sizeof(devExts)/sizeof(devExts[0])); dci.ppEnabledExtensionNames = devExts;
+    dci.enabledExtensionCount = (uint32_t)devExts.size();
+    dci.ppEnabledExtensionNames = devExts.empty() ? nullptr : devExts.data();
     VkDevice device; if(vkCreateDevice(phys,&dci,nullptr,&device)!=VK_SUCCESS){ std::puts("vkCreateDevice failed"); return 5; }
     VkPipelineCache pipelineCache = voxelvk::util::create_pipeline_cache_from_env(device);
 

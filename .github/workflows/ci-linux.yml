@@ -1,0 +1,48 @@
+name: CI Linux
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v4
+
+      - name: Cache vcpkg and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/build/vcpkg_installed
+            ${{ github.workspace }}/vcpkg/downloads
+            ${{ github.workspace }}/vcpkg/buildtrees
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+
+      - name: Configure (CMake Preset)
+        run: |
+          cmake --preset default
+
+      - name: Build
+        run: |
+          cmake --build --preset default -j 3
+
+      - name: Run tests
+        run: |
+          ctest --test-dir build --output-on-failure -j 2
+
+      - name: Upload test reports (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-outputs
+          path: |
+            build/compile_commands.json
+            build/*.log
+            performance_report.json

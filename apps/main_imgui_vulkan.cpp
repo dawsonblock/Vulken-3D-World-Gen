@@ -6,7 +6,7 @@
     #include <X11/Xlib.h>
     // stb image write for screenshots (header-only implementation here)
     #define STB_IMAGE_WRITE_IMPLEMENTATION
-    #include <stb/stb_image_write.h>
+    #include <stb_image_write.h>
 #endif
 #include <vulkan/vulkan.h>
 #include <cstdio>

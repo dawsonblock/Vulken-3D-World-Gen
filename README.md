@@ -2,6 +2,19 @@
 
 [![CI](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml)
 
+## CI
+
+- Linux build and tests run on GitHub Actions using CMake Presets and vcpkg cache.
+- Workflow file: `.github/workflows/ci-linux.yml`.
+- Local run mirrors CI:
+  - Configure: cmake --preset default
+  - Build: cmake --build --preset default -j
+  - Test: ctest --test-dir build --output-on-failure
+
+# VoxelVK - Production Voxel Rendering Engine
+
+[![CI](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml)
+
 **VoxelVK** is a production-grade voxel rendering engine built on Vulkan 1.3, featuring advanced weather simulation, AI integration, and 120 FPS performance optimization.
 
 ## 🌟 Features
