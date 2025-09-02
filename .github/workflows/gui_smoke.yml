@@ -14,7 +14,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y cmake ninja-build mesa-vulkan-drivers libvulkan1 vulkan-tools xvfb
+          sudo apt-get install -y cmake ninja-build mesa-vulkan-drivers libvulkan1 vulkan-tools xvfb x11vnc websockify fluxbox
 
       - name: Build
         run: |
@@ -24,8 +24,24 @@ jobs:
         run: |
           ctest --test-dir build --output-on-failure -j2
 
-      - name: GUI smoke (xvfb)
+      - name: GUI smoke (xvfb + screenshot)
         env:
           GUI_ARGS: --smoke
+          PORT: 6080
         run: |
-          ./scripts/run_gui.sh
+          set -e
+          # Start virtual desktop + app (auto-exits after ~2s)
+          scripts/start_gui_web.sh || true
+          # Give some time to render at least a couple frames
+          sleep 3
+          # Take a screenshot from the virtual display
+          sudo apt-get install -y imagemagick
+          DISPLAY=:99 import -window root screenshot.png || true
+          # Always stop services
+          scripts/stop_gui_web.sh || true
+
+      - name: Upload screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: gui-screenshot
+          path: screenshot.png

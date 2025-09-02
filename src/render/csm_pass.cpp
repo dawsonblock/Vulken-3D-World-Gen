@@ -63,7 +63,7 @@ bool CSMShadowPass::createDepthArray(VkPhysicalDevice phys){
         return false;
 
     // Array view for sampling in lighting pass
-    VkImageViewCreateInfo vci{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+    VkImageViewCreateInfo vci{}; vci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     vci.image = depthImage;
     vci.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
     vci.format = depthFormat;
@@ -75,7 +75,7 @@ bool CSMShadowPass::createDepthArray(VkPhysicalDevice phys){
     // Per-layer views for rendering
     layerViews.resize(cascades);
     for(uint32_t i=0;i<cascades;i++){
-        VkImageViewCreateInfo lv = vci;
+    VkImageViewCreateInfo lv = vci;
         lv.viewType = VK_IMAGE_VIEW_TYPE_2D;
         lv.subresourceRange.baseArrayLayer = i;
         lv.subresourceRange.layerCount = 1;
@@ -117,16 +117,16 @@ bool CSMShadowPass::createUBO(){
     if(vkCreateDescriptorSetLayout(device, &lci, nullptr, &uboSetLayout) != VK_SUCCESS) return false;
 
     VkDescriptorPoolSize ps{}; ps.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; ps.descriptorCount = 1;
-    VkDescriptorPoolCreateInfo pci{VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
+    VkDescriptorPoolCreateInfo pci{}; pci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     pci.maxSets = 1; pci.poolSizeCount = 1; pci.pPoolSizes = &ps;
     if(vkCreateDescriptorPool(device, &pci, nullptr, &descPool) != VK_SUCCESS) return false;
 
-    VkDescriptorSetAllocateInfo ai{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+    VkDescriptorSetAllocateInfo ai{}; ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     ai.descriptorPool = descPool; ai.descriptorSetCount = 1; ai.pSetLayouts = &uboSetLayout;
     if(vkAllocateDescriptorSets(device, &ai, &uboSet) != VK_SUCCESS) return false;
 
     VkDescriptorBufferInfo dbi{ubo, 0, sizeof(CSMGpuUBO)};
-    VkWriteDescriptorSet w{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+    VkWriteDescriptorSet w{}; w.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     w.dstSet = uboSet; w.dstBinding = 3; w.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     w.descriptorCount = 1; w.pBufferInfo = &dbi;
     vkUpdateDescriptorSets(device, 1, &w, 0, nullptr);

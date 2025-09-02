@@ -44,9 +44,10 @@ if ! pgrep -f "x11vnc .* -display ${XVFB}" >/dev/null 2>&1; then
 fi
 
 # Start noVNC (websockify) on ${PORT}
-NOVNC_WEB=/usr/share/novnc
+NOVNC_WEB=${NOVNC_WEB:-/usr/share/novnc}
 if [ ! -d "$NOVNC_WEB" ]; then
   echo "[start_gui_web] noVNC web directory not found at $NOVNC_WEB" >&2
+  echo "[start_gui_web] Install with: sudo apt-get install -y novnc websockify" >&2
   exit 1
 fi
 
@@ -59,4 +60,4 @@ fi
 # Run the GUI application on the virtual display
 export DISPLAY=${XVFB}
 echo "[start_gui_web] Launching GUI app on DISPLAY=${DISPLAY}"
-GUI_ARGS="$GUI_ARGS" GUI_EXEC="${GUI_EXEC:-}" "$(cd "$(dirname "$0")" && pwd)/run_gui.sh"
+"$(cd "$(dirname "$0")" && pwd)/run_gui.sh"

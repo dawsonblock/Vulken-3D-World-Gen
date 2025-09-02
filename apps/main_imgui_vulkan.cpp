@@ -7,6 +7,7 @@
 #include <chrono>
 #include <vector>
 #include <thread>
+#include <cmath>
 
 // VoxelVK systems
 #include "../src/core/fullscreen_toggle.hpp"
@@ -369,7 +370,7 @@ static bool createRenderPassAndFramebuffers(){
     dep.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     dep.srcAccessMask = 0; dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-    VkRenderPassCreateInfo rpci{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
+    VkRenderPassCreateInfo rpci{}; rpci.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     rpci.attachmentCount = 1; rpci.pAttachments = &color;
     rpci.subpassCount = 1; rpci.pSubpasses = &sub;
     rpci.dependencyCount = 1; rpci.pDependencies = &dep;
@@ -380,7 +381,7 @@ static bool createRenderPassAndFramebuffers(){
     g_Framebuffers.resize(g_SwapchainImageViews.size());
     for(size_t i=0;i<g_SwapchainImageViews.size();++i){
         VkImageView attachments[] = { g_SwapchainImageViews[i] };
-        VkFramebufferCreateInfo fbci{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+    VkFramebufferCreateInfo fbci{}; fbci.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         fbci.renderPass = g_RenderPass;
         fbci.attachmentCount = 1; fbci.pAttachments = attachments;
         fbci.width = g_SwapchainExtent.width; fbci.height = g_SwapchainExtent.height; fbci.layers = 1;
@@ -390,12 +391,12 @@ static bool createRenderPassAndFramebuffers(){
 }
 
 static bool createCommandPoolAndBuffers(){
-    VkCommandPoolCreateInfo cpci{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+    VkCommandPoolCreateInfo cpci{}; cpci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     cpci.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     cpci.queueFamilyIndex = g_GraphicsQueueFamily;
     if (vkCreateCommandPool(g_Device, &cpci, nullptr, &g_CommandPool) != VK_SUCCESS){ g_logger.Error("Failed to create command pool"); return false; }
     g_CommandBuffers.resize(g_Framebuffers.size());
-    VkCommandBufferAllocateInfo cbai{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+    VkCommandBufferAllocateInfo cbai{}; cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     cbai.commandPool = g_CommandPool; cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; cbai.commandBufferCount = (uint32_t)g_CommandBuffers.size();
     if (vkAllocateCommandBuffers(g_Device, &cbai, g_CommandBuffers.data()) != VK_SUCCESS){ g_logger.Error("Failed to alloc command buffers"); return false; }
     return true;
@@ -405,7 +406,7 @@ static bool createFramebuffersOnly(){
     g_Framebuffers.resize(g_SwapchainImageViews.size());
     for(size_t i=0;i<g_SwapchainImageViews.size();++i){
         VkImageView attachments[] = { g_SwapchainImageViews[i] };
-        VkFramebufferCreateInfo fbci{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+    VkFramebufferCreateInfo fbci{}; fbci.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         fbci.renderPass = g_RenderPass;
         fbci.attachmentCount = 1; fbci.pAttachments = attachments;
         fbci.width = g_SwapchainExtent.width; fbci.height = g_SwapchainExtent.height; fbci.layers = 1;
@@ -415,10 +416,10 @@ static bool createFramebuffersOnly(){
 }
 
 static void recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex){
-    VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    VkCommandBufferBeginInfo bi{}; bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     vkBeginCommandBuffer(cmd, &bi);
     VkClearValue clear{}; clear.color = { { 0.10f, 0.12f, 0.16f, 1.0f } };
-    VkRenderPassBeginInfo rpbi{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+    VkRenderPassBeginInfo rpbi{}; rpbi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rpbi.renderPass = g_RenderPass; rpbi.framebuffer = g_Framebuffers[imageIndex];
     rpbi.renderArea.offset = {0,0}; rpbi.renderArea.extent = g_SwapchainExtent;
     rpbi.clearValueCount = 1; rpbi.pClearValues = &clear;
@@ -435,8 +436,8 @@ static void recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex){
 }
 
 static bool createSyncObjects(){
-    VkSemaphoreCreateInfo sci{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-    VkFenceCreateInfo fci{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO }; fci.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    VkSemaphoreCreateInfo sci{}; sci.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    VkFenceCreateInfo fci{}; fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO; fci.flags = VK_FENCE_CREATE_SIGNALED_BIT;
     if (vkCreateSemaphore(g_Device, &sci, nullptr, &g_ImageAvailableSemaphore) != VK_SUCCESS) return false;
     if (vkCreateSemaphore(g_Device, &sci, nullptr, &g_RenderFinishedSemaphore) != VK_SUCCESS) return false;
     g_InFlightFences.resize(2);
@@ -459,14 +460,51 @@ static bool recreateSwapchain(GLFWwindow* window){
         }
         g_CommandBuffers.clear();
         g_CommandBuffers.resize(g_Framebuffers.size());
-        VkCommandBufferAllocateInfo cbai{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+        VkCommandBufferAllocateInfo cbai{}; cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         cbai.commandPool = g_CommandPool; cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; cbai.commandBufferCount = (uint32_t)g_CommandBuffers.size();
         if (vkAllocateCommandBuffers(g_Device, &cbai, g_CommandBuffers.data()) != VK_SUCCESS){ g_logger.Error("Failed to alloc command buffers (recreate)"); return false; }
     }
     return true;
 }
 
-int main() {
+// Simple fly camera state (for UI + future 3D usage)
+struct FlyCamera {
+    float x{0}, y{1.6f}, z{5};
+    float yaw{0}, pitch{0};
+    float moveSpeed{5.0f};
+    float lookSpeed{0.15f};
+};
+
+static void updateCameraInput(FlyCamera& cam, GLFWwindow* window, float dt) {
+    // WASD + QE, hold right mouse to look around
+    double mx, my; static double pmx=0, pmy=0; static bool first = true;
+    int rmb = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+    if (rmb == GLFW_PRESS) {
+        glfwGetCursorPos(window, &mx, &my);
+        if (first) { pmx = mx; pmy = my; first = false; }
+        double dx = mx - pmx, dy = my - pmy; pmx = mx; pmy = my;
+        cam.yaw   -= float(dx) * cam.lookSpeed * 0.01f;
+        cam.pitch -= float(dy) * cam.lookSpeed * 0.01f;
+        if (cam.pitch > 1.5f) cam.pitch = 1.5f; if (cam.pitch < -1.5f) cam.pitch = -1.5f;
+    } else {
+        first = true;
+    }
+    auto forward = [&](){ return std::array<float,3>{ std::cos(cam.yaw)*std::cos(cam.pitch), std::sin(cam.pitch), std::sin(cam.yaw)*std::cos(cam.pitch) }; };
+    auto rightv  = [&](){ return std::array<float,3>{ std::sin(cam.yaw-3.1415926f/2.0f), 0.0f, std::cos(cam.yaw-3.1415926f/2.0f) }; };
+    float s = cam.moveSpeed * dt;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) { auto f=forward(); cam.x += f[0]*s; cam.y += f[1]*s; cam.z += f[2]*s; }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) { auto f=forward(); cam.x -= f[0]*s; cam.y -= f[1]*s; cam.z -= f[2]*s; }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) { auto r=rightv();  cam.x -= r[0]*s;                 cam.z -= r[2]*s; }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { auto r=rightv();  cam.x += r[0]*s;                 cam.z += r[2]*s; }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) { cam.y -= s; }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) { cam.y += s; }
+}
+
+static bool hasArg(int argc, char** argv, const char* flag) {
+    for (int i=0;i<argc;++i) if (std::string(argv[i]) == flag) return true; return false;
+}
+
+int main(int argc, char** argv) {
     g_logger.Info("=== VoxelVK Production ImGui Demo ===");
     
     glfwSetErrorCallback(error_callback);
@@ -568,18 +606,18 @@ int main() {
 
     // Upload ImGui fonts
     {
-        VkCommandBufferAllocateInfo cbai{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+    VkCommandBufferAllocateInfo cbai{}; cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         cbai.commandPool = g_CommandPool;
         cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         cbai.commandBufferCount = 1;
         VkCommandBuffer cmd;
         vkAllocateCommandBuffers(g_Device, &cbai, &cmd);
-        VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    VkCommandBufferBeginInfo bi{}; bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         vkBeginCommandBuffer(cmd, &bi);
         ImGui_ImplVulkan_CreateFontsTexture(cmd);
         vkEndCommandBuffer(cmd);
-        VkSubmitInfo si{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    VkSubmitInfo si{}; si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         si.commandBufferCount = 1; si.pCommandBuffers = &cmd;
         vkQueueSubmit(g_GraphicsQueue, 1, &si, VK_NULL_HANDLE);
         vkQueueWaitIdle(g_GraphicsQueue);
@@ -595,13 +633,22 @@ int main() {
     double fps = 0.0;
     int frameCount = 0;
     double fpsAccum = 0.0;
+
+    // Smoke auto-exit if requested
+    double exitAfterSec = 0.0;
+    if (hasArg(argc, argv, "--smoke")) exitAfterSec = 2.0;
+    if (const char* envExit = std::getenv("VOXELVK_EXIT_AFTER_SEC")) {
+        try { exitAfterSec = std::max(exitAfterSec, std::stod(envExit)); } catch(...) {}
+    }
+
+    FlyCamera cam; // track camera state
     
     g_logger.Info("Entering main loop...");
     
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         
-        // Update timing
+    // Update timing
         double currentTime = glfwGetTime();
         double deltaTime = currentTime - lastTime;
         lastTime = currentTime;
@@ -621,7 +668,7 @@ int main() {
     // Update weather system
         weatherSystem.tick(deltaTime);
         
-        // Hot reload palette and propagate RAG settings (only on change)
+    // Hot reload palette and propagate RAG settings (only on change)
         paletteRuntime.tick_hot_reload();
         bool cur_enabled = paletteRuntime.cfg.ai_generation.enable_rag;
         int  cur_top_k   = paletteRuntime.cfg.ai_generation.rag_top_k;
@@ -630,6 +677,9 @@ int main() {
             last_rag_top_k = cur_top_k;
             voxelvk::ai::UpdateRagConfig(last_rag_enabled, last_rag_top_k);
         }
+
+    // Camera input
+    updateCameraInput(cam, window, static_cast<float>(deltaTime));
         
         // Handle fullscreen toggle
         if (glfwGetKey(window, GLFW_KEY_F11) == GLFW_PRESS) {
@@ -671,9 +721,13 @@ int main() {
         ImGui::NewFrame();
 
         // Simple demo UI
-        ImGui::Begin("VoxelVK UI");
+    ImGui::Begin("VoxelVK UI");
         ImGui::Text("FPS: %.1f", fps);
         ImGui::Text("Window: %dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
+    ImGui::Separator();
+    ImGui::Text("Camera pos: (%.2f, %.2f, %.2f)", cam.x, cam.y, cam.z);
+    ImGui::Text("Yaw/Pitch: (%.2f, %.2f)", cam.yaw, cam.pitch);
+    ImGui::SliderFloat("Move speed", &cam.moveSpeed, 0.5f, 20.0f);
         static bool rag_enabled = last_rag_enabled;
         static int rag_top_k = last_rag_top_k;
         if (ImGui::Checkbox("Enable RAG", &rag_enabled)) {
@@ -716,13 +770,13 @@ int main() {
     recordCommandBuffer(g_CommandBuffers[imageIndex], imageIndex);
 
         VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        VkSubmitInfo si{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    VkSubmitInfo si{}; si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         si.waitSemaphoreCount = 1; si.pWaitSemaphores = &g_ImageAvailableSemaphore; si.pWaitDstStageMask = &waitStage;
         si.commandBufferCount = 1; si.pCommandBuffers = &g_CommandBuffers[imageIndex];
         si.signalSemaphoreCount = 1; si.pSignalSemaphores = &g_RenderFinishedSemaphore;
         if (vkQueueSubmit(g_GraphicsQueue, 1, &si, g_InFlightFences[0]) != VK_SUCCESS){ g_logger.Error("Queue submit failed"); break; }
 
-        VkPresentInfoKHR pi{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
+    VkPresentInfoKHR pi{}; pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         pi.waitSemaphoreCount = 1; pi.pWaitSemaphores = &g_RenderFinishedSemaphore;
         pi.swapchainCount = 1; pi.pSwapchains = &g_Swapchain; pi.pImageIndices = &imageIndex;
         VkResult pr = vkQueuePresentKHR(g_PresentQueue, &pi);
@@ -732,6 +786,10 @@ int main() {
         } else if (pr != VK_SUCCESS) {
             g_logger.Error("Failed to present swapchain image");
             break;
+        }
+        // Optional auto-exit for smoke testing
+        if (exitAfterSec > 0.0) {
+            static double accum = 0.0; accum += deltaTime; if (accum >= exitAfterSec) { g_logger.Info("Smoke time reached; exiting."); break; }
         }
     }
     

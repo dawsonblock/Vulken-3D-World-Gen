@@ -103,6 +103,21 @@ VoxelVK/
 - **`main_imgui_vulkan`**: Interactive demo with ImGui HUD
 - **`vulkan_fullscreen_demo`**: Full Vulkan rendering pipeline
 
+### Headless GUI via noVNC
+
+Run the GUI in a virtual desktop and view it in your browser:
+
+```bash
+# Start (opens noVNC at http://127.0.0.1:6080)
+PORT=6080 GUI_EXEC=main_imgui_vulkan scripts/start_gui_web.sh
+
+# Optional: auto-exit after ~2 seconds (CI smoke)
+GUI_ARGS=--smoke PORT=6080 GUI_EXEC=main_imgui_vulkan scripts/start_gui_web.sh
+
+# Stop services
+PORT=6080 scripts/stop_gui_web.sh
+```
+
 ### **AI & RL Demos**
 - **`rl_nav_demo`**: RL training with navigation task
 - **RAG Integration**: Knowledge-based content generation (via ImGui)
