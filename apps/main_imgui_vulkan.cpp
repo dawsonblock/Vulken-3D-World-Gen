@@ -722,13 +722,36 @@ int main(int argc, char** argv) {
     if (enableViewports) io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     #endif
 
-    // Ini path & UI scale from arg/env
-    if (const char* ini = getArgValue(argc, argv, "--imgui-ini")) { ImGui::GetIO().IniFilename = ini; }
-    if (const char* envIni = std::getenv("VOXELVK_IMGUI_INI")) { ImGui::GetIO().IniFilename = envIni; }
-    // UI scale from arg/env
+    // Ini path & UI scale from arg/env (CLI takes precedence over env)
+    if (const char* ini = getArgValue(argc, argv, "--imgui-ini")) {
+        ImGui::GetIO().IniFilename = ini;
+    } else if (const char* envIni = std::getenv("VOXELVK_IMGUI_INI")) {
+        ImGui::GetIO().IniFilename = envIni;
+    }
+    // UI scale
     float uiScale = 1.0f;
-    if (const char* s = getArgValue(argc, argv, "--ui-scale")) { try { uiScale = std::max(0.5f, std::min(2.0f, std::stof(s))); } catch(...){} }
-    if (const char* e = std::getenv("VOXELVK_UI_SCALE")) { try { uiScale = std::max(0.5f, std::min(2.0f, std::stof(e))); } catch(...){} }
+    bool uiScaleParsed = false;
+    if (const char* s = getArgValue(argc, argv, "--ui-scale")) {
+        try {
+            uiScale = std::max(0.5f, std::min(2.0f, std::stof(s)));
+            uiScaleParsed = true;
+        } catch (const std::exception& ex) {
+            g_logger.Error(std::string("Failed to parse --ui-scale argument: ") + ex.what());
+        } catch (...) {
+            g_logger.Error("Failed to parse --ui-scale argument: unknown error");
+        }
+    }
+    if (!uiScaleParsed) {
+        if (const char* e = std::getenv("VOXELVK_UI_SCALE")) {
+            try {
+                uiScale = std::max(0.5f, std::min(2.0f, std::stof(e)));
+            } catch (const std::exception& ex) {
+                g_logger.Error(std::string("Failed to parse VOXELVK_UI_SCALE environment variable: ") + ex.what());
+            } catch (...) {
+                g_logger.Error("Failed to parse VOXELVK_UI_SCALE environment variable: unknown error");
+            }
+        }
+    }
     io.FontGlobalScale = uiScale;
 
     // Theme switch (runtime)
@@ -893,9 +916,10 @@ int main(int argc, char** argv) {
     // Camera input
     updateCameraInput(cam, window, static_cast<float>(deltaTime));
         
-    // Handle fullscreen toggle with edge detection
+    // Handle fullscreen toggle with edge detection (shared state)
+    static bool g_isFullscreen = false;
     static bool f11Prev = false; bool f11Now = (glfwGetKey(window, GLFW_KEY_F11) == GLFW_PRESS);
-    if (f11Now && !f11Prev) { static bool isFullscreen=false; isFullscreen = !isFullscreen; voxelvk::RequestFullscreen(isFullscreen); }
+    if (f11Now && !f11Prev) { g_isFullscreen = !g_isFullscreen; voxelvk::RequestFullscreen(g_isFullscreen); }
     f11Prev = f11Now;
         
         // Config hot-reload on F5
@@ -947,7 +971,7 @@ int main(int argc, char** argv) {
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("Actions")) {
-                    if (ImGui::MenuItem("Toggle Fullscreen (F11)")) { static bool isFullscreen=false; isFullscreen=!isFullscreen; voxelvk::RequestFullscreen(isFullscreen);}            
+                    if (ImGui::MenuItem("Toggle Fullscreen (F11)")) { g_isFullscreen = !g_isFullscreen; voxelvk::RequestFullscreen(g_isFullscreen);}            
                     ImGui::EndMenu();
                 }
                 ImGui::EndMainMenuBar();
@@ -958,7 +982,7 @@ int main(int argc, char** argv) {
             if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_K, false)) paletteOpen = true;
             struct Cmd { const char* name; std::function<void()> fn; };
             std::vector<Cmd> cmds = {
-                {"Toggle Fullscreen", [&](){ static bool isFullscreen=false; isFullscreen=!isFullscreen; voxelvk::RequestFullscreen(isFullscreen); }},
+                {"Toggle Fullscreen", [&](){ g_isFullscreen = !g_isFullscreen; voxelvk::RequestFullscreen(g_isFullscreen); }},
                 {"Save Screenshot", [&](){
 #if defined(__linux__)
                     SaveWindowScreenshot(window, "screenshot.png");
@@ -1041,8 +1065,18 @@ int main(int argc, char** argv) {
                 auto& pm = voxelvk::PerformanceMonitor::instance();
                 const auto& timings = pm.getGPUTimer().getAllTimings();
                 if (!timings.empty()) {
-                    ImGui::SameLine(); ImGui::TextDisabled("|"); ImGui::SameLine();
-                    int n=0; for (const auto& kv : timings) { if (n++>0) { ImGui::SameLine(); ImGui::TextDisabled("|"); ImGui::SameLine(); } ImGui::Text("%s: %.2f ms", kv.first.c_str(), kv.second); }
+                    ImGui::SameLine();
+                    ImGui::TextDisabled("|");
+                    ImGui::SameLine();
+                    int n = 0;
+                    for (const auto& kv : timings) {
+                        if (n++ > 0) {
+                            ImGui::SameLine();
+                            ImGui::TextDisabled("|");
+                            ImGui::SameLine();
+                        }
+                        ImGui::Text("%s: %.2f ms", kv.first.c_str(), kv.second);
+                    }
                 }
             }
             ImGui::End();
