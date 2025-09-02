@@ -10,7 +10,9 @@
     "imgui",
     "vulkan-memory-allocator",
     "nlohmann-json",
-    "curl"
+    "curl",
+    "hiredis",
+    "redis-plus-plus"
   ],
   "features": {
     "rl": {

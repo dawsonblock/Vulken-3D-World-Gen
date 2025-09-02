@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential cmake ninja-build git python3 python3-pip pkg-config \
     libvulkan-dev vulkan-validationlayers-dev vulkan-tools \
-    glslang-tools shaderc \
+    glslang-tools \
     ca-certificates curl zip && \
     rm -rf /var/lib/apt/lists/*
 
