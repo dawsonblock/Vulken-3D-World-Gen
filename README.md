@@ -1,19 +1,7 @@
 # VoxelVK - Production Voxel Rendering Engine
 
-[![CI](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci-linux.yml)
-
-## CI
-
-- Linux build and tests run on GitHub Actions using CMake Presets and vcpkg cache.
-- Workflow file: `.github/workflows/ci-linux.yml`.
-- Local run mirrors CI:
-  - Configure: cmake --preset default
-  - Build: cmake --build --preset default -j
-  - Test: ctest --test-dir build --output-on-failure
-
-# VoxelVK - Production Voxel Rendering Engine
-
 [![CI](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml)
+[![GUI Smoke](https://github.com/dawsonblock/VoxelVK/actions/workflows/gui_smoke.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/gui_smoke.yml)
 
 **VoxelVK** is a production-grade voxel rendering engine built on Vulkan 1.3, featuring advanced weather simulation, AI integration, and 120 FPS performance optimization.
 
@@ -60,37 +48,41 @@
 - **C++20 compatible compiler**
 - **vcpkg** (optional but recommended)
 
-### Build
+### Build (with CMake Presets)
+
+This repo uses vcpkg manifest mode with a pinned builtin registry baseline in `vcpkg-configuration.json`. Presets already set the vcpkg toolchain and triplets.
+
+- Linux
+  - Configure: cmake --preset default
+  - Build: cmake --build --preset default -j
+  - Headless: cmake --preset headless && cmake --build --preset headless -j
+
+- Windows
+  - Configure: cmake --preset windows-default
+  - Build: cmake --build --preset windows-default --config Release -j
+
+Optional packages (Linux):
+
 ```bash
-# Linux
+sudo apt install -y cmake ninja-build build-essential libvulkan-dev vulkan-tools glslang-tools shaderc
+```
 
-### vcpkg setup (pinned)
+Run demos (Linux):
 
-This repo uses vcpkg manifest mode with a pinned builtin registry baseline in `vcpkg-configuration.json`. This ensures reproducible dependencies across machines and CI. To update dependencies:
+```bash
+./build/apps/smoke_headless
+./build/apps/weather_demo
+./build/apps/rl_nav_demo
+./build/apps/main_imgui_vulkan
+```
 
-1. Update the `vcpkg` submodule to a newer commit.
-2. Copy that commit SHA into `vcpkg-configuration.json` as the `baseline`.
-3. Reconfigure using a CMake preset (these already set the vcpkg toolchain, triplets, and verbose logs):
+Run demos (Windows):
 
-  - default: Ninja + RelWithDebInfo
-  - debug: Ninja + Debug
-  - release: Ninja + Release + LTO
-  - headless: Ninja + RelWithDebInfo (no graphics)
-
-Triplets are set to `x64-linux` by default. Adjust in `CMakePresets.json` if needed.
-sudo apt install -y cmake ninja-build build-essential \
-  libvulkan1 vulkan-tools libglfw3-dev libglm-dev libyaml-cpp-dev
-
-# Configure and build
-export VCPKG_ROOT=~/vcpkg  # if using vcpkg
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
-cmake --build build -j
-
-# Run demos
-./build/smoke_headless              # Basic functionality test
-./build/weather_demo                # Weather system showcase  
-./build/rl_nav_demo                 # RL training demonstration
-./build/main_imgui_vulkan           # Interactive demo with GUI
+```powershell
+build-windows\apps\smoke_headless.exe
+build-windows\apps\weather_demo.exe
+build-windows\apps\rl_nav_demo.exe
+build-windows\apps\main_imgui_vulkan.exe
 ```
 
 For detailed instructions, see [BUILD.md](BUILD.md) and [RUN.md](RUN.md).
@@ -189,8 +181,14 @@ python scripts/build_rag_index.py
 ## 🧪 Testing
 
 ```bash
-# Complete test suite
-ctest --test-dir build --output-on-failure
+# Complete test suite (Linux)
+ctest --preset default --output-on-failure
+
+# Headless tests (Linux)
+ctest --preset headless --output-on-failure
+
+# Windows
+ctest --preset windows-default -C Release --output-on-failure
 
 # System validation
 ./scripts/run_all_validations.sh
@@ -221,9 +219,14 @@ VoxelVK implements a layered architecture:
 VoxelVK uses modern development practices:
 - **vcpkg** for dependency management
 - **clang-format** for code style
+- **clang-tidy** with a minimal baseline
 - **Comprehensive testing** with CTest
 - **CI/CD** with GitHub Actions
 - **Performance gates** for regression prevention
+
+Formatting and static analysis configs live at the repo root:
+- `.clang-format` and `.clang-tidy`
+- `.editorconfig`
 
 ## 📄 License
 
