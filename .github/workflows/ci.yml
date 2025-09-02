@@ -179,17 +179,30 @@ jobs:
 
       - name: Configure (CMake)
         run: |
-          cmake -S . -B build -G "Ninja" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DVOXELVK_ENABLE_CUDA=OFF \
-            -DVOXELVK_ENABLE_TENSORRT=OFF \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}" \
-            ${{ matrix.preset == 'headless' && '-DVOXELVK_HEADLESS_ONLY=ON' || '' }}
+          if [ "${{ matrix.preset }}" = "headless" ]; then
+            cmake --preset headless \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DVOXELVK_ENABLE_CUDA=OFF \
+              -DVOXELVK_ENABLE_TENSORRT=OFF \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+              -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+          else
+            cmake --preset default \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DVOXELVK_ENABLE_CUDA=OFF \
+              -DVOXELVK_ENABLE_TENSORRT=OFF \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+              -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+          fi
         shell: bash
 
       - name: Build
-        run: cmake --build build --config Release --parallel
+        run: |
+          if [ "${{ matrix.preset }}" = "headless" ]; then
+            cmake --build build_headless --config Release --parallel;
+          else
+            cmake --build build --config Release --parallel;
+          fi
         shell: bash
 
       - name: Run smoke test (Linux headless)
@@ -200,8 +213,8 @@ jobs:
           mkdir -p "$(dirname "$VK_PIPELINE_CACHE_PATH")"
           if [ -x "./scripts/run_headless.sh" ]; then
             timeout 20s ./scripts/run_headless.sh || true
-          elif [ -x "./build/apps/smoke_headless" ]; then
-            timeout 10s ./build/apps/smoke_headless || true
+          elif [ -x "./build_headless/apps/smoke_headless" ]; then
+            timeout 10s ./build_headless/apps/smoke_headless || true
           else
             echo "No headless runner found."
           fi
