@@ -327,14 +327,25 @@ jobs:
         shell: bash
       - name: Configure (tests only)
         run: |
-          cmake -S . -B build-tests -G "Ninja" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DVOXELVK_HEADLESS_ONLY=ON \
-            -DENABLE_TESTS=ON
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cmake --preset windows-default -DVOXELVK_HEADLESS_ONLY=ON -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release;
+          else
+            cmake --preset headless -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release;
+          fi
       - name: Build tests
-        run: cmake --build build-tests --config Release --target voxelvk_tests --parallel
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cmake --build build-windows --config Release --parallel;
+          else
+            cmake --build build_headless --config Release --parallel;
+          fi
       - name: Run tests
-        run: ctest --test-dir build-tests -C Release --output-on-failure
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            ctest --test-dir build-windows -C Release --output-on-failure;
+          else
+            ctest --test-dir build_headless -C Release --output-on-failure;
+          fi
 
   perf_bench:
     name: Perf Bench (Linux headless)
