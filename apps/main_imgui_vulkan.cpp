@@ -19,6 +19,7 @@
 
 // VoxelVK systems
 #include "../src/core/fullscreen_toggle.hpp"
+#include "../src/core/performance_monitor.hpp"
 #include "../src/ai/ai_palette_config_io.hpp"
 #include "../src/ai/rag_runtime_bridge.hpp"
 #include "../src/core/logger.hpp"
@@ -459,7 +460,10 @@ static void recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex){
 #ifdef MAIN_HAS_IMGUI_VULKAN
     ImDrawData* draw_data = ImGui::GetDrawData();
     if (draw_data) {
+        auto& pm = voxelvk::PerformanceMonitor::instance();
+        uint32_t ts = pm.getGPUTimer().beginTimestamp(cmd, "ImGui");
         ImGui_ImplVulkan_RenderDrawData(draw_data, cmd);
+        pm.getGPUTimer().endTimestamp(cmd, ts);
     }
 #endif
     vkCmdEndRenderPass(cmd);
@@ -612,6 +616,12 @@ int main(int argc, char** argv) {
     if(!createRenderPassAndFramebuffers()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     if(!createCommandPoolAndBuffers()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     if(!createSyncObjects()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
+    // Initialize performance monitor and GPU timer (best-effort)
+    voxelvk::PerformanceMonitor::instance().initialize(voxelvk::PerformanceBudgetTracker::BudgetConfig::Balanced60());
+    {
+        uint32_t framesInFlight = g_SwapchainImages.empty() ? 2u : (uint32_t)g_SwapchainImages.size();
+        voxelvk::PerformanceMonitor::instance().enableGPUTimer(g_Device, g_PhysicalDevice, framesInFlight, 64);
+    }
     
     // Initialize weather system for demo
     WeatherSystem weatherSystem;
@@ -720,6 +730,10 @@ int main(int argc, char** argv) {
     }
 
     FlyCamera cam; // track camera state
+    bool autoScreenshotPending = false;
+    if (hasArg(argc, argv, "--autoscreenshot") || std::getenv("VOXELVK_AUTOSCREENSHOT")) {
+        autoScreenshotPending = true;
+    }
     
     g_logger.Info("Entering main loop...");
     
@@ -759,19 +773,10 @@ int main(int argc, char** argv) {
     // Camera input
     updateCameraInput(cam, window, static_cast<float>(deltaTime));
         
-        // Handle fullscreen toggle
-        if (glfwGetKey(window, GLFW_KEY_F11) == GLFW_PRESS) {
-            static bool fullscreenPressed = false;
-            if (!fullscreenPressed) {
-                static bool isFullscreen = false;
-                isFullscreen = !isFullscreen;
-                voxelvk::RequestFullscreen(isFullscreen);
-                fullscreenPressed = true;
-            }
-        } else {
-            static bool fullscreenPressed = false;
-            fullscreenPressed = false;
-        }
+    // Handle fullscreen toggle with edge detection
+    static bool f11Prev = false; bool f11Now = (glfwGetKey(window, GLFW_KEY_F11) == GLFW_PRESS);
+    if (f11Now && !f11Prev) { static bool isFullscreen=false; isFullscreen = !isFullscreen; voxelvk::RequestFullscreen(isFullscreen); }
+    f11Prev = f11Now;
         
         // Config hot-reload on F5
         if (glfwGetKey(window, GLFW_KEY_F5) == GLFW_PRESS) {
@@ -792,7 +797,7 @@ int main(int argc, char** argv) {
             reloadPressed = false;
         }
         
-        // Start a new ImGui frame (if available)
+    // Start a new ImGui frame (if available)
 #ifdef MAIN_HAS_IMGUI_VULKAN
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -837,6 +842,22 @@ int main(int argc, char** argv) {
             isFullscreen = !isFullscreen;
             voxelvk::RequestFullscreen(isFullscreen);
         }
+        if (ImGui::CollapsingHeader("Perf HUD", ImGuiTreeNodeFlags_DefaultOpen)) {
+            auto& pm = voxelvk::PerformanceMonitor::instance();
+            auto& tracker = pm.getBudgetTracker();
+            ImGui::Text("Avg frame: %.2f ms", tracker.getAverageTime(voxelvk::PerformanceBudget::FRAME_TOTAL));
+            ImGui::Text("P95 frame: %.2f ms", tracker.getP95Time(voxelvk::PerformanceBudget::FRAME_TOTAL));
+            const auto& timings = pm.getGPUTimer().getAllTimings();
+            if (!timings.empty()) {
+                ImGui::Separator();
+                ImGui::Text("GPU timings:");
+                for (const auto& kv : timings) {
+                    ImGui::BulletText("%s: %.3f ms", kv.first.c_str(), kv.second);
+                }
+            } else {
+                ImGui::TextDisabled("GPU timings not available");
+            }
+        }
         ImGui::End();
         ImGui::Render();
 #elif defined(MAIN_HAS_IMGUI_MINIMAL)
@@ -849,7 +870,7 @@ int main(int argc, char** argv) {
     vkWaitForFences(g_Device, 1, &g_InFlightFences[0], VK_TRUE, 1000000000ULL);
         vkResetFences(g_Device, 1, &g_InFlightFences[0]);
 
-        uint32_t imageIndex = 0;
+    uint32_t imageIndex = 0;
         VkResult aiRes = vkAcquireNextImageKHR(g_Device, g_Swapchain, UINT64_MAX, g_ImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
         if (aiRes == VK_ERROR_OUT_OF_DATE_KHR || g_FramebufferResized) {
             g_FramebufferResized = false;
@@ -859,6 +880,9 @@ int main(int argc, char** argv) {
             g_logger.Error("Failed to acquire swapchain image");
             break;
         }
+
+    // Begin performance frame with swapchain image index
+    voxelvk::PerformanceMonitor::instance().beginFrame(imageIndex);
 
     // Re-record for this image (with optional ImGui)
     recordCommandBuffer(g_CommandBuffers[imageIndex], imageIndex);
@@ -881,6 +905,20 @@ int main(int argc, char** argv) {
             g_logger.Error("Failed to present swapchain image");
             break;
         }
+        // End performance frame and collect timings
+        voxelvk::PerformanceMonitor::instance().endFrame();
+
+        // Auto-screenshot after first frame if requested
+#if defined(__linux__)
+        if (autoScreenshotPending) {
+            if (SaveWindowScreenshot(window, "screenshot.png")) {
+                g_logger.Info("Auto-screenshot saved to screenshot.png");
+            } else {
+                g_logger.Warn("Auto-screenshot failed");
+            }
+            autoScreenshotPending = false;
+        }
+#endif
         // Optional auto-exit for smoke testing
         if (exitAfterSec > 0.0) {
             static double accum = 0.0; accum += deltaTime; if (accum >= exitAfterSec) { g_logger.Info("Smoke time reached; exiting."); break; }

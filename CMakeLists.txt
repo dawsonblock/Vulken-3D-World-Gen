@@ -175,9 +175,18 @@ endif()
 # === Enhanced Applications ===
 if(NOT VOXELVK_HEADLESS_ONLY)
   # Production ImGui application with Vulkan backend
-  add_executable(main_imgui_vulkan apps/main_imgui_vulkan.cpp ${WEATHER_SRC} src/core/logger.cpp ${AI_SRC})
+  add_executable(main_imgui_vulkan apps/main_imgui_vulkan.cpp ${WEATHER_SRC} src/core/logger.cpp src/core/performance_monitor.cpp ${AI_SRC})
   target_include_directories(main_imgui_vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src)
   target_link_libraries(main_imgui_vulkan PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
+  if(JSON_LIB)
+    target_link_libraries(main_imgui_vulkan PRIVATE ${JSON_LIB})
+  endif()
+  # Link X11 for Linux-specific screenshot helper if available
+  find_package(X11 QUIET)
+  if(X11_FOUND)
+    target_include_directories(main_imgui_vulkan PRIVATE ${X11_INCLUDE_DIR})
+    target_link_libraries(main_imgui_vulkan PRIVATE ${X11_LIBRARIES})
+  endif()
   add_dependencies(main_imgui_vulkan ShaderSPV)
   
   if(WEATHER_YAML_LIB)
