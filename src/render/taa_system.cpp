@@ -26,22 +26,22 @@ glm::mat4 CameraMotion::getReprojectionMatrix() const {
     return glm::inverse(currentVP) * prevVP;
 }
 
-void TAAResources::release() {
+void TAAResources::release(VkDevice device) {
     // Clean up all TAA resources
     if (historyColorViewA != VK_NULL_HANDLE) {
-        vkDestroyImageView(MemoryManager::instance().device_, historyColorViewA, nullptr);
+    vkDestroyImageView(device, historyColorViewA, nullptr);
         historyColorViewA = VK_NULL_HANDLE;
     }
     if (historyColorViewB != VK_NULL_HANDLE) {
-        vkDestroyImageView(MemoryManager::instance().device_, historyColorViewB, nullptr);
+    vkDestroyImageView(device, historyColorViewB, nullptr);
         historyColorViewB = VK_NULL_HANDLE;
     }
     if (motionVectorView != VK_NULL_HANDLE) {
-        vkDestroyImageView(MemoryManager::instance().device_, motionVectorView, nullptr);
+    vkDestroyImageView(device, motionVectorView, nullptr);
         motionVectorView = VK_NULL_HANDLE;
     }
     if (depthHistoryView != VK_NULL_HANDLE) {
-        vkDestroyImageView(MemoryManager::instance().device_, depthHistoryView, nullptr);
+    vkDestroyImageView(device, depthHistoryView, nullptr);
         depthHistoryView = VK_NULL_HANDLE;
     }
     
@@ -197,7 +197,7 @@ glm::vec2 TAASystem::getJitterOffset(uint32_t frameIndex) const {
 void TAASystem::executeMotionVectorPass(VkCommandBuffer cmd, VkImageView depth, VkImageView previousDepth) {
     if (!settings_.enabled) return;
     
-    NVTX_RANGE_PUSH("TAA_MotionVectors");
+    VXL_NVTX_RANGE("TAA_MotionVectors");
     VK_DEBUG_LABEL(cmd, "TAA_MotionVectors");
     
     // Bind motion vector generation pipeline
@@ -208,13 +208,13 @@ void TAASystem::executeMotionVectorPass(VkCommandBuffer cmd, VkImageView depth, 
     
     g_taaLogger.Debug("Motion vector pass executed");
     
-    NVTX_RANGE_POP();
+    // NVTX range automatically ends here
 }
 
 void TAASystem::executeTAAResolvePass(VkCommandBuffer cmd, VkImageView currentColor, VkImageView output) {
     if (!settings_.enabled) return;
     
-    NVTX_RANGE_PUSH("TAA_Resolve");
+    VXL_NVTX_RANGE("TAA_Resolve");
     VK_DEBUG_LABEL(cmd, "TAA_Resolve");
     
     // Bind TAA resolve pipeline
@@ -230,7 +230,7 @@ void TAASystem::executeTAAResolvePass(VkCommandBuffer cmd, VkImageView currentCo
     
     g_taaLogger.Debug("TAA resolve pass executed");
     
-    NVTX_RANGE_POP();
+    // NVTX range automatically ends here
 }
 
 void TAASystem::setWeatherTRPTextures(VkImageView clouds, VkImageView precipitation) {
@@ -247,7 +247,7 @@ void TAASystem::executeWeatherTAABlend(VkCommandBuffer cmd, VkImageView taaResul
         return;
     }
     
-    NVTX_RANGE_PUSH("TAA_WeatherBlend");
+    VXL_NVTX_RANGE("TAA_WeatherBlend");
     VK_DEBUG_LABEL(cmd, "TAA_WeatherBlend");
     
     // Bind weather blend pipeline
@@ -258,7 +258,7 @@ void TAASystem::executeWeatherTAABlend(VkCommandBuffer cmd, VkImageView taaResul
     
     g_taaLogger.Debug("Weather-TAA blend pass executed");
     
-    NVTX_RANGE_POP();
+    // NVTX range automatically ends here
 }
 
 bool TAASystem::createResources(uint32_t width, uint32_t height) {
@@ -279,19 +279,27 @@ bool TAASystem::createResources(uint32_t width, uint32_t height) {
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     
     // History buffer A
-    resources_.historyAllocationA = MemoryManager::instance().createImage(
-        imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::RENDER_TARGETS, "TAA_HistoryA");
-    
-    if (resources_.historyAllocationA.allocation == VK_NULL_HANDLE) {
+    {
+        ImageResult res = MemoryManager::instance().createImage(
+            imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::RENDER_TARGETS, "TAA_HistoryA");
+        resources_.historyColorA = res.image;
+        resources_.historyAllocationA = res.allocation;
+    }
+
+    if (resources_.historyColorA == VK_NULL_HANDLE || resources_.historyAllocationA.allocation == VK_NULL_HANDLE) {
         g_taaLogger.Error("Failed to create TAA history buffer A");
         return false;
     }
     
     // History buffer B
-    resources_.historyAllocationB = MemoryManager::instance().createImage(
-        imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::RENDER_TARGETS, "TAA_HistoryB");
-    
-    if (resources_.historyAllocationB.allocation == VK_NULL_HANDLE) {
+    {
+        ImageResult res = MemoryManager::instance().createImage(
+            imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::RENDER_TARGETS, "TAA_HistoryB");
+        resources_.historyColorB = res.image;
+        resources_.historyAllocationB = res.allocation;
+    }
+
+    if (resources_.historyColorB == VK_NULL_HANDLE || resources_.historyAllocationB.allocation == VK_NULL_HANDLE) {
         g_taaLogger.Error("Failed to create TAA history buffer B");
         return false;
     }
@@ -300,10 +308,14 @@ bool TAASystem::createResources(uint32_t width, uint32_t height) {
     imageInfo.format = resources_.motionFormat;
     imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     
-    resources_.motionAllocation = MemoryManager::instance().createImage(
-        imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::RENDER_TARGETS, "TAA_MotionVectors");
-    
-    if (resources_.motionAllocation.allocation == VK_NULL_HANDLE) {
+    {
+        ImageResult res = MemoryManager::instance().createImage(
+            imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::RENDER_TARGETS, "TAA_MotionVectors");
+        resources_.motionVectors = res.image;
+        resources_.motionAllocation = res.allocation;
+    }
+
+    if (resources_.motionVectors == VK_NULL_HANDLE || resources_.motionAllocation.allocation == VK_NULL_HANDLE) {
         g_taaLogger.Error("Failed to create motion vector buffer");
         return false;
     }
@@ -365,7 +377,7 @@ bool TAASystem::createPipelines() {
 }
 
 void TAASystem::destroyResources() {
-    resources_.release();
+    resources_.release(device_);
 }
 
 void TAASystem::generateJitterSequence() {

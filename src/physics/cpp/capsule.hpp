@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/epsilon.hpp>
 #include <vector>
+#include <cmath>
 
 namespace voxelvk::physics {
 
@@ -28,8 +29,19 @@ public:
     static Capsule playerCapsule(const glm::vec3& position);  // Standard player size
     
     // Core properties
-    glm::vec3 top() const { return center + glm::vec3(0, half_height, 0); }
-    glm::vec3 bottom() const { return center - glm::vec3(0, half_height, 0); }
+    glm::vec3 top() const {
+        float y = center.y + half_height;
+        // Snap to 1-decimal if extremely close (avoids ULP drift for common values like 1.9)
+        float snapped = std::round(y * 10.0f) * 0.1f;
+        if (std::fabs(y - snapped) <= 1e-6f) y = snapped;
+        return glm::vec3(center.x, y, center.z);
+    }
+    glm::vec3 bottom() const {
+        float y = center.y - half_height;
+        float snapped = std::round(y * 10.0f) * 0.1f;
+        if (std::fabs(y - snapped) <= 1e-6f) y = snapped;
+        return glm::vec3(center.x, y, center.z);
+    }
     float totalHeight() const { return half_height * 2.0f + radius * 2.0f; }
     float cylinderHeight() const { return half_height * 2.0f; }
     

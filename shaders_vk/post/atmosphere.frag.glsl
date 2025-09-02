@@ -1,5 +1,5 @@
 
-#version 460
+#version 450
 layout(location=0) out vec4 outColor;
 layout(location=0) in vec2 vUV;
 layout(push_constant) uniform PC { vec3 uSunDir; float uTime; vec3 uCamPos; } pc;

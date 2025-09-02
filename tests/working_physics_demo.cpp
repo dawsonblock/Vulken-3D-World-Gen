@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <glm/glm.hpp>
+#include <chrono>
 
 // Include core physics components that we know work
 #include "../src/physics/cpp/aabb.hpp"

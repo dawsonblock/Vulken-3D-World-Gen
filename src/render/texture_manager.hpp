@@ -7,6 +7,8 @@
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
 #include "../vk/memory_manager.hpp"
+#include <unordered_map>
+#include <mutex>
 
 namespace voxelvk {
 
@@ -136,48 +138,18 @@ public:
     std::shared_ptr<TextureAsset> loadTexture(const std::string& name);
     std::shared_ptr<TextureAsset> loadTextureSync(const std::string& name);
     
-    // Texture creation
-    std::shared_ptr<TextureAsset> createTexture2D(
-        uint32_t width, uint32_t height, 
-        VkFormat format,
-        VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-        const char* debugName = "Texture2D"
-    );
+    // Direct creation utilities
+    std::shared_ptr<TextureAsset> createTexture2D(uint32_t width, uint32_t height,
+                                                  VkFormat format,
+                                                  VkImageUsageFlags usage,
+                                                  const char* debugName);
+    std::shared_ptr<TextureAsset> createCloudTexture(uint32_t resolution);
+    std::shared_ptr<TextureAsset> createNoiseTexture(uint32_t resolution);
     
-    std::shared_ptr<TextureAsset> createRenderTarget(
-        uint32_t width, uint32_t height,
-        VkFormat format,
-        VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-        const char* debugName = "RenderTarget"
-    );
-    
-    // Weather-specific texture creation
-    std::shared_ptr<TextureAsset> createCloudTexture(uint32_t resolution = 512);
-    std::shared_ptr<TextureAsset> createNoiseTexture(uint32_t resolution = 256);
-    std::shared_ptr<TextureAsset> createPrecipitationTexture(uint32_t particleCount = 10000);
-    
-    // Texture streaming and LOD
-    void setStreamingDistance(float distance) { streamingDistance_ = distance; }
-    void updateStreaming(const glm::vec3& viewerPosition);
-    
-    // Memory management
+    // Cache and stats
     size_t getTextureMemoryUsage() const;
-    bool evictUnusedTextures(); // Returns bytes freed
-    void setMaxTextureMemory(size_t maxBytes) { maxTextureMemory_ = maxBytes; }
+    bool evictUnusedTextures();
     
-    // Texture atlas support
-    struct AtlasEntry {
-        std::shared_ptr<TextureAsset> texture;
-        float uMin, vMin, uMax, vMax;
-    };
-    
-    bool createTextureAtlas(const std::vector<std::string>& textureNames, 
-                           const std::string& atlasName,
-                           uint32_t atlasSize = 2048);
-    
-    AtlasEntry getAtlasEntry(const std::string& textureName) const;
-    
-    // Statistics
     struct Stats {
         size_t totalTextures = 0;
         size_t loadedTextures = 0;
@@ -185,11 +157,15 @@ public:
         size_t memoryUsage = 0;
         size_t memoryBudget = 0;
         double cacheHitRatio = 0.0;
-        size_t streamingLoads = 0;
     };
-    
     Stats getStats() const;
     void logStats() const;
+    
+private:
+    // Internal methods
+    void loadTextureAsync(const std::string& name, std::shared_ptr<TextureAsset> texture);
+    std::shared_ptr<TextureAsset> createTextureFromKTX2(const KTX2Loader::LoadResult& loadResult, const std::string& debugName);
+    VkSampler createTextureSampler(bool enableMipmaps, bool enableAnisotropy);
     
 private:
     VkDevice device_;
@@ -201,6 +177,7 @@ private:
     
     // Texture cache
     std::unordered_map<std::string, std::shared_ptr<TextureAsset>> textureCache_;
+    struct AtlasEntry { uint32_t dummy = 0; }; // placeholder to satisfy references
     std::unordered_map<std::string, AtlasEntry> atlasEntries_;
     mutable std::mutex textureMutex_;
     
@@ -209,10 +186,6 @@ private:
     
     // Statistics
     mutable Stats stats_{};
-    
-    // Internal methods
-    std::shared_ptr<TextureAsset> createTextureFromKTX2(const KTX2Loader::LoadResult& loadResult, const std::string& debugName);
-    VkSampler createTextureSampler(bool enableMipmaps, bool enableAnisotropy);
     
     std::string getTexturePath(const std::string& name) const;
     bool textureExists(const std::string& name) const;

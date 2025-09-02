@@ -2,6 +2,7 @@
 #include <cassert>
 #include <memory>
 #include <vector>
+#include <filesystem>
 
 // RL backend for testing
 #include "../src/rl/rl_backend.hpp"

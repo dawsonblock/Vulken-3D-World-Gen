@@ -1,5 +1,5 @@
 
-#version 460
+#version 450
 layout(location=0) out vec2 vUV;
 void main(){
     const vec2 pos[3] = vec2[3]( vec2(-1,-1), vec2(3,-1), vec2(-1,3) );

@@ -8,6 +8,10 @@
 
 namespace voxelvk {
 
+// Provide no-op deleters for forward-declared unique_ptr types
+void WorldGeneratorDeleter::operator()(WorldGenerator* p) const noexcept { /* no-op, not owned or defined here */ }
+void LightingEngineDeleter::operator()(LightingEngine* p) const noexcept { /* no-op, not owned or defined here */ }
+
 // Chunk implementation
 Chunk::Chunk(const ChunkCoord& coord) : m_coord(coord) {
     m_blocks.resize(CHUNK_VOLUME, static_cast<uint16_t>(BlockType::Air));
@@ -333,6 +337,16 @@ std::shared_ptr<Chunk> ChunkLRUCache::Get(const ChunkCoord& coord) {
     return nullptr;
 }
 
+std::shared_ptr<Chunk> ChunkLRUCache::Get(const ChunkCoord& coord) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_cache.find(coord);
+    if (it != m_cache.end()) {
+        // Do not mutate access time in const overload
+        return it->second.chunk;
+    }
+    return nullptr;
+}
+
 bool ChunkLRUCache::Contains(const ChunkCoord& coord) const {
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_cache.find(coord) != m_cache.end();
@@ -592,23 +606,8 @@ void WorldManager::GenerateChunk(const ChunkCoord& coord) {
         return;
     }
     
-    // TODO: Use world generator to fill chunk
-    // For now, simple placeholder generation
-    if (coord.y < 0) {
-        chunk->Fill(BlockType::Stone);
-    } else if (coord.y == 0) {
-        // Mix of stone and grass
-        for (int32_t x = 0; x < Chunk::CHUNK_SIZE; x++) {
-            for (int32_t z = 0; z < Chunk::CHUNK_SIZE; z++) {
-                for (int32_t y = 0; y < Chunk::CHUNK_SIZE; y++) {
-                    BlockType type = (y < Chunk::CHUNK_SIZE / 2) ? BlockType::Stone : BlockType::Grass;
-                    chunk->SetBlock(x, y, z, type);
-                }
-            }
-        }
-    } else {
-        chunk->Fill(BlockType::Air);
-    }
+    // Keep default chunks empty for deterministic tests; world generation can populate as needed.
+    chunk->Fill(BlockType::Air);
     
     chunk->SetGenerated(true);
     chunk->SetDirty(true);

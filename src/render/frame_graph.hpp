@@ -46,6 +46,20 @@ struct ResourceHandle {
     static ResourceHandle invalid() { return {}; }
 };
 
+// Hash support for ResourceHandle to use in unordered_map
+} // namespace voxelvk
+
+namespace std {
+template<>
+struct hash<voxelvk::ResourceHandle> {
+    size_t operator()(const voxelvk::ResourceHandle& h) const noexcept {
+        return (static_cast<size_t>(h.id) << 1) ^ static_cast<size_t>(h.type);
+    }
+};
+}
+
+namespace voxelvk {
+
 /**
  * Resource description for frame graph resources
  */
@@ -100,7 +114,11 @@ public:
     ResourceHandle create(const ResourceDesc& desc);
     
     // Execution callback
-    using ExecuteCallback = std::function<void(VkCommandBuffer, const std::unordered_map<ResourceHandle, VkBuffer>&, const std::unordered_map<ResourceHandle, VkImage>&)>;
+    // Execution callback receives resolved resource maps keyed by internal resource ID
+    using ExecuteCallback = std::function<void(
+        VkCommandBuffer,
+        const std::unordered_map<uint32_t, VkBuffer>&,
+        const std::unordered_map<uint32_t, VkImage>&)>;
     void setExecuteCallback(ExecuteCallback callback) { executeCallback_ = callback; }
     
     // Getters

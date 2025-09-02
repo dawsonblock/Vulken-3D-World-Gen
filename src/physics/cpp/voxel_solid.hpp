@@ -14,8 +14,6 @@ namespace collision_utils {
     class WorldInterface;
 }
 
-namespace voxelvk::physics {
-
 /**
  * Block type definitions and solidity checking
  * Direct port of Python voxel_solid.py functionality
@@ -138,7 +136,8 @@ public:
     bool isSolidFast(uint16_t block_type) const;
     
     // Batch checking with vectorized operations where possible
-    void batchIsSolid(const uint16_t* block_types, bool* results, size_t count) const;
+    // Writes 0/1 into results to avoid vector<bool>::data pitfalls
+    void batchIsSolid(const uint16_t* block_types, uint8_t* results, size_t count) const;
     
     // Update cache when block registry changes
     void invalidateCache();

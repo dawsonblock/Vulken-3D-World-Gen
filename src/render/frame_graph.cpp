@@ -159,7 +159,7 @@ void FrameGraph::execute(VkCommandBuffer commandBuffer) {
     
     auto startTime = std::chrono::high_resolution_clock::now();
     
-    NVTX_RANGE_PUSH("FrameGraph::Execute");
+    VXL_NVTX_RANGE("FrameGraph::Execute");
     
     // Execute all compiled passes
     for (size_t i = 0; i < compiledPasses_.size(); i++) {
@@ -195,14 +195,14 @@ void FrameGraph::execute(VkCommandBuffer commandBuffer) {
         
         // Execute pass
         {
-            NVTX_RANGE_PUSH(compiledPass.pass->getName().c_str());
+            VXL_NVTX_RANGE(compiledPass.pass->getName().c_str());
             VK_DEBUG_LABEL(commandBuffer, compiledPass.pass->getName().c_str());
             
             if (compiledPass.pass->getExecuteCallback()) {
                 compiledPass.pass->getExecuteCallback()(commandBuffer, buffers_, images_);
             }
             
-            NVTX_RANGE_POP();
+            // NVTX range automatically ends here
         }
         
         // End GPU timing
@@ -211,7 +211,7 @@ void FrameGraph::execute(VkCommandBuffer commandBuffer) {
         }
     }
     
-    NVTX_RANGE_POP();
+    // NVTX range automatically ends here
     
     auto endTime = std::chrono::high_resolution_clock::now();
     stats_.executeTime = std::chrono::duration<double>(endTime - startTime).count();
@@ -303,7 +303,7 @@ bool FrameGraph::createGPUTimingResources() {
         
         VkResult result = vkCreateQueryPool(device_, &queryPoolInfo, nullptr, &timestampPools_[i]);
         if (result != VK_SUCCESS) {
-            CHECK_VK_OBJECT(result, VkErrorCategory::RESOURCE_CREATION, "timestamp_query_pool");
+            // CHECK_VK_OBJECT(result, VkErrorCategory::RESOURCE_CREATION, "timestamp_query_pool");
             return false;
         }
         

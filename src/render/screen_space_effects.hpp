@@ -5,6 +5,9 @@
 #include <vector>
 #include <string>
 #include "../vk/memory_manager.hpp"
+#include <mutex>
+// Frame graph integration types
+#include "frame_graph.hpp"
 
 namespace voxelvk {
 

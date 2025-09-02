@@ -1,4 +1,5 @@
 
+#version 450
 #ifndef PCSS_GLSL
 #define PCSS_GLSL
 float pcss_shadow_factor(sampler2DShadow map, vec3 projCoord, float mapSize, float searchRadiusPx, float minFilterPx, float maxFilterPx){

@@ -259,13 +259,13 @@ bool FastBlockChecker::isSolidFast(uint16_t block_type) const {
     return solid_blocks_.find(block_type) != solid_blocks_.end();
 }
 
-void FastBlockChecker::batchIsSolid(const uint16_t* block_types, bool* results, size_t count) const {
+void FastBlockChecker::batchIsSolid(const uint16_t* block_types, uint8_t* results, size_t count) const {
     if (!cache_valid_) {
         const_cast<FastBlockChecker*>(this)->rebuildCache();
     }
     
     for (size_t i = 0; i < count; ++i) {
-        results[i] = (solid_blocks_.find(block_types[i]) != solid_blocks_.end());
+    results[i] = (solid_blocks_.find(block_types[i]) != solid_blocks_.end()) ? 1 : 0;
     }
 }
 

@@ -12,6 +12,50 @@ if(DEFINED ENV{VCPKG_ROOT})
   message(STATUS "Using vcpkg toolchain from: $ENV{VCPKG_ROOT}")
 endif()
 
+# === AI System Sources ===
+set(VOXELVK_ENABLE_AI ON CACHE BOOL "Enable AI system")
+
+if(VOXELVK_ENABLE_AI)
+  file(GLOB AI_SRC
+    src/ai/ai_palette_config_io.cpp
+    src/ai/ai_biome_palette.hpp
+    src/ai/ai_imgui_palette_panel.cpp
+  )
+endif()
+
+# === Weather System Sources (defined early for use by other components) ===
+set(VOXELVK_ENABLE_WEATHER ON CACHE BOOL "Enable weather system")
+
+if(VOXELVK_ENABLE_WEATHER)
+  file(GLOB WEATHER_SRC
+    src/env/weather/weather_system.cpp
+    src/env/weather/sky_model.cpp
+    src/env/weather/lightning.cpp
+    src/render/framegraph/frame_graph_min.cpp
+    src/render/post/temporal_accum.cpp
+    src/render/post/height_fog.cpp
+  )
+  
+  # Find yaml-cpp dependency
+  find_package(yaml-cpp QUIET)
+  if(NOT yaml-cpp_FOUND)
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+      pkg_check_modules(YAML_CPP QUIET yaml-cpp)
+    endif()
+  endif()
+  
+  if(yaml-cpp_FOUND OR YAML_CPP_FOUND)
+    set(WEATHER_YAML_LIB yaml-cpp)
+    if(YAML_CPP_FOUND)
+      set(WEATHER_YAML_LIB ${YAML_CPP_LIBRARIES})
+    endif()
+    message(STATUS "Found yaml-cpp for weather system")
+  else()
+    message(WARNING "yaml-cpp not found - weather system will use fallback config")
+  endif()
+endif()
+
 option(ENABLE_VALIDATION_LAYERS "Enable Vulkan validation layers" ON)
 option(ENABLE_VK_DEBUG_MARKERS  "Enable VK_EXT_debug_utils markers" ON)
 option(ENABLE_IMGUI_OVERLAY     "Enable ImGui debug HUD overlay" ON)
@@ -31,6 +75,12 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter)
   add_link_options(-Wl,--no-undefined)
+  
+  # Force use of system libstdc++ instead of conda's
+  if(EXISTS "/usr/lib/x86_64-linux-gnu/libstdc++.so.6")
+    add_link_options(-Wl,--rpath=/usr/lib/x86_64-linux-gnu)
+    add_link_options(-L/usr/lib/x86_64-linux-gnu)
+  endif()
 endif()
 
 # --- Build tagging injection ---
@@ -39,6 +89,32 @@ include(${CMAKE_SOURCE_DIR}/cmake/GenBuildInfo.cmake)
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
 find_package(Threads REQUIRED)
+find_package(nlohmann_json QUIET)
+if(nlohmann_json_FOUND)
+  set(JSON_LIB nlohmann_json::nlohmann_json)
+  message(STATUS "Found nlohmann_json for JSON support")
+else()
+  message(WARNING "nlohmann_json not found - JSON features will be disabled or may fail to compile")
+endif()
+
+# Find GLM (OpenGL Mathematics)
+find_package(glm QUIET)
+if(NOT glm_FOUND)
+  find_package(PkgConfig QUIET)
+  if(PkgConfig_FOUND)
+    pkg_check_modules(GLM QUIET glm)
+  endif()
+endif()
+
+if(glm_FOUND OR GLM_FOUND)
+  set(GLM_LIB glm::glm)
+  if(GLM_FOUND)
+    set(GLM_LIB ${GLM_LIBRARIES})
+  endif()
+  message(STATUS "Found GLM for mathematics")
+else()
+  message(WARNING "GLM not found - math functionality may not link")
+endif()
 
 # Only configure graphics stack when not headless-only
 if(NOT VOXELVK_HEADLESS_ONLY)
@@ -99,7 +175,7 @@ endif()
 # === Enhanced Applications ===
 if(NOT VOXELVK_HEADLESS_ONLY)
   # Production ImGui application with Vulkan backend
-  add_executable(main_imgui_vulkan apps/main_imgui_vulkan.cpp ${WEATHER_SRC} src/core/logger.cpp)
+  add_executable(main_imgui_vulkan apps/main_imgui_vulkan.cpp ${WEATHER_SRC} src/core/logger.cpp ${AI_SRC})
   target_include_directories(main_imgui_vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src)
   target_link_libraries(main_imgui_vulkan PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
   add_dependencies(main_imgui_vulkan ShaderSPV)
@@ -107,6 +183,10 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   if(WEATHER_YAML_LIB)
     target_link_libraries(main_imgui_vulkan PRIVATE ${WEATHER_YAML_LIB})
     target_compile_definitions(main_imgui_vulkan PRIVATE VOXELVK_ENABLE_WEATHER=1)
+  endif()
+  
+  if(GLM_LIB)
+    target_link_libraries(main_imgui_vulkan PRIVATE ${GLM_LIB})
   endif()
   
   target_compile_definitions(main_imgui_vulkan PRIVATE
@@ -265,37 +345,9 @@ if(VOXELVK_ENABLE_P0_RELIABILITY)
 endif()
 
 # === Weather System ===
-set(VOXELVK_ENABLE_WEATHER ON CACHE BOOL "Enable weather system")
+# (Sources defined earlier in file)
 
 if(VOXELVK_ENABLE_WEATHER)
-  file(GLOB WEATHER_SRC
-    src/env/weather/weather_system.cpp
-    src/env/weather/sky_model.cpp
-    src/env/weather/lightning.cpp
-    src/render/framegraph/frame_graph_min.cpp
-    src/render/post/temporal_accum.cpp
-    src/render/post/height_fog.cpp
-  )
-  
-  # Find yaml-cpp dependency
-  find_package(yaml-cpp QUIET)
-  if(NOT yaml-cpp_FOUND)
-    find_package(PkgConfig QUIET)
-    if(PkgConfig_FOUND)
-      pkg_check_modules(YAML_CPP QUIET yaml-cpp)
-    endif()
-  endif()
-  
-  if(yaml-cpp_FOUND OR YAML_CPP_FOUND)
-    set(WEATHER_YAML_LIB yaml-cpp)
-    if(YAML_CPP_FOUND)
-      set(WEATHER_YAML_LIB ${YAML_CPP_LIBRARIES})
-    endif()
-    message(STATUS "Found yaml-cpp for weather system")
-  else()
-    message(WARNING "yaml-cpp not found - weather system will use fallback config")
-  endif()
-
   # Weather shaders
   set(WEATHER_SHADERS
     shaders_vk/common/weather_ubo.glsl
@@ -369,12 +421,18 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   endif()
 
   if(NOT TARGET VoxelVK_Elite_ALL)
-    add_executable(VoxelVK_Elite_ALL apps/smoke_headless.cpp ${VOXELVK_ELITE_SOURCES})
+  add_executable(VoxelVK_Elite_ALL apps/smoke_headless.cpp ${VOXELVK_ELITE_SOURCES} src/core/logger.cpp src/core/thread_pool.cpp)
     add_dependencies(VoxelVK_Elite_ALL ShaderSPV)
     target_include_directories(VoxelVK_Elite_ALL PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(VoxelVK_Elite_ALL PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
+    if(JSON_LIB)
+      target_link_libraries(VoxelVK_Elite_ALL PRIVATE ${JSON_LIB})
+    endif()
     if(VMA_TARGET)
       target_link_libraries(VoxelVK_Elite_ALL PRIVATE ${VMA_TARGET})
+    endif()
+    if(GLM_LIB)
+      target_link_libraries(VoxelVK_Elite_ALL PRIVATE ${GLM_LIB})
     endif()
     target_compile_definitions(VoxelVK_Elite_ALL PRIVATE
       $<$<BOOL:${ENABLE_VALIDATION_LAYERS}>:ENABLE_VALIDATION_LAYERS=1>
@@ -389,33 +447,41 @@ if(NOT VOXELVK_HEADLESS_ONLY)
       $<$<BOOL:${VOXELVK_ENABLE_TENSORRT}>:VOXELVK_ENABLE_TENSORRT=1>)
   endif()
   # Demo: GUI fullscreen toggle (requires GLFW + OpenGL)
-  add_executable(gui_fullscreen_demo apps/gui_fullscreen_demo.cpp)
-  target_link_libraries(gui_fullscreen_demo PRIVATE ${GLFW_LIB})
-  add_dependencies(gui_fullscreen_demo ShaderSPV)
+  find_package(OpenGL QUIET)
+  if(OpenGL_FOUND)
+    add_executable(gui_fullscreen_demo apps/gui_fullscreen_demo.cpp ${AI_SRC})
+    target_link_libraries(gui_fullscreen_demo PRIVATE ${GLFW_LIB} OpenGL::GL)
+    add_dependencies(gui_fullscreen_demo ShaderSPV)
+  else()
+    message(WARNING "OpenGL not found; gui_fullscreen_demo will be skipped")
+  endif()
 
-  # Weather system demo
+  # Weather system demo and integration test
   if(VOXELVK_ENABLE_WEATHER)
     add_executable(weather_demo apps/weather_demo.cpp ${WEATHER_SRC})
     target_include_directories(weather_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(weather_demo PRIVATE Threads::Threads)
+    if(JSON_LIB)
+      target_link_libraries(weather_demo PRIVATE ${JSON_LIB})
+    endif()
     if(WEATHER_YAML_LIB)
       target_link_libraries(weather_demo PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(weather_demo PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
-  
-  # Weather system integration test
-  if(VOXELVK_ENABLE_WEATHER)
+
     add_executable(weather_integration_test apps/weather_integration_test.cpp ${WEATHER_SRC})
     target_include_directories(weather_integration_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(weather_integration_test PRIVATE Threads::Threads)
+    if(JSON_LIB)
+      target_link_libraries(weather_integration_test PRIVATE ${JSON_LIB})
+    endif()
     if(WEATHER_YAML_LIB)
       target_link_libraries(weather_integration_test PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(weather_integration_test PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
   endif()
-  endif()
 
-endif()
+endif() # NOT VOXELVK_HEADLESS_ONLY
 
   # Optional RAG integrations (FAISS, ONNX Runtime)
   # Use soft-detection to avoid breaking builds if libs not available
@@ -424,16 +490,14 @@ endif()
   set(VOXELVK_HAS_ONNXRUNTIME 0)
   # Link ImGui to demo if available via vcpkg (header+backends)
   find_package(imgui QUIET)
-  if(imgui_FOUND)
-    target_link_libraries(gui_fullscreen_demo PRIVATE imgui::imgui)
-    target_compile_definitions(gui_fullscreen_demo PRIVATE GUI_DEMO_HAS_IMGUI_VCPKG=1)
-  # OpenGL linkage for demo (platform-provided)
-  find_package(OpenGL QUIET)
-  if(OpenGL_FOUND)
-    target_link_libraries(gui_fullscreen_demo PRIVATE OpenGL::GL)
+  if(TARGET gui_fullscreen_demo)
+    if(imgui_FOUND)
+      target_link_libraries(gui_fullscreen_demo PRIVATE imgui::imgui)
+      target_compile_definitions(gui_fullscreen_demo PRIVATE GUI_DEMO_HAS_IMGUI_VCPKG=1)
+    endif()
   endif()
   # Production-grade main ImGui fullscreen app (optional)
-  add_executable(main_imgui_fullscreen apps/main_imgui_fullscreen.cpp)
+  add_executable(main_imgui_fullscreen apps/main_imgui_fullscreen.cpp ${AI_SRC})
   target_link_libraries(main_imgui_fullscreen PRIVATE ${GLFW_LIB})
   if(imgui_FOUND)
     target_link_libraries(main_imgui_fullscreen PRIVATE imgui::imgui)
@@ -443,12 +507,24 @@ endif()
   endif()
 
   # Vulkan fullscreen demo (optional): GLFW Vulkan window + swapchain recreate on toggle
-  add_executable(vulkan_fullscreen_demo apps/vulkan_fullscreen_demo.cpp)
-  target_link_libraries(vulkan_fullscreen_demo PRIVATE ${GLFW_LIB} Vulkan::Vulkan)
-
-
-    message(STATUS "Linking ImGui to gui_fullscreen_demo")
+  option(VOXELVK_BUILD_VULKAN_FULLSCREEN_DEMO "Build the simple Vulkan fullscreen demo" OFF)
+  if(VOXELVK_BUILD_VULKAN_FULLSCREEN_DEMO)
+    add_executable(vulkan_fullscreen_demo apps/vulkan_fullscreen_demo.cpp ${AI_SRC})
+    target_link_libraries(vulkan_fullscreen_demo PRIVATE ${GLFW_LIB} Vulkan::Vulkan)
   endif()
+
+  # Always-available minimal X11 visual GUI (no GL/Vulkan)
+  find_package(X11)
+  if(X11_FOUND)
+    add_executable(x11_basic_demo apps/x11_basic_demo.cpp)
+    target_include_directories(x11_basic_demo PRIVATE ${X11_INCLUDE_DIR})
+    target_link_libraries(x11_basic_demo PRIVATE ${X11_LIBRARIES})
+  endif()
+
+
+    if(TARGET gui_fullscreen_demo)
+      message(STATUS "Linking ImGui to gui_fullscreen_demo")
+    endif()
 
   if(PkgConfig_FOUND)
     pkg_check_modules(FAISS QUIET faiss)
@@ -510,9 +586,12 @@ if(ENABLE_TESTS)
   
   # Performance monitoring tests
   if(VOXELVK_ENABLE_P2_PERFORMANCE)
-    add_executable(test_performance_monitoring tests/test_performance_monitoring.cpp src/core/logger.cpp)
+    add_executable(test_performance_monitoring tests/test_performance_monitoring.cpp src/core/logger.cpp src/core/performance_monitor.cpp)
     target_include_directories(test_performance_monitoring PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(test_performance_monitoring PRIVATE Threads::Threads)
+    target_link_libraries(test_performance_monitoring PRIVATE Threads::Threads Vulkan::Vulkan)
+    if(JSON_LIB)
+      target_link_libraries(test_performance_monitoring PRIVATE ${JSON_LIB})
+    endif()
     target_compile_definitions(test_performance_monitoring PRIVATE VOXELVK_ENABLE_P2_PERFORMANCE=1)
     
     add_test(NAME test_performance_monitoring COMMAND test_performance_monitoring)
@@ -520,9 +599,12 @@ if(ENABLE_TESTS)
   endif()
   
   # Integration tests
-  add_executable(test_integration tests/test_integration.cpp ${WEATHER_SRC} src/core/logger.cpp)
+  add_executable(test_integration tests/test_integration.cpp ${WEATHER_SRC} src/core/logger.cpp src/core/performance_monitor.cpp)
   target_include_directories(test_integration PRIVATE ${CMAKE_SOURCE_DIR}/src)
-  target_link_libraries(test_integration PRIVATE Threads::Threads)
+  target_link_libraries(test_integration PRIVATE Threads::Threads Vulkan::Vulkan)
+  if(JSON_LIB)
+    target_link_libraries(test_integration PRIVATE ${JSON_LIB})
+  endif()
   
   if(WEATHER_YAML_LIB)
     target_link_libraries(test_integration PRIVATE ${WEATHER_YAML_LIB})

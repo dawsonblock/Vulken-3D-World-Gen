@@ -5,6 +5,7 @@
 #include <array>
 #include <atomic>
 #include <mutex>
+#include <memory>
 #include "memory_manager.hpp"
 
 namespace voxelvk {
@@ -38,7 +39,12 @@ public:
     };
     
     const Stats& getStats() const { return stats_; }
-    void resetStats() { stats_ = Stats{}; }
+    void resetStats() {
+        stats_.totalAllocations.store(0);
+        stats_.peakUsage.store(0);
+        stats_.resetCount.store(0);
+        stats_.overflowCount.store(0);
+    }
     
     bool isValid() const { return buffer_ != VK_NULL_HANDLE && mappedData_ != nullptr; }
     

@@ -4,19 +4,17 @@
 #include <memory>
 #include <vector>
 #include <chrono>
+#include <tuple>
+#include <utility>
 #include "aabb.hpp"
 #include "capsule.hpp"
+#include "collision_utils.hpp"
+#include "voxel_solid.hpp"
 
 namespace voxelvk::physics {
 
-// Forward declarations to avoid circular dependencies
-namespace collision_utils {
-    class WorldInterface;
-    struct CollisionConfig;
-    struct CapsuleResolutionResult;
-}
-
-namespace voxelvk::physics {
+// Forward declarations to avoid circular dependencies are no longer needed
+// because we include the concrete headers above. Keep namespace alias for clarity.
 
 /**
  * High-performance C++ Player Controller

@@ -1,8 +1,9 @@
 
+#version 450
 // Example usage in your main lighting shader:
 
-#include "shadows/csm_common.glsl"
-#include "lighting/pcss.glsl"
+#include "../shadows/csm_common.glsl"
+#include "pcss.glsl"
 
 layout(binding=5) uniform sampler2DArray uShadowMap; // wired from code
 

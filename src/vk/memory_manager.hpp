@@ -6,6 +6,7 @@
 #include <mutex>
 #include <functional>
 #include <atomic>
+#include <array>
 #include "device_caps.hpp"
 
 namespace voxelvk {
@@ -84,6 +85,26 @@ struct VMAAllocation {
 };
 
 /**
+ * Combined result for buffer creation
+ */
+struct BufferResult {
+    VkBuffer buffer = VK_NULL_HANDLE;
+    VMAAllocation allocation{};
+    
+    bool isValid() const { return buffer != VK_NULL_HANDLE && allocation.allocation != VK_NULL_HANDLE; }
+};
+
+/**
+ * Combined result for image creation
+ */
+struct ImageResult {
+    VkImage image = VK_NULL_HANDLE;
+    VMAAllocation allocation{};
+    
+    bool isValid() const { return image != VK_NULL_HANDLE && allocation.allocation != VK_NULL_HANDLE; }
+};
+
+/**
  * Professional GPU memory manager with VMA backend
  */
 class MemoryManager {
@@ -96,7 +117,7 @@ public:
     void shutdown();
     
     // Buffer allocation
-    VMAAllocation createBuffer(
+    BufferResult createBuffer(
         const VkBufferCreateInfo& bufferInfo,
         VmaMemoryUsage memoryUsage,
         MemoryCategory category,
@@ -104,7 +125,7 @@ public:
     );
     
     // Image allocation
-    VMAAllocation createImage(
+    ImageResult createImage(
         const VkImageCreateInfo& imageInfo,
         VmaMemoryUsage memoryUsage,
         MemoryCategory category,
@@ -133,7 +154,8 @@ public:
     
     // VMA statistics
     VmaBudget getVMABudget() const;
-    VmaStatInfo getVMAStats() const;
+    // VmaStatInfo is optional; not all VMA versions expose it. Provide only when available in cpp.
+    // VmaStatInfo getVMAStats() const;
     
     // Debugging and profiling
     void logMemoryReport() const;
@@ -178,15 +200,15 @@ private:
  */
 namespace memory {
     // Vertex buffer creation
-    VMAAllocation createVertexBuffer(const void* data, size_t size, const char* name = "VertexBuffer");
-    VMAAllocation createIndexBuffer(const void* data, size_t size, const char* name = "IndexBuffer");
+    BufferResult createVertexBuffer(const void* data, size_t size, const char* name = "VertexBuffer");
+    BufferResult createIndexBuffer(const void* data, size_t size, const char* name = "IndexBuffer");
     
     // Uniform buffer creation (per-frame ring)
-    VMAAllocation createUniformBuffer(size_t size, const char* name = "UniformBuffer");
+    BufferResult createUniformBuffer(size_t size, const char* name = "UniformBuffer");
     VMAAllocation createDynamicUniformBuffer(size_t size, const char* name = "DynamicUniformBuffer");
     
     // Texture creation
-    VMAAllocation createTexture2D(uint32_t width, uint32_t height, VkFormat format, 
+    ImageResult createTexture2D(uint32_t width, uint32_t height, VkFormat format, 
                                   VkImageUsageFlags usage, const char* name = "Texture2D");
     VMAAllocation createRenderTarget(uint32_t width, uint32_t height, VkFormat format,
                                      const char* name = "RenderTarget");
@@ -195,7 +217,7 @@ namespace memory {
     VMAAllocation createStagingBuffer(size_t size, const char* name = "StagingBuffer");
     
     // Weather-specific allocations
-    VMAAllocation createWeatherBuffer(size_t size, const char* name = "WeatherBuffer");
+    BufferResult createWeatherBuffer(size_t size, const char* name = "WeatherBuffer");
     VMAAllocation createParticleBuffer(size_t particleCount, const char* name = "ParticleBuffer");
 }
 

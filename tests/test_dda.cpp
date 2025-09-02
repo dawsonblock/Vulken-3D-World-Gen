@@ -3,13 +3,15 @@
 #include "../src/core/logger.hpp"
 #include <gtest/gtest.h>
 #include <memory>
+#include <cmath>
 
 using namespace voxelvk;
 
 class RaycastDDATest : public ::testing::Test {
 protected:
     void SetUp() override {
-        Logger::Initialize("RaycastDDATest", LogLevel::ERROR);
+    // Configure minimal logging for tests
+    Logger::SetGlobalLogLevel(LogLevel::ERROR);
         
         WorldConfig config;
         config.chunk_size = 16;  // Smaller for testing
@@ -27,7 +29,7 @@ protected:
         raycaster.reset();
         world_manager->Shutdown();
         world_manager.reset();
-        Logger::Shutdown();
+    // No explicit shutdown needed for Logger
     }
     
     void SetupTestWorld() {
@@ -169,7 +171,10 @@ TEST_F(RaycastDDATest, PerformanceTest) {
     Timer timer;
     
     for (int i = 0; i < num_rays; i++) {
-        float angle = static_cast<float>(i) / num_rays * 2.0f * M_PI;
+    #ifndef M_PI
+    #define M_PI 3.14159265358979323846
+    #endif
+    float angle = static_cast<float>(i) / num_rays * 2.0f * static_cast<float>(M_PI);
         Vec3 direction(std::cos(angle), -0.5f, std::sin(angle));
         direction = direction.normalized();
         
@@ -204,6 +209,24 @@ TEST_F(RaycastDDATest, StatisticsCollection) {
     EXPECT_EQ(stats.total_misses, 0);
     EXPECT_GT(stats.avg_steps_per_ray, 0.0);
     EXPECT_GT(stats.avg_time_per_ray_us, 0.0);
+}
+
+TEST_F(RaycastDDATest, StatsNotDoubleCountWithTransparentFirst) {
+    // Place glass over stone in the path
+    world_manager->SetBlock(6, 5, 5, BlockType::Glass);
+    world_manager->SetBlock(6, 4, 5, BlockType::Stone);
+    raycaster->ResetStats();
+    Vec3 origin(6, 7, 5);
+    Vec3 direction(0, -1, 0);
+    auto before = raycaster->GetStats();
+    (void)before;
+    RaycastHit hit = raycaster->Raycast(origin, direction, 10.0f);
+    EXPECT_TRUE(hit.hit);
+    EXPECT_EQ(hit.block_type, BlockType::Glass);
+    const auto& stats = raycaster->GetStats();
+    EXPECT_EQ(stats.total_rays_cast, 1) << "Raycast should count once";
+    EXPECT_EQ(stats.total_hits, 1);
+    EXPECT_EQ(stats.total_misses, 0);
 }
 
 // Test ray generation utilities
@@ -253,8 +276,4 @@ TEST(RaycastUtilsTest, GenerateSphereRays) {
     EXPECT_LT(sum_length, 5.0f);  // Allow some variance due to randomness
 }
 
-// Main function for running tests
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+// gtest_main provides the test runner entry point

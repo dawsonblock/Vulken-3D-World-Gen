@@ -6,6 +6,7 @@
 #include <string>
 #include <chrono>
 #include <vector>
+#include <thread>
 
 // VoxelVK systems
 #include "../src/core/fullscreen_toggle.hpp"
@@ -30,17 +31,46 @@ using namespace voxelvk;
 
 static Logger g_logger("MainImGuiApp");
 
-// Global Vulkan objects for ImGui integration
+// Global Vulkan objects
 static VkInstance g_Instance = VK_NULL_HANDLE;
+static VkSurfaceKHR g_Surface = VK_NULL_HANDLE;
 static VkPhysicalDevice g_PhysicalDevice = VK_NULL_HANDLE;
 static VkDevice g_Device = VK_NULL_HANDLE;
 static uint32_t g_GraphicsQueueFamily = UINT32_MAX;
+static uint32_t g_PresentQueueFamily = UINT32_MAX;
 static VkQueue g_GraphicsQueue = VK_NULL_HANDLE;
+static VkQueue g_PresentQueue = VK_NULL_HANDLE;
+static VkSwapchainKHR g_Swapchain = VK_NULL_HANDLE;
+static std::vector<VkImage> g_SwapchainImages;
+static std::vector<VkImageView> g_SwapchainImageViews;
+static VkFormat g_SwapchainImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+static VkExtent2D g_SwapchainExtent { 0u, 0u };
 static VkRenderPass g_RenderPass = VK_NULL_HANDLE;
+static std::vector<VkFramebuffer> g_Framebuffers;
+static VkCommandPool g_CommandPool = VK_NULL_HANDLE;
+static std::vector<VkCommandBuffer> g_CommandBuffers;
+static VkSemaphore g_ImageAvailableSemaphore = VK_NULL_HANDLE;
+static VkSemaphore g_RenderFinishedSemaphore = VK_NULL_HANDLE;
+static std::vector<VkFence> g_InFlightFences;
+static bool g_FramebufferResized = false;
+
+// ImGui descriptor pool (if used)
 static VkDescriptorPool g_ImGuiDescriptorPool = VK_NULL_HANDLE;
 
 static void error_callback(int code, const char* desc) {
     g_logger.Error("GLFW error {}: {}", code, desc);
+}
+
+static void framebuffer_size_callback(GLFWwindow* /*window*/, int /*w*/, int /*h*/){
+    g_FramebufferResized = true;
+}
+
+static bool createSurface(GLFWwindow* window){
+    if(glfwCreateWindowSurface(g_Instance, window, nullptr, &g_Surface) != VK_SUCCESS){
+        g_logger.Error("Failed to create Vulkan surface");
+        return false;
+    }
+    return true;
 }
 
 static bool initializeVulkan(GLFWwindow* window) {
@@ -79,6 +109,8 @@ static bool initializeVulkan(GLFWwindow* window) {
         g_logger.Error("Failed to create Vulkan instance");
         return false;
     }
+    // Create surface for presentation
+    if(!createSurface(window)) return false;
     
     // Select physical device
     uint32_t deviceCount = 0;
@@ -99,15 +131,20 @@ static bool initializeVulkan(GLFWwindow* window) {
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(g_PhysicalDevice, &queueFamilyCount, queueFamilies.data());
     
+    // Find graphics and present queue families
     for (uint32_t i = 0; i < queueFamilyCount; i++) {
-        if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+        if ((queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && g_GraphicsQueueFamily == UINT32_MAX) {
             g_GraphicsQueueFamily = i;
-            break;
+        }
+        VkBool32 presentSupport = VK_FALSE;
+        vkGetPhysicalDeviceSurfaceSupportKHR(g_PhysicalDevice, i, g_Surface, &presentSupport);
+        if (presentSupport && g_PresentQueueFamily == UINT32_MAX) {
+            g_PresentQueueFamily = i;
         }
     }
-    
-    if (g_GraphicsQueueFamily == UINT32_MAX) {
-        g_logger.Error("No graphics queue family found");
+
+    if (g_GraphicsQueueFamily == UINT32_MAX || g_PresentQueueFamily == UINT32_MAX) {
+        g_logger.Error("No suitable graphics/present queue family found");
         return false;
     }
     
@@ -119,18 +156,32 @@ static bool initializeVulkan(GLFWwindow* window) {
     queueCreateInfo.queueCount = 1;
     queueCreateInfo.pQueuePriorities = &queuePriority;
     
+    // Enable swapchain extension
+    const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
     VkDeviceCreateInfo deviceCreateInfo{};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    deviceCreateInfo.queueCreateInfoCount = 1;
-    deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+    VkDeviceQueueCreateInfo queueInfos[2]{};
+    uint32_t uniqueCount = 0;
+    if (g_GraphicsQueueFamily == g_PresentQueueFamily) {
+        queueInfos[0] = queueCreateInfo; uniqueCount = 1;
+    } else {
+        queueInfos[0] = queueCreateInfo;
+        queueInfos[1] = queueCreateInfo; queueInfos[1].queueFamilyIndex = g_PresentQueueFamily; uniqueCount = 2;
+    }
+    deviceCreateInfo.queueCreateInfoCount = uniqueCount;
+    deviceCreateInfo.pQueueCreateInfos = queueInfos;
+    deviceCreateInfo.enabledExtensionCount = 1;
+    deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions;
     
     if (vkCreateDevice(g_PhysicalDevice, &deviceCreateInfo, nullptr, &g_Device) != VK_SUCCESS) {
         g_logger.Error("Failed to create Vulkan device");
         return false;
     }
     
-    // Get graphics queue
+    // Get queues
     vkGetDeviceQueue(g_Device, g_GraphicsQueueFamily, 0, &g_GraphicsQueue);
+    vkGetDeviceQueue(g_Device, g_PresentQueueFamily, 0, &g_PresentQueue);
     
     g_logger.Info("Vulkan initialized successfully for ImGui");
     return true;
@@ -171,6 +222,21 @@ static void shutdownVulkan() {
     if (g_Device != VK_NULL_HANDLE) {
         vkDeviceWaitIdle(g_Device);
     }
+
+    if (g_RenderPass != VK_NULL_HANDLE) {
+        vkDestroyRenderPass(g_Device, g_RenderPass, nullptr);
+        g_RenderPass = VK_NULL_HANDLE;
+    }
+    for(auto fb : g_Framebuffers){ if(fb) vkDestroyFramebuffer(g_Device, fb, nullptr); }
+    g_Framebuffers.clear();
+    for(auto iv : g_SwapchainImageViews){ if(iv) vkDestroyImageView(g_Device, iv, nullptr); }
+    g_SwapchainImageViews.clear();
+    if (g_Swapchain != VK_NULL_HANDLE) { vkDestroySwapchainKHR(g_Device, g_Swapchain, nullptr); g_Swapchain = VK_NULL_HANDLE; }
+    if (g_CommandPool != VK_NULL_HANDLE) { vkDestroyCommandPool(g_Device, g_CommandPool, nullptr); g_CommandPool = VK_NULL_HANDLE; }
+    if (g_ImageAvailableSemaphore) { vkDestroySemaphore(g_Device, g_ImageAvailableSemaphore, nullptr); g_ImageAvailableSemaphore = VK_NULL_HANDLE; }
+    if (g_RenderFinishedSemaphore) { vkDestroySemaphore(g_Device, g_RenderFinishedSemaphore, nullptr); g_RenderFinishedSemaphore = VK_NULL_HANDLE; }
+    for(auto f : g_InFlightFences){ if(f) vkDestroyFence(g_Device, f, nullptr); }
+    g_InFlightFences.clear();
     
     if (g_ImGuiDescriptorPool != VK_NULL_HANDLE) {
         vkDestroyDescriptorPool(g_Device, g_ImGuiDescriptorPool, nullptr);
@@ -182,10 +248,222 @@ static void shutdownVulkan() {
         g_Device = VK_NULL_HANDLE;
     }
     
-    if (g_Instance != VK_NULL_HANDLE) {
-        vkDestroyInstance(g_Instance, nullptr);
-        g_Instance = VK_NULL_HANDLE;
+    if (g_Surface != VK_NULL_HANDLE) { vkDestroySurfaceKHR(g_Instance, g_Surface, nullptr); g_Surface = VK_NULL_HANDLE; }
+    if (g_Instance != VK_NULL_HANDLE) { vkDestroyInstance(g_Instance, nullptr); g_Instance = VK_NULL_HANDLE; }
+}
+
+// Swapchain helpers
+static VkSurfaceFormatKHR chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats){
+    for(const auto& f : formats){
+        if((f.format == VK_FORMAT_B8G8R8A8_UNORM || f.format == VK_FORMAT_B8G8R8A8_SRGB) && f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR){
+            return f;
+        }
     }
+    return formats[0];
+}
+
+static VkPresentModeKHR choosePresentMode(const std::vector<VkPresentModeKHR>& modes){
+    for(const auto& m : modes){ if(m == VK_PRESENT_MODE_MAILBOX_KHR) return m; }
+    return VK_PRESENT_MODE_FIFO_KHR;
+}
+
+static VkExtent2D chooseExtent(const VkSurfaceCapabilitiesKHR& caps, GLFWwindow* window){
+    if(caps.currentExtent.width != UINT32_MAX) return caps.currentExtent;
+    int w=0,h=0; glfwGetFramebufferSize(window, &w, &h);
+    VkExtent2D e{ (uint32_t)w, (uint32_t)h };
+    if(e.width < caps.minImageExtent.width) e.width = caps.minImageExtent.width;
+    if(e.height < caps.minImageExtent.height) e.height = caps.minImageExtent.height;
+    if(e.width > caps.maxImageExtent.width) e.width = caps.maxImageExtent.width;
+    if(e.height > caps.maxImageExtent.height) e.height = caps.maxImageExtent.height;
+    return e;
+}
+
+static bool createSwapchainAndViews(GLFWwindow* window){
+    VkSurfaceCapabilitiesKHR caps{}; vkGetPhysicalDeviceSurfaceCapabilitiesKHR(g_PhysicalDevice, g_Surface, &caps);
+    uint32_t fmtCount=0; vkGetPhysicalDeviceSurfaceFormatsKHR(g_PhysicalDevice, g_Surface, &fmtCount, nullptr);
+    std::vector<VkSurfaceFormatKHR> formats(fmtCount); vkGetPhysicalDeviceSurfaceFormatsKHR(g_PhysicalDevice, g_Surface, &fmtCount, formats.data());
+    uint32_t pmCount=0; vkGetPhysicalDeviceSurfacePresentModesKHR(g_PhysicalDevice, g_Surface, &pmCount, nullptr);
+    std::vector<VkPresentModeKHR> modes(pmCount); vkGetPhysicalDeviceSurfacePresentModesKHR(g_PhysicalDevice, g_Surface, &pmCount, modes.data());
+
+    auto surfaceFormat = chooseSurfaceFormat(formats);
+    auto presentMode = choosePresentMode(modes);
+    auto extent = chooseExtent(caps, window);
+
+    uint32_t imageCount = caps.minImageCount + 1; if(caps.maxImageCount>0 && imageCount>caps.maxImageCount) imageCount = caps.maxImageCount;
+
+    VkSwapchainCreateInfoKHR sci{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
+    sci.surface = g_Surface;
+    sci.minImageCount = imageCount;
+    sci.imageFormat = surfaceFormat.format;
+    sci.imageColorSpace = surfaceFormat.colorSpace;
+    sci.imageExtent = extent;
+    sci.imageArrayLayers = 1;
+    sci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    uint32_t qfs[2] = { g_GraphicsQueueFamily, g_PresentQueueFamily };
+    if (g_GraphicsQueueFamily != g_PresentQueueFamily){
+        sci.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        sci.queueFamilyIndexCount = 2; sci.pQueueFamilyIndices = qfs;
+    } else {
+        sci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    }
+    sci.preTransform = caps.currentTransform;
+    sci.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    sci.presentMode = presentMode;
+    sci.clipped = VK_TRUE;
+    sci.oldSwapchain = g_Swapchain;
+
+    if (vkCreateSwapchainKHR(g_Device, &sci, nullptr, &g_Swapchain) != VK_SUCCESS){
+        g_logger.Error("Failed to create swapchain");
+        return false;
+    }
+    if (sci.oldSwapchain) { vkDestroySwapchainKHR(g_Device, sci.oldSwapchain, nullptr); }
+
+    // Get images and create image views
+    uint32_t imgCount=0; vkGetSwapchainImagesKHR(g_Device, g_Swapchain, &imgCount, nullptr);
+    g_SwapchainImages.resize(imgCount);
+    vkGetSwapchainImagesKHR(g_Device, g_Swapchain, &imgCount, g_SwapchainImages.data());
+    g_SwapchainImageFormat = surfaceFormat.format;
+    g_SwapchainExtent = extent;
+
+    g_SwapchainImageViews.resize(imgCount);
+    for(size_t i=0;i<imgCount;++i){
+        VkImageViewCreateInfo ivci{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+        ivci.image = g_SwapchainImages[i];
+        ivci.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        ivci.format = g_SwapchainImageFormat;
+        ivci.components = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY };
+        ivci.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        ivci.subresourceRange.baseMipLevel = 0;
+        ivci.subresourceRange.levelCount = 1;
+        ivci.subresourceRange.baseArrayLayer = 0;
+        ivci.subresourceRange.layerCount = 1;
+        if (vkCreateImageView(g_Device, &ivci, nullptr, &g_SwapchainImageViews[i]) != VK_SUCCESS){
+            g_logger.Error("Failed to create image view");
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool createRenderPassAndFramebuffers(){
+    // Render pass with single color attachment clear->present
+    VkAttachmentDescription color{};
+    color.format = g_SwapchainImageFormat;
+    color.samples = VK_SAMPLE_COUNT_1_BIT;
+    color.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    color.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    color.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    color.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    color.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    color.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    VkAttachmentReference colorRef{ 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
+    VkSubpassDescription sub{};
+    sub.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    sub.colorAttachmentCount = 1;
+    sub.pColorAttachments = &colorRef;
+
+    VkSubpassDependency dep{};
+    dep.srcSubpass = VK_SUBPASS_EXTERNAL; dep.dstSubpass = 0;
+    dep.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dep.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dep.srcAccessMask = 0; dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+    VkRenderPassCreateInfo rpci{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
+    rpci.attachmentCount = 1; rpci.pAttachments = &color;
+    rpci.subpassCount = 1; rpci.pSubpasses = &sub;
+    rpci.dependencyCount = 1; rpci.pDependencies = &dep;
+
+    if (vkCreateRenderPass(g_Device, &rpci, nullptr, &g_RenderPass) != VK_SUCCESS){ g_logger.Error("Failed to create render pass"); return false; }
+
+    // Framebuffers
+    g_Framebuffers.resize(g_SwapchainImageViews.size());
+    for(size_t i=0;i<g_SwapchainImageViews.size();++i){
+        VkImageView attachments[] = { g_SwapchainImageViews[i] };
+        VkFramebufferCreateInfo fbci{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+        fbci.renderPass = g_RenderPass;
+        fbci.attachmentCount = 1; fbci.pAttachments = attachments;
+        fbci.width = g_SwapchainExtent.width; fbci.height = g_SwapchainExtent.height; fbci.layers = 1;
+        if (vkCreateFramebuffer(g_Device, &fbci, nullptr, &g_Framebuffers[i]) != VK_SUCCESS){ g_logger.Error("Failed to create framebuffer"); return false; }
+    }
+    return true;
+}
+
+static bool createCommandPoolAndBuffers(){
+    VkCommandPoolCreateInfo cpci{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+    cpci.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    cpci.queueFamilyIndex = g_GraphicsQueueFamily;
+    if (vkCreateCommandPool(g_Device, &cpci, nullptr, &g_CommandPool) != VK_SUCCESS){ g_logger.Error("Failed to create command pool"); return false; }
+    g_CommandBuffers.resize(g_Framebuffers.size());
+    VkCommandBufferAllocateInfo cbai{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+    cbai.commandPool = g_CommandPool; cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; cbai.commandBufferCount = (uint32_t)g_CommandBuffers.size();
+    if (vkAllocateCommandBuffers(g_Device, &cbai, g_CommandBuffers.data()) != VK_SUCCESS){ g_logger.Error("Failed to alloc command buffers"); return false; }
+    return true;
+}
+
+static bool createFramebuffersOnly(){
+    g_Framebuffers.resize(g_SwapchainImageViews.size());
+    for(size_t i=0;i<g_SwapchainImageViews.size();++i){
+        VkImageView attachments[] = { g_SwapchainImageViews[i] };
+        VkFramebufferCreateInfo fbci{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+        fbci.renderPass = g_RenderPass;
+        fbci.attachmentCount = 1; fbci.pAttachments = attachments;
+        fbci.width = g_SwapchainExtent.width; fbci.height = g_SwapchainExtent.height; fbci.layers = 1;
+        if (vkCreateFramebuffer(g_Device, &fbci, nullptr, &g_Framebuffers[i]) != VK_SUCCESS){ g_logger.Error("Failed to create framebuffer"); return false; }
+    }
+    return true;
+}
+
+static void recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex){
+    VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    vkBeginCommandBuffer(cmd, &bi);
+    VkClearValue clear{}; clear.color = { { 0.10f, 0.12f, 0.16f, 1.0f } };
+    VkRenderPassBeginInfo rpbi{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+    rpbi.renderPass = g_RenderPass; rpbi.framebuffer = g_Framebuffers[imageIndex];
+    rpbi.renderArea.offset = {0,0}; rpbi.renderArea.extent = g_SwapchainExtent;
+    rpbi.clearValueCount = 1; rpbi.pClearValues = &clear;
+    vkCmdBeginRenderPass(cmd, &rpbi, VK_SUBPASS_CONTENTS_INLINE);
+    // Optional: render ImGui within the pass
+#ifdef MAIN_HAS_IMGUI_VULKAN
+    ImDrawData* draw_data = ImGui::GetDrawData();
+    if (draw_data) {
+        ImGui_ImplVulkan_RenderDrawData(draw_data, cmd);
+    }
+#endif
+    vkCmdEndRenderPass(cmd);
+    vkEndCommandBuffer(cmd);
+}
+
+static bool createSyncObjects(){
+    VkSemaphoreCreateInfo sci{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+    VkFenceCreateInfo fci{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO }; fci.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    if (vkCreateSemaphore(g_Device, &sci, nullptr, &g_ImageAvailableSemaphore) != VK_SUCCESS) return false;
+    if (vkCreateSemaphore(g_Device, &sci, nullptr, &g_RenderFinishedSemaphore) != VK_SUCCESS) return false;
+    g_InFlightFences.resize(2);
+    for(auto& f : g_InFlightFences){ if (vkCreateFence(g_Device, &fci, nullptr, &f) != VK_SUCCESS) return false; }
+    return true;
+}
+
+static bool recreateSwapchain(GLFWwindow* window){
+    int w=0,h=0; do { glfwGetFramebufferSize(window, &w, &h); glfwWaitEventsTimeout(0.01); } while(w==0 || h==0);
+    vkDeviceWaitIdle(g_Device);
+    for(auto fb : g_Framebuffers){ if(fb) vkDestroyFramebuffer(g_Device, fb, nullptr); } g_Framebuffers.clear();
+    for(auto iv : g_SwapchainImageViews){ if(iv) vkDestroyImageView(g_Device, iv, nullptr); } g_SwapchainImageViews.clear();
+    if(!createSwapchainAndViews(window)) return false;
+    if (g_RenderPass != VK_NULL_HANDLE){ if(!createFramebuffersOnly()) return false; } else { if(!createRenderPassAndFramebuffers()) return false; }
+    // Recreate command buffers to match new framebuffer count
+    if (g_CommandPool == VK_NULL_HANDLE) { if(!createCommandPoolAndBuffers()) return false; }
+    else {
+        if(!g_CommandBuffers.empty()){
+            vkFreeCommandBuffers(g_Device, g_CommandPool, (uint32_t)g_CommandBuffers.size(), g_CommandBuffers.data());
+        }
+        g_CommandBuffers.clear();
+        g_CommandBuffers.resize(g_Framebuffers.size());
+        VkCommandBufferAllocateInfo cbai{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+        cbai.commandPool = g_CommandPool; cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; cbai.commandBufferCount = (uint32_t)g_CommandBuffers.size();
+        if (vkAllocateCommandBuffers(g_Device, &cbai, g_CommandBuffers.data()) != VK_SUCCESS){ g_logger.Error("Failed to alloc command buffers (recreate)"); return false; }
+    }
+    return true;
 }
 
 int main() {
@@ -208,12 +486,20 @@ int main() {
         return 2;
     }
     
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
     // Initialize Vulkan
     if (!initializeVulkan(window)) {
         glfwDestroyWindow(window);
         glfwTerminate();
         return 3;
     }
+
+    // Swapchain + draw setup
+    if(!createSwapchainAndViews(window)) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
+    if(!createRenderPassAndFramebuffers()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
+    if(!createCommandPoolAndBuffers()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
+    if(!createSyncObjects()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     
     // Initialize weather system for demo
     WeatherSystem weatherSystem;
@@ -241,8 +527,10 @@ int main() {
         g_logger.Info("RAG config updated: enabled={}, top_k={}", enabled, topK);
     });
     
-    voxelvk::ai::UpdateRagConfig(paletteRuntime.cfg.ai_generation.enable_rag, 
-                                paletteRuntime.cfg.ai_generation.rag_top_k);
+    // Track last-known RAG config to avoid spamming updates/logs
+    bool last_rag_enabled = paletteRuntime.cfg.ai_generation.enable_rag;
+    int  last_rag_top_k  = paletteRuntime.cfg.ai_generation.rag_top_k;
+    voxelvk::ai::UpdateRagConfig(last_rag_enabled, last_rag_top_k);
     
 #ifdef MAIN_HAS_IMGUI_VULKAN
     // Initialize ImGui with Vulkan backend
@@ -263,11 +551,7 @@ int main() {
         glfwTerminate();
         return 4;
     }
-    
-    // Note: In a full implementation, you'd create a render pass for ImGui
-    // For now, we'll use a mock render pass
-    g_RenderPass = VK_NULL_HANDLE; // Would be created for actual rendering
-    
+
     ImGui_ImplVulkan_InitInfo init_info{};
     init_info.Instance = g_Instance;
     init_info.PhysicalDevice = g_PhysicalDevice;
@@ -275,12 +559,34 @@ int main() {
     init_info.QueueFamily = g_GraphicsQueueFamily;
     init_info.Queue = g_GraphicsQueue;
     init_info.DescriptorPool = g_ImGuiDescriptorPool;
-    init_info.MinImageCount = 2;
-    init_info.ImageCount = 2;
+    init_info.MinImageCount = (uint32_t)g_SwapchainImages.size();
+    init_info.ImageCount = (uint32_t)g_SwapchainImages.size();
     init_info.UseDynamicRendering = false;
     
-    // ImGui_ImplVulkan_Init(&init_info, g_RenderPass); // Would be called with real render pass
-    
+    // Initialize ImGui Vulkan backend with our render pass
+    ImGui_ImplVulkan_Init(&init_info, g_RenderPass);
+
+    // Upload ImGui fonts
+    {
+        VkCommandBufferAllocateInfo cbai{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+        cbai.commandPool = g_CommandPool;
+        cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        cbai.commandBufferCount = 1;
+        VkCommandBuffer cmd;
+        vkAllocateCommandBuffers(g_Device, &cbai, &cmd);
+        VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+        bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(cmd, &bi);
+        ImGui_ImplVulkan_CreateFontsTexture(cmd);
+        vkEndCommandBuffer(cmd);
+        VkSubmitInfo si{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+        si.commandBufferCount = 1; si.pCommandBuffers = &cmd;
+        vkQueueSubmit(g_GraphicsQueue, 1, &si, VK_NULL_HANDLE);
+        vkQueueWaitIdle(g_GraphicsQueue);
+        ImGui_ImplVulkan_DestroyFontUploadObjects();
+        vkFreeCommandBuffers(g_Device, g_CommandPool, 1, &cmd);
+    }
+
     g_logger.Info("ImGui Vulkan backend initialized");
 #endif
     
@@ -312,13 +618,18 @@ int main() {
             glfwSetWindowTitle(window, title.c_str());
         }
         
-        // Update weather system
+    // Update weather system
         weatherSystem.tick(deltaTime);
         
-        // Hot reload palette and propagate RAG settings
+        // Hot reload palette and propagate RAG settings (only on change)
         paletteRuntime.tick_hot_reload();
-        voxelvk::ai::UpdateRagConfig(paletteRuntime.cfg.ai_generation.enable_rag, 
-                                    paletteRuntime.cfg.ai_generation.rag_top_k);
+        bool cur_enabled = paletteRuntime.cfg.ai_generation.enable_rag;
+        int  cur_top_k   = paletteRuntime.cfg.ai_generation.rag_top_k;
+        if (cur_enabled != last_rag_enabled || cur_top_k != last_rag_top_k) {
+            last_rag_enabled = cur_enabled;
+            last_rag_top_k = cur_top_k;
+            voxelvk::ai::UpdateRagConfig(last_rag_enabled, last_rag_top_k);
+        }
         
         // Handle fullscreen toggle
         if (glfwGetKey(window, GLFW_KEY_F11) == GLFW_PRESS) {
@@ -353,108 +664,84 @@ int main() {
             reloadPressed = false;
         }
         
+        // Start a new ImGui frame (if available)
 #ifdef MAIN_HAS_IMGUI_VULKAN
-        // Begin ImGui frame
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        
-        // Performance HUD
-        if (ImGui::Begin("VoxelVK Performance HUD", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("FPS: %.1f", fps);
-            ImGui::Text("Frame time: %.3f ms", deltaTime * 1000.0);
-            ImGui::Separator();
-            
-            // Weather system status
-            auto weatherUBO = weatherSystem.getUBO();
-            ImGui::Text("Weather System:");
-            ImGui::Text("  State: %u", weatherUBO.state);
-            ImGui::Text("  Wind: %.1f m/s", weatherUBO.windSpeed);
-            ImGui::Text("  Clouds: %.2f", weatherUBO.cloudCoverage);
-            ImGui::Text("  Time of day: %.2f", weatherUBO.timeOfDay);
-            
-            ImGui::Separator();
-            
-            // RAG system status
-            ImGui::Text("RAG System:");
-            ImGui::Text("  Enabled: %s", paletteRuntime.cfg.ai_generation.enable_rag ? "YES" : "NO");
-            ImGui::Text("  Top-K: %d", paletteRuntime.cfg.ai_generation.rag_top_k);
-            
-            ImGui::Separator();
-            
-            // Controls
-            if (ImGui::Button("Toggle Fullscreen (F11)")) {
-                voxelvk::RequestFullscreen(true);
-            }
-            
-            if (ImGui::Button("Hot Reload Config (F5)")) {
-                try {
-                    weatherSystem.loadFromYaml("config/weather.yaml");
-                    g_logger.Info("Configuration reloaded via UI");
-                } catch (const std::exception& e) {
-                    g_logger.Warn("Reload failed: {}", e.what());
-                }
-            }
-            
-            // Weather controls
-            ImGui::Separator();
-            ImGui::Text("Weather Controls:");
-            
-            if (ImGui::Button("Clear")) weatherSystem.setState(WeatherState::CLEAR);
-            ImGui::SameLine();
-            if (ImGui::Button("Storm")) weatherSystem.setState(WeatherState::STORM);
-            ImGui::SameLine();
-            if (ImGui::Button("Rain")) weatherSystem.setState(WeatherState::RAIN);
-            
-            if (ImGui::Button("Snow")) weatherSystem.setState(WeatherState::SNOW);
-            ImGui::SameLine();
-            if (ImGui::Button("Fog")) weatherSystem.setState(WeatherState::FOG);
+
+        // Simple demo UI
+        ImGui::Begin("VoxelVK UI");
+        ImGui::Text("FPS: %.1f", fps);
+        ImGui::Text("Window: %dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
+        static bool rag_enabled = last_rag_enabled;
+        static int rag_top_k = last_rag_top_k;
+        if (ImGui::Checkbox("Enable RAG", &rag_enabled)) {
+            voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k);
+            last_rag_enabled = rag_enabled;
+        }
+        if (ImGui::SliderInt("RAG Top-K", &rag_top_k, 1, 16)) {
+            voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k);
+            last_rag_top_k = rag_top_k;
+        }
+        if (ImGui::Button("Toggle Fullscreen (F11)")) {
+            static bool isFullscreen = false;
+            isFullscreen = !isFullscreen;
+            voxelvk::RequestFullscreen(isFullscreen);
         }
         ImGui::End();
-        
-        // Render ImGui
         ImGui::Render();
-        
-        // In a full implementation, you'd render ImGui to the swapchain
-        // For now, we just prepare the draw data
-        ImDrawData* draw_data = ImGui::GetDrawData();
-        if (draw_data) {
-            // ImGui_ImplVulkan_RenderDrawData would be called here with command buffer
-            g_logger.Debug("ImGui frame prepared (draw_data valid)");
-        }
-        
 #elif defined(MAIN_HAS_IMGUI_MINIMAL)
-        // Minimal ImGui without rendering (just for testing)
+        // Minimal ImGui without backend: just ensure we log once
         static bool firstRun = true;
-        if (firstRun) {
-            g_logger.Info("ImGui available but no Vulkan backend - running minimal mode");
-            firstRun = false;
-        }
-#else
-        // No ImGui - just run the core loop
-        static bool firstRun = true;
-        if (firstRun) {
-            g_logger.Info("ImGui not available - running core loop only");
-            firstRun = false;
-        }
+        if (firstRun) { g_logger.Info("ImGui available but no Vulkan backend - running minimal mode"); firstRun = false; }
 #endif
-        
-        // Simulate frame work
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS
+
+        // Acquire/record/submit/present
+    vkWaitForFences(g_Device, 1, &g_InFlightFences[0], VK_TRUE, 1000000000ULL);
+        vkResetFences(g_Device, 1, &g_InFlightFences[0]);
+
+        uint32_t imageIndex = 0;
+        VkResult aiRes = vkAcquireNextImageKHR(g_Device, g_Swapchain, UINT64_MAX, g_ImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+        if (aiRes == VK_ERROR_OUT_OF_DATE_KHR || g_FramebufferResized) {
+            g_FramebufferResized = false;
+            if(!recreateSwapchain(window)) { g_logger.Error("Swapchain recreate failed"); break; }
+            continue;
+        } else if (aiRes != VK_SUCCESS && aiRes != VK_SUBOPTIMAL_KHR) {
+            g_logger.Error("Failed to acquire swapchain image");
+            break;
+        }
+
+    // Re-record for this image (with optional ImGui)
+    recordCommandBuffer(g_CommandBuffers[imageIndex], imageIndex);
+
+        VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        VkSubmitInfo si{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+        si.waitSemaphoreCount = 1; si.pWaitSemaphores = &g_ImageAvailableSemaphore; si.pWaitDstStageMask = &waitStage;
+        si.commandBufferCount = 1; si.pCommandBuffers = &g_CommandBuffers[imageIndex];
+        si.signalSemaphoreCount = 1; si.pSignalSemaphores = &g_RenderFinishedSemaphore;
+        if (vkQueueSubmit(g_GraphicsQueue, 1, &si, g_InFlightFences[0]) != VK_SUCCESS){ g_logger.Error("Queue submit failed"); break; }
+
+        VkPresentInfoKHR pi{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
+        pi.waitSemaphoreCount = 1; pi.pWaitSemaphores = &g_RenderFinishedSemaphore;
+        pi.swapchainCount = 1; pi.pSwapchains = &g_Swapchain; pi.pImageIndices = &imageIndex;
+        VkResult pr = vkQueuePresentKHR(g_PresentQueue, &pi);
+        if (pr == VK_ERROR_OUT_OF_DATE_KHR || pr == VK_SUBOPTIMAL_KHR || g_FramebufferResized) {
+            g_FramebufferResized = false;
+            if(!recreateSwapchain(window)) { g_logger.Error("Swapchain present-recreate failed"); break; }
+        } else if (pr != VK_SUCCESS) {
+            g_logger.Error("Failed to present swapchain image");
+            break;
+        }
     }
     
     g_logger.Info("Main loop exited, shutting down...");
     
-#ifdef MAIN_HAS_IMGUI_VULKAN
-    // Cleanup ImGui
-    if (g_Device != VK_NULL_HANDLE) {
-        vkDeviceWaitIdle(g_Device);
-    }
-    
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-#endif
+    // Optional ImGui cleanup
+    #ifdef MAIN_HAS_IMGUI_VULKAN
+    if (g_Device != VK_NULL_HANDLE) { vkDeviceWaitIdle(g_Device); }
+    ImGui_ImplVulkan_Shutdown(); ImGui_ImplGlfw_Shutdown(); ImGui::DestroyContext();
+    #endif
     
     // Cleanup
     shutdownVulkan();

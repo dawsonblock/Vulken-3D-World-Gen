@@ -1,4 +1,5 @@
 
+#version 450
 #ifndef PBR_COMMON_GLSL
 #define PBR_COMMON_GLSL
 float saturate(float x){ return clamp(x,0.0,1.0); }

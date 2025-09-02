@@ -92,13 +92,16 @@ bool OptimizedMesh::uploadToGPU(const char* debugName) {
     vertexBufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     
     std::string vertexName = std::string(debugName) + "_Vertices";
-    vertexAllocation = MemoryManager::instance().createBuffer(
+    BufferResult vertexResult = MemoryManager::instance().createBuffer(
         vertexBufferInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::GEOMETRY, vertexName.c_str());
     
-    if (vertexAllocation.allocation == VK_NULL_HANDLE) {
+    if (!vertexResult.isValid()) {
         g_meshLogger.Error("Failed to create vertex buffer");
         return false;
     }
+    
+    vertexBuffer = vertexResult.buffer;
+    vertexAllocation = vertexResult.allocation;
     
     // Create index buffer
     VkBufferCreateInfo indexBufferInfo{};
@@ -108,14 +111,17 @@ bool OptimizedMesh::uploadToGPU(const char* debugName) {
     indexBufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     
     std::string indexName = std::string(debugName) + "_Indices";
-    indexAllocation = MemoryManager::instance().createBuffer(
+    BufferResult indexResult = MemoryManager::instance().createBuffer(
         indexBufferInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::GEOMETRY, indexName.c_str());
     
-    if (indexAllocation.allocation == VK_NULL_HANDLE) {
+    if (!indexResult.isValid()) {
         g_meshLogger.Error("Failed to create index buffer");
         MemoryManager::instance().destroyBuffer(vertexBuffer, vertexAllocation);
         return false;
     }
+    
+    indexBuffer = indexResult.buffer;
+    indexAllocation = indexResult.allocation;
     
     // TODO: Upload data via staging buffers
     // For now, just mark as uploaded
@@ -491,6 +497,31 @@ float MeshOptimizer::calculateOverdrawRatio(const OptimizedMesh& mesh) {
     // Simplified overdraw calculation
     // Real implementation would render triangles and count pixel overdraw
     return 1.0f - (static_cast<float>(mesh.indices.size()) / (mesh.originalTriangleCount * 3));
+}
+
+OptimizedMesh MeshOptimizer::simplifyMesh(const OptimizedMesh& mesh, float ratio) {
+    // Very simple decimation placeholder: drop triangles uniformly by ratio
+    if (ratio >= 1.0f || mesh.indices.size() < 6) {
+        return mesh;
+    }
+
+    OptimizedMesh out = mesh;
+    std::vector<uint32_t> newIndices;
+    newIndices.reserve(static_cast<size_t>(mesh.indices.size() * ratio));
+    size_t step = static_cast<size_t>(1.0f / std::max(0.01f, ratio));
+    if (step < 1) step = 1;
+    // Keep every 'step' triangle (3 indices)
+    for (size_t i = 0, tri = 0; i + 2 < mesh.indices.size(); i += 3, ++tri) {
+        if (tri % step == 0) {
+            newIndices.push_back(mesh.indices[i + 0]);
+            newIndices.push_back(mesh.indices[i + 1]);
+            newIndices.push_back(mesh.indices[i + 2]);
+        }
+    }
+    if (newIndices.size() >= 3) {
+        out.indices.swap(newIndices);
+    }
+    return out;
 }
 
 } // namespace voxelvk

@@ -1,10 +1,12 @@
 
-#version 460 core
-out vec4 fragColor;
-in vec2 vUV;
-uniform vec3 uSunDir;
-uniform float uTime;
-uniform vec3 uCamPos;
+#version 450
+layout(location = 0) out vec4 fragColor;
+layout(location = 0) in vec2 vUV;
+layout(binding = 0) uniform AtmosphereParams {
+    vec3 uSunDir;
+    float uTime;
+    vec3 uCamPos;
+};
 const vec3 betaR = vec3(5.5e-6, 13.0e-6, 22.4e-6);
 const vec3 betaM = vec3(21e-6);
 void main(){

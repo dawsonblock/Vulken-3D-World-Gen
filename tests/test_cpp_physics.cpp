@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <chrono>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include "../src/physics/cpp/aabb.hpp"
@@ -115,6 +116,13 @@ TEST_F(PhysicsTest, CapsulePlayerFactory) {
     EXPECT_EQ(player.center, spawn_pos);
     EXPECT_FLOAT_EQ(player.radius, 0.3f);
     EXPECT_FLOAT_EQ(player.half_height, 0.9f);
+}
+
+TEST_F(PhysicsTest, CapsuleTopBottomSnapping) {
+    // Construct values that produce 0.1 and 1.9 exactly after snapping
+    Capsule capsule(glm::vec3(0, 1, 0), 0.9f, 0.3f);
+    EXPECT_EQ(capsule.top(), glm::vec3(0, 1.9f, 0));
+    EXPECT_EQ(capsule.bottom(), glm::vec3(0, 0.1f, 0));
 }
 
 // Collision Utilities Tests
@@ -286,12 +294,12 @@ TEST_F(PhysicsTest, FastBlockChecker) {
         static_cast<uint16_t>(BlockType::WATER)
     };
     
-    std::vector<bool> results(types.size());
+    std::vector<uint8_t> results(types.size());
     checker.batchIsSolid(types.data(), results.data(), types.size());
     
-    EXPECT_FALSE(results[0]);  // Air
-    EXPECT_TRUE(results[1]);   // Stone
-    EXPECT_FALSE(results[2]);  // Water
+    EXPECT_EQ(results[0], 0) << "Air should not be solid";
+    EXPECT_EQ(results[1], 1) << "Stone should be solid";
+    EXPECT_EQ(results[2], 0) << "Water should not be solid";
 }
 
 // Performance Tests
@@ -334,6 +342,7 @@ TEST_F(PhysicsTest, PlayerControllerIntegration) {
     // Simulate falling to ground
     collision_utils::CollisionConfig config;
     config.ground_normal_threshold = 0.7f;
+    config.enable_pre_fall = true;  // Ensure we simulate downward settling before resolving
     
     auto result = collision_utils::resolveCapsuleWorldAdvanced(player, *world, config);
     

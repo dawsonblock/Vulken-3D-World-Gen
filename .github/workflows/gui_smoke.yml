@@ -1,0 +1,31 @@
+name: GUI Smoke
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gui-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y cmake ninja-build mesa-vulkan-drivers libvulkan1 vulkan-tools xvfb
+
+      - name: Build
+        run: |
+          ./scripts/build.sh
+
+      - name: Tests
+        run: |
+          ctest --test-dir build --output-on-failure -j2
+
+      - name: GUI smoke (xvfb)
+        env:
+          GUI_ARGS: --smoke
+        run: |
+          ./scripts/run_gui.sh

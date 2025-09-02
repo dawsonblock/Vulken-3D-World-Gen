@@ -3,8 +3,11 @@
 #include <vector>
 #include <array>
 #include <unordered_map>
+#include <future>
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
+#include <glm/geometric.hpp>
+#include <glm/common.hpp>
 #include "../vk/memory_manager.hpp"
 
 namespace voxelvk {

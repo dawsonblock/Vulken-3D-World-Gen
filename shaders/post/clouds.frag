@@ -1,7 +1,12 @@
 
-#version 460 core
-out vec4 fragColor; in vec2 vUV;
-uniform sampler2D uNoise; uniform vec3 uSunDir; uniform float uTime;
+#version 450
+layout(location = 0) out vec4 fragColor;
+layout(location = 0) in vec2 vUV;
+layout(binding = 0) uniform sampler2D uNoise;
+layout(binding = 1) uniform CloudParams {
+    vec3 uSunDir;
+    float uTime;
+};
 float noise(vec3 p){ return texture(uNoise, p.xz*0.0008 + uTime*0.005).r; }
 void main(){
     vec3 ray = normalize(vec3(vUV*2.0-1.0, 1.2));

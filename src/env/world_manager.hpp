@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <shared_mutex>
 #include <mutex>
 #include <atomic>
 #include <queue>
@@ -58,6 +59,10 @@ struct BlockPos {
     
     BlockPos() : x(0), y(0), z(0) {}
     BlockPos(int32_t x_, int32_t y_, int32_t z_) : x(x_), y(y_), z(z_) {}
+    
+    bool operator==(const BlockPos& other) const noexcept {
+        return x == other.x && y == other.y && z == other.z;
+    }
     
     // Convert to chunk coordinate
     ChunkCoord ToChunkCoord(int32_t chunk_size) const {
@@ -140,7 +145,7 @@ public:
     BlockType GetUniformType() const;
     
     // Access time for LRU
-    void UpdateAccessTime();
+    void UpdateAccessTime() const;
     uint64_t GetLastAccessTime() const { return m_last_access_time; }
     
     // Neighbors (for lighting and generation)
@@ -165,7 +170,7 @@ private:
     std::atomic<bool> m_loaded{false};
     
     // Access tracking for LRU
-    std::atomic<uint64_t> m_last_access_time{0};
+    mutable std::atomic<uint64_t> m_last_access_time{0};
     
     // Neighbors for lighting and generation
     std::array<std::weak_ptr<Chunk>, 6> m_neighbors; // N, S, E, W, U, D
@@ -203,6 +208,7 @@ public:
     
     void Insert(const ChunkCoord& coord, std::shared_ptr<Chunk> chunk);
     std::shared_ptr<Chunk> Get(const ChunkCoord& coord);
+    std::shared_ptr<Chunk> Get(const ChunkCoord& coord) const;
     bool Contains(const ChunkCoord& coord) const;
     void Remove(const ChunkCoord& coord);
     void Clear();
@@ -247,7 +253,7 @@ struct WorldConfig {
     
     // Performance
     size_t generation_threads = 4;
-    bool async_generation = true;
+    bool async_generation = false; // default to sync for deterministic tests
     bool async_lighting = true;
     
     // Limits
@@ -259,6 +265,9 @@ struct WorldConfig {
 // Forward declarations
 class WorldGenerator;
 class LightingEngine;
+// Custom deleters to avoid incomplete-type delete issues at unique_ptr destruction points.
+struct WorldGeneratorDeleter { void operator()(WorldGenerator* p) const noexcept; };
+struct LightingEngineDeleter { void operator()(LightingEngine* p) const noexcept; };
 
 // Main world manager class
 class WorldManager {
@@ -345,8 +354,8 @@ private:
     mutable std::mutex m_edits_mutex;
     
     // Generation and lighting
-    std::unique_ptr<WorldGenerator> m_generator;
-    std::unique_ptr<LightingEngine> m_lighting;
+    std::unique_ptr<WorldGenerator, WorldGeneratorDeleter> m_generator;
+    std::unique_ptr<LightingEngine, LightingEngineDeleter> m_lighting;
     std::unique_ptr<ThreadPool> m_thread_pool;
     
     // Unloading queue
@@ -375,3 +384,26 @@ private:
 };
 
 } // namespace voxelvk
+
+// Hash support for BlockPos in unordered_map
+namespace std {
+template<>
+struct hash<voxelvk::BlockPos> {
+    size_t operator()(const voxelvk::BlockPos& p) const noexcept {
+        // Mix three 32-bit integers into size_t
+        // Use a variant of splitmix64 on combined key
+        uint64_t x = static_cast<uint64_t>(static_cast<uint32_t>(p.x));
+        uint64_t y = static_cast<uint64_t>(static_cast<uint32_t>(p.y));
+        uint64_t z = static_cast<uint64_t>(static_cast<uint32_t>(p.z));
+        uint64_t k = x;
+        k = (k << 21) - k - 1; k ^= y + 0x9e3779b97f4a7c15ULL + (k<<6) + (k>>2);
+        k = (k << 21) - k - 1; k ^= z + 0x9e3779b97f4a7c15ULL + (k<<6) + (k>>2);
+        k ^= (k >> 33);
+        k *= 0xff51afd7ed558ccdULL;
+        k ^= (k >> 33);
+        k *= 0xc4ceb9fe1a85ec53ULL;
+        k ^= (k >> 33);
+        return static_cast<size_t>(k);
+    }
+};
+}

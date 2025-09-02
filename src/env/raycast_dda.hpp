@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 #include <functional>
+#include <cmath>
 
 namespace voxelvk {
 
@@ -159,6 +160,8 @@ public:
     
     const Stats& GetStats() const { return m_stats; }
     void ResetStats() { m_stats.Reset(); }
+    // Accessor for utilities that need world context
+    const WorldManager& GetWorldManager() const { return *m_world_manager; }
     
 private:
     WorldManager* m_world_manager;
@@ -166,7 +169,7 @@ private:
     mutable Stats m_stats;
     
     // Core DDA implementation
-    RaycastHit PerformDDA(const Ray& ray, std::function<bool(BlockType)> should_stop) const;
+    RaycastHit PerformDDA(const Ray& ray, std::function<bool(BlockType)> should_stop, bool update_stats = true) const;
     
     // Helper functions
     BlockUtils::BlockFace GetHitFace(const Vec3& hit_point, const BlockPos& block_pos) const;

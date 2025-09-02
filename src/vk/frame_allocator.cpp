@@ -24,13 +24,17 @@ FrameArena::FrameArena(size_t totalSize, const char* debugName)
                       VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     
-    allocation_ = MemoryManager::instance().createBuffer(
+    BufferResult bufRes = MemoryManager::instance().createBuffer(
         bufferInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, MemoryCategory::UNIFORMS, debugName);
-    
-    if (allocation_.allocation == VK_NULL_HANDLE) {
+
+    if (!bufRes.isValid()) {
         g_frameAllocLogger.Error("Failed to create frame arena buffer");
         return;
     }
+    
+    // Store the buffer handle
+    buffer_ = bufRes.buffer;
+    allocation_ = bufRes.allocation;
     
     // Map buffer persistently
     mappedData_ = MemoryManager::instance().map(allocation_);
@@ -287,23 +291,23 @@ bool PerFrameAllocator::createUniformBuffers(size_t bufferSize) {
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         
         std::string name = "FrameUniformBuffer_" + std::to_string(i);
-        VMAAllocation allocation = MemoryManager::instance().createBuffer(
+    auto result = MemoryManager::instance().createBuffer(
             bufferInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, MemoryCategory::UNIFORMS, name.c_str());
         
-        if (allocation.allocation == VK_NULL_HANDLE) {
+    if (!result.isValid()) {
             g_frameAllocLogger.Error("Failed to create uniform buffer {}", i);
             return false;
         }
         
         // Map buffer persistently
-        void* mappedData = MemoryManager::instance().map(allocation);
+    void* mappedData = MemoryManager::instance().map(result.allocation);
         if (!mappedData) {
             g_frameAllocLogger.Error("Failed to map uniform buffer {}", i);
             return false;
         }
         
-        uniformBuffers_[i] = VK_NULL_HANDLE; // Buffer handle from allocation
-        uniformAllocations_[i] = allocation;
+        uniformBuffers_[i] = result.buffer;
+        uniformAllocations_[i] = result.allocation;
         uniformMappedData_[i] = mappedData;
         uniformOffsets_[i] = 0;
     }
@@ -313,12 +317,12 @@ bool PerFrameAllocator::createUniformBuffers(size_t bufferSize) {
 
 void PerFrameAllocator::destroyUniformBuffers() {
     for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++) {
-        if (uniformAllocations_[i].allocation != VK_NULL_HANDLE) {
+    if (uniformAllocations_[i].allocation != VK_NULL_HANDLE) {
             if (uniformMappedData_[i]) {
-                MemoryManager::instance().unmap(uniformAllocations_[i]);
+        MemoryManager::instance().unmap(uniformAllocations_[i]);
             }
             
-            MemoryManager::instance().destroyBuffer(uniformBuffers_[i], uniformAllocations_[i]);
+        MemoryManager::instance().destroyBuffer(uniformBuffers_[i], uniformAllocations_[i]);
             
             uniformBuffers_[i] = VK_NULL_HANDLE;
             uniformAllocations_[i] = {};

@@ -341,6 +341,31 @@ void BlockRegistry::RegisterDefaultBlocks() {
         .texture_name = "grass"
     });
     
+    // Dirt
+    RegisterBlock({
+        .id = static_cast<uint16_t>(BlockType::Dirt),
+        .name = "dirt",
+        .is_solid = true,
+        .is_transparent = false,
+        .is_opaque = true,
+        .hardness = 0.5f,
+        .tool_type = 3,
+        .break_time = 0.5f,
+        .texture_name = "dirt"
+    });
+
+    // Glass
+    RegisterBlock({
+        .id = static_cast<uint16_t>(BlockType::Glass),
+        .name = "glass",
+        .is_solid = true,
+        .is_transparent = true,
+        .is_opaque = false,
+        .hardness = 0.3f,
+        .break_time = 0.3f,
+        .texture_name = "glass"
+    });
+    
     // Add more default blocks...
     // (Similar pattern for Dirt, Sand, Water, Wood, etc.)
     

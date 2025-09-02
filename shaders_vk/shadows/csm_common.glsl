@@ -1,4 +1,5 @@
 
+#version 450
 #ifndef CSM_COMMON_GLSL
 #define CSM_COMMON_GLSL
 layout(std140, binding = 3) uniform CSMData {

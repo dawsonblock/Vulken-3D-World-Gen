@@ -1,4 +1,4 @@
-#version 460
+#version 450
 layout(location=0) out vec2 vUv;
 void main(){
   vec2 pos = vec2((gl_VertexIndex<<1)&2, gl_VertexIndex&2);

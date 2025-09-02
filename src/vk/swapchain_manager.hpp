@@ -1,5 +1,11 @@
 #pragma once
 #include <vulkan/vulkan.h>
+#ifdef HAS_GLFW
+#include <GLFW/glfw3.h>
+#else
+// Forward declare GLFWwindow to avoid including GLFW when not available
+struct GLFWwindow;
+#endif
 #include <vector>
 #include <functional>
 #include "device_caps.hpp"

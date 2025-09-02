@@ -191,7 +191,7 @@ void SSAOSystem::setSettings(const SSAOSettings& settings) {
 void SSAOSystem::executeSSAO(VkCommandBuffer cmd, VkImageView depth, VkImageView normal, VkImageView output) {
     if (!settings_.enabled) return;
     
-    NVTX_RANGE_PUSH("SSAO");
+    VXL_NVTX_RANGE("SSAO");
     VK_DEBUG_LABEL(cmd, "SSAO");
     
     auto startTime = std::chrono::high_resolution_clock::now();
@@ -214,7 +214,7 @@ void SSAOSystem::executeSSAO(VkCommandBuffer cmd, VkImageView depth, VkImageView
     stats_.averageTime = stats_.averageTime * 0.9 + ssaoTime * 0.1; // Running average
     stats_.framesProcessed++;
     
-    NVTX_RANGE_POP();
+    // NVTX range automatically ends here
     
     g_ssaoLogger.Debug("SSAO pass executed: {:.3f}ms", ssaoTime * 1000.0);
 }
@@ -239,10 +239,14 @@ bool SSAOSystem::createResources() {
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     
-    aoAllocation_ = MemoryManager::instance().createImage(
-        imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::RENDER_TARGETS, "SSAO_Texture");
+    {
+        ImageResult res = MemoryManager::instance().createImage(
+            imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::RENDER_TARGETS, "SSAO_Texture");
+        aoTexture_ = res.image;
+        aoAllocation_ = res.allocation;
+    }
     
-    if (aoAllocation_.allocation == VK_NULL_HANDLE) {
+    if (aoTexture_ == VK_NULL_HANDLE || aoAllocation_.allocation == VK_NULL_HANDLE) {
         g_ssaoLogger.Error("Failed to create AO texture");
         return false;
     }
@@ -261,7 +265,7 @@ bool SSAOSystem::createResources() {
     
     VkResult result = vkCreateImageView(device_, &viewInfo, nullptr, &aoTextureView_);
     if (result != VK_SUCCESS) {
-        CHECK_VK_OBJECT(result, VkErrorCategory::RESOURCE_CREATION, "ssao_texture_view");
+        CHECK_VK_OBJECT(result, voxelvk::VkErrorCategory::RESOURCE_CREATION, "ssao_texture_view");
         return false;
     }
     
@@ -390,12 +394,34 @@ void SSRSystem::shutdown() {
     g_ssrLogger.Info("SSR system shutdown complete");
 }
 
+void SSRSystem::setSettings(const SSRSettings& settings) {
+    // If settings that affect resources changed, recreate resources
+    bool needRecreate =
+        (settings.enabled != settings_.enabled) ||
+        (settings.halfResolution != settings_.halfResolution);
+
+    settings_ = settings;
+
+    if (device_ == VK_NULL_HANDLE)
+        return;
+
+    if (needRecreate) {
+        g_ssrLogger.Info("SSR settings changed - regenerating resources");
+        vkDeviceWaitIdle(device_);
+        destroyResources();
+        if (settings_.enabled) {
+            createResources();
+            createPipelines();
+        }
+    }
+}
+
 void SSRSystem::executeSSR(VkCommandBuffer cmd, 
                           VkImageView color, VkImageView depth, VkImageView normal, VkImageView roughness,
                           VkImageView output) {
     if (!settings_.enabled) return;
     
-    NVTX_RANGE_PUSH("SSR");
+    VXL_NVTX_RANGE("SSR");
     VK_DEBUG_LABEL(cmd, "SSR");
     
     auto startTime = std::chrono::high_resolution_clock::now();
@@ -423,7 +449,7 @@ void SSRSystem::executeSSR(VkCommandBuffer cmd,
     stats_.averageTime = stats_.averageTime * 0.9 + ssrTime * 0.1;
     stats_.framesProcessed++;
     
-    NVTX_RANGE_POP();
+    // NVTX range automatically ends here
     
     g_ssrLogger.Debug("SSR pass executed: {:.3f}ms", ssrTime * 1000.0);
 }
@@ -448,10 +474,14 @@ bool SSRSystem::createResources() {
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     
-    reflectionAllocation_ = MemoryManager::instance().createImage(
-        imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::RENDER_TARGETS, "SSR_Reflections");
+    {
+        ImageResult res = MemoryManager::instance().createImage(
+            imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::RENDER_TARGETS, "SSR_Reflections");
+        reflectionTexture_ = res.image;
+        reflectionAllocation_ = res.allocation;
+    }
     
-    if (reflectionAllocation_.allocation == VK_NULL_HANDLE) {
+    if (reflectionTexture_ == VK_NULL_HANDLE || reflectionAllocation_.allocation == VK_NULL_HANDLE) {
         g_ssrLogger.Error("Failed to create SSR reflection texture");
         return false;
     }
@@ -470,7 +500,7 @@ bool SSRSystem::createResources() {
     
     VkResult result = vkCreateImageView(device_, &viewInfo, nullptr, &reflectionTextureView_);
     if (result != VK_SUCCESS) {
-        CHECK_VK_OBJECT(result, VkErrorCategory::RESOURCE_CREATION, "ssr_reflection_view");
+        CHECK_VK_OBJECT(result, voxelvk::VkErrorCategory::RESOURCE_CREATION, "ssr_reflection_view");
         return false;
     }
     
@@ -615,7 +645,7 @@ void ScreenSpaceEffects::executeScreenSpacePass(VkCommandBuffer cmd,
                                                 VkImageView output) {
     auto startTime = std::chrono::high_resolution_clock::now();
     
-    NVTX_RANGE_PUSH("ScreenSpaceEffects");
+    VXL_NVTX_RANGE("ScreenSpaceEffects");
     
     // Execute SSAO
     if (ssaoSystem_.getSettings().enabled) {
@@ -633,7 +663,7 @@ void ScreenSpaceEffects::executeScreenSpacePass(VkCommandBuffer cmd,
     perfStats_.totalTime = totalTime;
     perfStats_.withinBudget = totalTime <= (maxScreenSpaceTimeMs_ / 1000.0);
     
-    NVTX_RANGE_POP();
+    // NVTX range automatically ends here
     
     if (!perfStats_.withinBudget) {
         g_ssaoLogger.Warn("Screen space effects over budget: {:.3f}ms (limit: {:.3f}ms)",

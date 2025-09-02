@@ -1,5 +1,5 @@
 
-#version 460
+#version 450
 layout(location=0) in vec3 inPosition;      // world-space position preferred (or model space with external model matrix)
 layout(push_constant) uniform Push { int uCascadeIndex; } pc;
 layout(std140, binding=3) uniform CSMData {

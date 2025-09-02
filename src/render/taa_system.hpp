@@ -82,7 +82,7 @@ struct TAAResources {
     VkFormat motionFormat = VK_FORMAT_R16G16_SFLOAT;
     
     bool isValid() const { return historyColorA != VK_NULL_HANDLE && motionVectors != VK_NULL_HANDLE; }
-    void release();
+    void release(VkDevice device);
     VkImageView getCurrentHistoryView() const { return useHistoryA ? historyColorViewA : historyColorViewB; }
     VkImageView getPreviousHistoryView() const { return useHistoryA ? historyColorViewB : historyColorViewA; }
     void swapHistory() { useHistoryA = !useHistoryA; }

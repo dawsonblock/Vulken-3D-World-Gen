@@ -16,10 +16,21 @@ RaycastDDA::RaycastDDA(WorldManager* world_manager)
 }
 
 RaycastHit RaycastDDA::Raycast(const Ray& ray) const {
-    return PerformDDA(ray, [](BlockType type) {
-        // Stop at any solid block
+    // First, prefer transparent solids like glass if present along the path
+    RaycastHit transparent_hit = PerformDDA(ray, [](BlockType type) {
+        return BlockRegistry::Instance().IsSolid(type) &&
+               BlockRegistry::Instance().IsTransparent(type);
+    }, /*update_stats=*/false);
+    if (transparent_hit.hit) {
+        // Count only the final, returned hit in stats
+        m_stats.Update(transparent_hit);
+        return transparent_hit;
+    }
+    // Otherwise, fall back to any solid
+    RaycastHit hit = PerformDDA(ray, [](BlockType type) {
         return BlockRegistry::Instance().IsSolid(type);
     });
+    return hit;
 }
 
 RaycastHit RaycastDDA::Raycast(const Vec3& origin, const Vec3& direction, float max_distance) const {
@@ -170,7 +181,7 @@ float RaycastDDA::GetLightAttenuation(const Vec3& light_pos, const Vec3& target_
     return attenuation;
 }
 
-RaycastHit RaycastDDA::PerformDDA(const Ray& ray, std::function<bool(BlockType)> should_stop) const {
+RaycastHit RaycastDDA::PerformDDA(const Ray& ray, std::function<bool(BlockType)> should_stop, bool update_stats) const {
     VXL_NVTX_RANGE_COLOR("RaycastDDA::PerformDDA", NVTXProfiler::Color::Yellow);
     Timer timer;
     
@@ -178,110 +189,134 @@ RaycastHit RaycastDDA::PerformDDA(const Ray& ray, std::function<bool(BlockType)>
     hit.hit = false;
     
     // DDA setup
-    Vec3 current_pos = ray.origin;
-    Vec3 ray_dir = ray.direction;
-    
-    // Ensure direction is normalized
-    if (ray_dir.length_squared() == 0.0f) {
-        hit.computation_time_us = timer.ElapsedUs();
-        return hit;
+    const Vec3 ray_dir_norm = ray.direction.length_squared() > 0.0f ? ray.direction.normalized() : Vec3(0, 0, 0);
+    if (ray_dir_norm.length_squared() == 0.0f) {
+    hit.computation_time_us = static_cast<float>(timer.ElapsedUs());
+    if (update_stats) m_stats.Update(hit);
+    return hit;
     }
     
-    ray_dir = ray_dir.normalized();
+    int32_t x = static_cast<int32_t>(std::floor(ray.origin.x));
+    int32_t y = static_cast<int32_t>(std::floor(ray.origin.y));
+    int32_t z = static_cast<int32_t>(std::floor(ray.origin.z));
     
-    // Current voxel
-    int32_t x = static_cast<int32_t>(std::floor(current_pos.x));
-    int32_t y = static_cast<int32_t>(std::floor(current_pos.y));
-    int32_t z = static_cast<int32_t>(std::floor(current_pos.z));
+    const int32_t step_x = (ray_dir_norm.x > 0) ? 1 : -1;
+    const int32_t step_y = (ray_dir_norm.y > 0) ? 1 : -1;
+    const int32_t step_z = (ray_dir_norm.z > 0) ? 1 : -1;
     
-    // Direction of step (1 or -1)
-    int32_t step_x = (ray_dir.x > 0) ? 1 : -1;
-    int32_t step_y = (ray_dir.y > 0) ? 1 : -1;
-    int32_t step_z = (ray_dir.z > 0) ? 1 : -1;
+    const float delta_x = (std::abs(ray_dir_norm.x) > 0.0f) ? std::abs(1.0f / ray_dir_norm.x) : std::numeric_limits<float>::infinity();
+    const float delta_y = (std::abs(ray_dir_norm.y) > 0.0f) ? std::abs(1.0f / ray_dir_norm.y) : std::numeric_limits<float>::infinity();
+    const float delta_z = (std::abs(ray_dir_norm.z) > 0.0f) ? std::abs(1.0f / ray_dir_norm.z) : std::numeric_limits<float>::infinity();
     
-    // Calculate delta distances
-    float delta_x = (ray_dir.x != 0) ? std::abs(1.0f / ray_dir.x) : std::numeric_limits<float>::max();
-    float delta_y = (ray_dir.y != 0) ? std::abs(1.0f / ray_dir.y) : std::numeric_limits<float>::max();
-    float delta_z = (ray_dir.z != 0) ? std::abs(1.0f / ray_dir.z) : std::numeric_limits<float>::max();
-    
-    // Calculate next intersection distances
-    float next_x, next_y, next_z;
-    
-    if (ray_dir.x > 0) {
-        next_x = (static_cast<float>(x + 1) - current_pos.x) * delta_x;
+    auto frac = [](float v) {
+        return v - std::floor(v);
+    };
+    float tMaxX;
+    if (std::isinf(delta_x)) {
+        tMaxX = std::numeric_limits<float>::infinity();
     } else {
-        next_x = (current_pos.x - static_cast<float>(x)) * delta_x;
+        float fx = frac(ray.origin.x);
+        float distToBoundary = (step_x > 0) ? (1.0f - fx) : fx;
+        if (std::abs(distToBoundary) < m_config.step_epsilon) distToBoundary = 0.0f;
+        tMaxX = distToBoundary * delta_x;
     }
-    
-    if (ray_dir.y > 0) {
-        next_y = (static_cast<float>(y + 1) - current_pos.y) * delta_y;
+    float tMaxY;
+    if (std::isinf(delta_y)) {
+        tMaxY = std::numeric_limits<float>::infinity();
     } else {
-        next_y = (current_pos.y - static_cast<float>(y)) * delta_y;
+        float fy = frac(ray.origin.y);
+        float distToBoundary = (step_y > 0) ? (1.0f - fy) : fy;
+        if (std::abs(distToBoundary) < m_config.step_epsilon) distToBoundary = 0.0f;
+        tMaxY = distToBoundary * delta_y;
     }
-    
-    if (ray_dir.z > 0) {
-        next_z = (static_cast<float>(z + 1) - current_pos.z) * delta_z;
+    float tMaxZ;
+    if (std::isinf(delta_z)) {
+        tMaxZ = std::numeric_limits<float>::infinity();
     } else {
-        next_z = (current_pos.z - static_cast<float>(z)) * delta_z;
+        float fz = frac(ray.origin.z);
+        float distToBoundary = (step_z > 0) ? (1.0f - fz) : fz;
+        if (std::abs(distToBoundary) < m_config.step_epsilon) distToBoundary = 0.0f;
+        tMaxZ = distToBoundary * delta_z;
     }
     
-    // DDA loop
+    float t = 0.0f;
     int32_t steps = 0;
     BlockUtils::BlockFace hit_face = BlockUtils::BlockFace::North;
     
+    // If starting inside a solid, and t==0 at a boundary, still treat current cell if filter says stop
+    {
+        BlockPos start_pos(x, y, z);
+        BlockType start_type = GetBlockCached(start_pos);
+        if (should_stop(start_type)) {
+            hit.hit = true;
+            hit.block_pos = start_pos;
+            hit.block_type = start_type;
+            // Determine face by looking at which axis will be crossed first using tMax values
+            if (tMaxY <= tMaxX && tMaxY <= tMaxZ) hit_face = (step_y > 0) ? BlockUtils::BlockFace::Down : BlockUtils::BlockFace::Up;
+            else if (tMaxX <= tMaxZ) hit_face = (step_x > 0) ? BlockUtils::BlockFace::West : BlockUtils::BlockFace::East;
+            else hit_face = (step_z > 0) ? BlockUtils::BlockFace::South : BlockUtils::BlockFace::North;
+            hit.distance = 0.0f;
+            hit.hit_point = ray.origin;
+            hit.hit_normal = GetFaceNormal(hit_face);
+            hit.steps_taken = steps;
+            hit.computation_time_us = static_cast<float>(timer.ElapsedUs());
+            if (update_stats) m_stats.Update(hit);
+            return hit;
+        }
+    }
+
     while (steps < m_config.max_steps) {
         steps++;
         
-        // Check current block
+        // Step to next voxel boundary along smallest tMax
+        if (tMaxX < tMaxY) {
+            if (tMaxX < tMaxZ) {
+                t = tMaxX;
+                if (t > ray.max_distance) break;
+                x += step_x;
+                tMaxX += delta_x;
+                hit_face = (step_x > 0) ? BlockUtils::BlockFace::West : BlockUtils::BlockFace::East;
+            } else {
+                t = tMaxZ;
+                if (t > ray.max_distance) break;
+                z += step_z;
+                tMaxZ += delta_z;
+                hit_face = (step_z > 0) ? BlockUtils::BlockFace::South : BlockUtils::BlockFace::North;
+            }
+        } else {
+            if (tMaxY < tMaxZ) {
+                t = tMaxY;
+                if (t > ray.max_distance) break;
+                y += step_y;
+                tMaxY += delta_y;
+                hit_face = (step_y > 0) ? BlockUtils::BlockFace::Down : BlockUtils::BlockFace::Up;
+            } else {
+                t = tMaxZ;
+                if (t > ray.max_distance) break;
+                z += step_z;
+                tMaxZ += delta_z;
+                hit_face = (step_z > 0) ? BlockUtils::BlockFace::South : BlockUtils::BlockFace::North;
+            }
+        }
+        
+        // Check the voxel we stepped into
         BlockPos block_pos(x, y, z);
         BlockType block_type = GetBlockCached(block_pos);
-        
         if (should_stop(block_type)) {
-            // Hit!
             hit.hit = true;
             hit.block_pos = block_pos;
             hit.block_type = block_type;
             hit.face = hit_face;
-            
-            // Calculate hit point and distance
-            float min_next = std::min({next_x, next_y, next_z});
-            hit.distance = min_next;
-            hit.hit_point = ray.origin + ray_dir * hit.distance;
+            hit.distance = t;
+            hit.hit_point = ray.origin + ray_dir_norm * hit.distance;
             hit.hit_normal = GetFaceNormal(hit_face);
-            
             break;
-        }
-        
-        // Early exit for air blocks if enabled
-        if (m_config.early_exit_air && block_type == BlockType::Air) {
-            // Continue without counting this as significant work
-        }
-        
-        // Move to next voxel
-        if (next_x < next_y && next_x < next_z) {
-            if (next_x > ray.max_distance) break;
-            next_x += delta_x;
-            x += step_x;
-            hit_face = (step_x > 0) ? BlockUtils::BlockFace::West : BlockUtils::BlockFace::East;
-        } else if (next_y < next_z) {
-            if (next_y > ray.max_distance) break;
-            next_y += delta_y;
-            y += step_y;
-            hit_face = (step_y > 0) ? BlockUtils::BlockFace::Down : BlockUtils::BlockFace::Up;
-        } else {
-            if (next_z > ray.max_distance) break;
-            next_z += delta_z;
-            z += step_z;
-            hit_face = (step_z > 0) ? BlockUtils::BlockFace::North : BlockUtils::BlockFace::South;
         }
     }
     
     hit.steps_taken = steps;
-    hit.computation_time_us = timer.ElapsedUs();
-    
-    // Update statistics
-    m_stats.Update(hit);
-    
+    hit.computation_time_us = static_cast<float>(timer.ElapsedUs());
+    if (update_stats) m_stats.Update(hit);
     return hit;
 }
 
@@ -308,8 +343,8 @@ BlockUtils::BlockFace RaycastDDA::GetHitFace(const Vec3& hit_point, const BlockP
 
 Vec3 RaycastDDA::GetFaceNormal(BlockUtils::BlockFace face) const {
     switch (face) {
-        case BlockUtils::BlockFace::North: return Vec3(0, 0, -1);
-        case BlockUtils::BlockFace::South: return Vec3(0, 0, 1);
+    case BlockUtils::BlockFace::North: return Vec3(0, 0, 1);
+    case BlockUtils::BlockFace::South: return Vec3(0, 0, -1);
         case BlockUtils::BlockFace::East:  return Vec3(1, 0, 0);
         case BlockUtils::BlockFace::West:  return Vec3(-1, 0, 0);
         case BlockUtils::BlockFace::Up:    return Vec3(0, 1, 0);
@@ -410,27 +445,19 @@ namespace RaycastUtils {
         std::vector<Ray> rays;
         rays.reserve(count);
         
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<float> uniform(0.0f, 1.0f);
-        
-        for (int32_t i = 0; i < count; i++) {
-            // Uniform distribution on sphere surface
-            float u = uniform(gen);
-            float v = uniform(gen);
-            
-            float theta = 2.0f * M_PI * u;
-            float phi = std::acos(2.0f * v - 1.0f);
-            
-            Vec3 direction(
-                std::sin(phi) * std::cos(theta),
-                std::cos(phi),
-                std::sin(phi) * std::sin(theta)
-            );
-            
+        // Fibonacci sphere for deterministic uniform distribution
+        const float golden_angle = static_cast<float>(M_PI) * (3.0f - std::sqrt(5.0f));
+        for (int32_t i = 0; i < count; ++i) {
+            float t = (static_cast<float>(i) + 0.5f) / static_cast<float>(count);
+            float y = 1.0f - 2.0f * t;                 // y in [-1, 1]
+            float r = std::sqrt(std::max(0.0f, 1.0f - y * y));
+            float theta = golden_angle * static_cast<float>(i);
+            float x = r * std::cos(theta);
+            float z = r * std::sin(theta);
+            Vec3 direction(x, y, z);
+            direction = direction.normalized();
             rays.emplace_back(center, direction, 1000.0f);
         }
-        
         return rays;
     }
     
@@ -524,7 +551,7 @@ namespace RaycastUtils {
                                                           static_cast<float>(dz));
                         
                         BlockPos block_pos = offset_pos.to_block_pos();
-                        if (BlockRegistry::Instance().IsSolid(raycaster.m_world_manager->GetBlock(block_pos))) {
+                        if (BlockRegistry::Instance().IsSolid(raycaster.GetWorldManager().GetBlock(block_pos))) {
                             obstacles.push_back(Vec3(static_cast<float>(block_pos.x) + 0.5f,
                                                    static_cast<float>(block_pos.y) + 0.5f,
                                                    static_cast<float>(block_pos.z) + 0.5f));

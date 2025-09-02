@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cassert>
 #include <memory>
+#include <chrono>
 
 // Weather system for testing
 #include "../src/env/weather/weather_system.hpp"

@@ -114,3 +114,23 @@ private:
 };
 
 } // namespace voxelvk
+
+// Legacy logging macro shims
+#ifndef VXL_TRACE
+#define VXL_TRACE(fmt, ...) do { static ::voxelvk::Logger _vxl_logger__("App"); _vxl_logger__.Trace(fmt, ##__VA_ARGS__); } while(0)
+#endif
+#ifndef VXL_DEBUG
+#define VXL_DEBUG(fmt, ...) do { static ::voxelvk::Logger _vxl_logger__("App"); _vxl_logger__.Debug(fmt, ##__VA_ARGS__); } while(0)
+#endif
+#ifndef VXL_INFO
+#define VXL_INFO(fmt, ...)  do { static ::voxelvk::Logger _vxl_logger__("App"); _vxl_logger__.Info(fmt, ##__VA_ARGS__); } while(0)
+#endif
+#ifndef VXL_WARN
+#define VXL_WARN(fmt, ...)  do { static ::voxelvk::Logger _vxl_logger__("App"); _vxl_logger__.Warn(fmt, ##__VA_ARGS__); } while(0)
+#endif
+#ifndef VXL_ERROR
+#define VXL_ERROR(fmt, ...) do { static ::voxelvk::Logger _vxl_logger__("App"); _vxl_logger__.Error(fmt, ##__VA_ARGS__); } while(0)
+#endif
+#ifndef VXL_FATAL
+#define VXL_FATAL(fmt, ...) do { static ::voxelvk::Logger _vxl_logger__("App"); _vxl_logger__.Fatal(fmt, ##__VA_ARGS__); } while(0)
+#endif

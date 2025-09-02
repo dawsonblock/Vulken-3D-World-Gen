@@ -4,6 +4,11 @@
 #include <limits>
 #include <vector>
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
+
 namespace voxelvk::physics {
 
 // Static constants
@@ -12,14 +17,14 @@ const Capsule Capsule::UNIT = Capsule(glm::vec3(0.0f), 0.5f, 0.5f);
 // Constructors
 Capsule::Capsule(const glm::vec3& center, float half_height, float radius)
     : center(center), half_height(half_height), radius(radius) {
-    ensureValid();
+    // Do not auto-clamp here; allow validation to be explicit via validateAndClampCapsule
 }
 
 Capsule::Capsule(const glm::vec3& bottom, const glm::vec3& top, float radius)
     : radius(radius) {
     center = (bottom + top) * 0.5f;
     half_height = glm::length(top - bottom) * 0.5f;
-    ensureValid();
+    // Avoid auto-clamping; keep construction lightweight and explicit
 }
 
 // Static factory methods
@@ -494,3 +499,7 @@ glm::vec3 safeNormalize(const glm::vec3& v, const glm::vec3& fallback) {
 } // namespace capsule_geometry
 
 } // namespace voxelvk::physics
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif

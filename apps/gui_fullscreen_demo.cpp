@@ -95,20 +95,7 @@ int main(){
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 #else
-        glMatrixMode(GL_PROJECTION); glLoadIdentity();
-        glOrtho(0, fbw, fbh, 0, -1, 1);
-        glMatrixMode(GL_MODELVIEW); glLoadIdentity();
-
-        float r = g_is_fullscreen ? 0.2f : 0.1f;
-        float g = g_is_fullscreen ? 0.6f : 0.4f;
-        float b = 0.2f;
-        glColor3f(r,g,b);
-        glBegin(GL_QUADS);
-            glVertex2f(btn_x, btn_y);
-            glVertex2f(btn_x + btn_w, btn_y);
-            glVertex2f(btn_x + btn_w, btn_y + btn_h);
-            glVertex2f(btn_x, btn_y + btn_h);
-        glEnd();
+    // No ImGui path: minimal input handling without legacy GL fixed-function calls
 
         if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
             double mx, my; glfwGetCursorPos(window, &mx, &my);

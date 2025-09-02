@@ -1,3 +1,5 @@
+// Guard entire test when TensorRT integration isn't enabled
+#if defined(VOXELVK_ENABLE_TENSORRT)
 #include <gtest/gtest.h>
 #include "../src/ai/ai_enhanced_generator.hpp"
 #include "../src/ai/ai_tensorrt_manager.hpp"
@@ -425,3 +427,8 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+
+#else
+// Provide a dummy main so the test target compiles when TensorRT is disabled
+int main() { return 0; }
+#endif

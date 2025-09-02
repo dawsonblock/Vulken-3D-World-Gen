@@ -93,6 +93,7 @@ namespace collision_utils {
         
         // Ground detection
         float ground_normal_threshold = 0.7f;
+    bool enable_pre_fall = false; // If true, simulate downward settling before resolving
         
         // Numeric stability
         float epsilon = 1e-6f;

@@ -168,7 +168,8 @@ public:
         double confidenceLevel = 0.95;               // 95% confidence for regression
     };
     
-    PerformanceRegressionDetector(const RegressionThresholds& thresholds = {});
+    PerformanceRegressionDetector();
+    PerformanceRegressionDetector(const RegressionThresholds& thresholds);
     
     // Baseline management
     void setBaseline(PerformanceBudget category, const std::vector<double>& baselineSamples);
@@ -207,6 +208,11 @@ public:
     bool initialize(const PerformanceBudgetTracker::BudgetConfig& config = PerformanceBudgetTracker::BudgetConfig::Performance120());
     void shutdown();
     
+    // Optional: enable GPU timing when a valid Vulkan device is available
+    // Safe no-op in headless/tests if never called.
+    void enableGPUTimer(VkDevice device, VkPhysicalDevice physicalDevice,
+                        uint32_t framesInFlight = 3, uint32_t maxTimestampsPerFrame = 64);
+    
     // Frame timing
     void beginFrame(uint32_t frameIndex);
     void endFrame();
@@ -243,6 +249,7 @@ private:
     
     bool initialized_ = false;
     bool nvtxEnabled_ = false;
+    bool gpuTimerEnabled_ = false;
     bool regressionDetectionEnabled_ = false;
     
     // Current frame tracking
