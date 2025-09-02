@@ -707,15 +707,20 @@ int main(int argc, char** argv) {
     const bool enableViewports = hasArg(argc, argv, "--viewports") || std::getenv("VOXELVK_VIEWPORTS");
     if (enableViewports) io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
+    // Ini path & UI scale from arg/env
+    if (const char* ini = getArgValue(argc, argv, "--imgui-ini")) { ImGui::GetIO().IniFilename = ini; }
+    if (const char* envIni = std::getenv("VOXELVK_IMGUI_INI")) { ImGui::GetIO().IniFilename = envIni; }
     // UI scale from arg/env
     float uiScale = 1.0f;
     if (const char* s = getArgValue(argc, argv, "--ui-scale")) { try { uiScale = std::max(0.5f, std::min(2.0f, std::stof(s))); } catch(...){} }
     if (const char* e = std::getenv("VOXELVK_UI_SCALE")) { try { uiScale = std::max(0.5f, std::min(2.0f, std::stof(e))); } catch(...){} }
     io.FontGlobalScale = uiScale;
 
-    // Modern dark theme with rounded corners and subtle accents
-    ImGui::StyleColorsDark();
-    {
+    // Theme switch (runtime)
+    enum class ThemeKind { Dark, Light };
+    static ThemeKind themeKind = ThemeKind::Dark;
+    auto ApplyDarkTheme = [](){
+        ImGui::StyleColorsDark();
         ImGuiStyle& s = ImGui::GetStyle();
         s.WindowRounding = 8.0f;
         s.FrameRounding = 6.0f;
@@ -748,11 +753,15 @@ int main(int argc, char** argv) {
         c[ImGuiCol_TabHovered]      = ImVec4(0.20f,0.45f,0.85f,0.45f);
         c[ImGuiCol_TabActive]       = ImVec4(0.18f,0.20f,0.25f,1.00f);
         c[ImGuiCol_NavHighlight]    = ImVec4(0.20f,0.45f,0.85f,0.60f);
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-            s.WindowRounding = 8.0f;
-            s.Colors[ImGuiCol_WindowBg].w = 1.0f;
-        }
-    }
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) { s.WindowRounding = 8.0f; s.Colors[ImGuiCol_WindowBg].w = 1.0f; }
+    };
+    auto ApplyLightTheme = [](){
+        ImGui::StyleColorsLight();
+        ImGuiStyle& s = ImGui::GetStyle();
+        s.WindowRounding = 8.0f; s.FrameRounding = 6.0f; s.GrabRounding = 6.0f; s.PopupRounding = 8.0f; s.TabRounding = 6.0f; s.ScrollbarRounding = 9.0f;
+        s.ItemSpacing = ImVec2(10, 8); s.ItemInnerSpacing = ImVec2(8, 6); s.WindowPadding = ImVec2(12, 10); s.FramePadding = ImVec2(10, 6);
+    };
+    ApplyDarkTheme();
     
     // Initialize ImGui backends
     ImGui_ImplGlfw_InitForVulkan(window, true);
@@ -913,7 +922,7 @@ int main(int argc, char** argv) {
             // Dockspace & main menu
             ImGuiViewport* vp = ImGui::GetMainViewport();
             ImGui::DockSpaceOverViewport(vp, ImGuiDockNodeFlags_PassthruCentralNode);
-            if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMainMenuBar()) {
                 if (ImGui::BeginMenu("View")) {
                     static bool showOverview = true, showCamera = true, showSystems = true, showPerf = true;
                     ImGui::MenuItem("Overview", nullptr, &showOverview);
@@ -923,6 +932,10 @@ int main(int argc, char** argv) {
                     ImGui::Separator();
                     ImGui::Text("UI Scale"); ImGui::SameLine();
                     static float uiScaleRuntime = io.FontGlobalScale; if (ImGui::SliderFloat("##uiscale", &uiScaleRuntime, 0.75f, 1.75f, "%.2fx")) io.FontGlobalScale = uiScaleRuntime;
+            ImGui::Separator();
+            bool tDark = (themeKind == ThemeKind::Dark);
+            if (ImGui::MenuItem("Dark Theme", nullptr, tDark)) { themeKind = ThemeKind::Dark; ApplyDarkTheme(); }
+            if (ImGui::MenuItem("Light Theme", nullptr, !tDark)) { themeKind = ThemeKind::Light; ApplyLightTheme(); }
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("Actions")) {
@@ -930,6 +943,38 @@ int main(int argc, char** argv) {
                     ImGui::EndMenu();
                 }
                 ImGui::EndMainMenuBar();
+            }
+
+            // Command Palette (Ctrl+K)
+            static bool paletteOpen = false; static char paletteQuery[128] = "";
+            if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_K, false)) paletteOpen = true;
+            struct Cmd { const char* name; std::function<void()> fn; };
+            std::vector<Cmd> cmds = {
+                {"Toggle Fullscreen", [&](){ static bool isFullscreen=false; isFullscreen=!isFullscreen; voxelvk::RequestFullscreen(isFullscreen); }},
+                {"Save Screenshot", [&](){
+#if defined(__linux__)
+                    SaveWindowScreenshot(window, "screenshot.png");
+#endif
+                }},
+                {"Export Perf JSON", [&](){ voxelvk::PerformanceMonitor::instance().exportPerformanceData("."); }},
+                {"Toggle Viewports", [&](){ io.ConfigFlags ^= ImGuiConfigFlags_ViewportsEnable; }},
+            };
+            if (paletteOpen) {
+                ImGui::SetNextWindowSize(ImVec2(520, 300), ImGuiCond_Always);
+                if (ImGui::Begin("Command Palette", &paletteOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings)) {
+                    ImGui::InputTextWithHint("##cmd", "Type a command...", paletteQuery, sizeof(paletteQuery));
+                    auto matches = cmds;
+                    if (paletteQuery[0]) {
+                        matches.clear();
+                        std::string q = paletteQuery; std::transform(q.begin(), q.end(), q.begin(), ::tolower);
+                        for (auto& c : cmds) { std::string n=c.name; std::transform(n.begin(), n.end(), n.begin(), ::tolower); if (n.find(q)!=std::string::npos) matches.push_back(c); }
+                    }
+                    ImGui::Separator();
+                    for (auto& m : matches) {
+                        if (ImGui::Selectable(m.name)) { m.fn(); paletteOpen=false; paletteQuery[0]='\0'; }
+                    }
+                }
+                ImGui::End();
             }
 
             // Panels
@@ -973,6 +1018,22 @@ int main(int argc, char** argv) {
                 const auto& timings = pm.getGPUTimer().getAllTimings();
                 if (!timings.empty()) { ImGui::Separator(); ImGui::Text("GPU timings:"); for (const auto& kv : timings) { ImGui::BulletText("%s: %.3f ms", kv.first.c_str(), kv.second); } }
                 else { ImGui::TextDisabled("GPU timings not available"); }
+            }
+            ImGui::End();
+            // Status bar
+            ImGuiWindowFlags sbFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus;
+            ImGuiViewport* mainVp = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(ImVec2(mainVp->WorkPos.x, mainVp->WorkPos.y + mainVp->WorkSize.y - 24));
+            ImGui::SetNextWindowSize(ImVec2(mainVp->WorkSize.x, 24));
+            if (ImGui::Begin("##StatusBar", nullptr, sbFlags)) {
+                ImGui::Text("FPS: %.0f  (%.2f ms)", fps, 1000.0 * (fps > 0.0 ? 1.0 / fps : 0.0));
+                ImGui::SameLine();
+                auto& pm = voxelvk::PerformanceMonitor::instance();
+                const auto& timings = pm.getGPUTimer().getAllTimings();
+                if (!timings.empty()) {
+                    ImGui::SameLine(); ImGui::TextDisabled("|"); ImGui::SameLine();
+                    int n=0; for (const auto& kv : timings) { if (n++>0) { ImGui::SameLine(); ImGui::TextDisabled("|"); ImGui::SameLine(); } ImGui::Text("%s: %.2f ms", kv.first.c_str(), kv.second); }
+                }
             }
             ImGui::End();
         }
