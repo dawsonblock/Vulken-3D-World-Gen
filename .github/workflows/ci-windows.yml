@@ -26,8 +26,15 @@ jobs:
           if (-not (Test-Path $vcpkgRoot)) {
             git clone --depth 1 https://github.com/microsoft/vcpkg $vcpkgRoot
           }
+          Write-Host "vcpkg root: $vcpkgRoot"
+          Get-ChildItem -Force $vcpkgRoot | Select-Object -ExpandProperty Name
+          $bootstrapBat = Join-Path $vcpkgRoot 'bootstrap-vcpkg.bat'
           if (-not (Test-Path (Join-Path $vcpkgRoot 'vcpkg.exe'))) {
-            & "$vcpkgRoot\bootstrap-vcpkg.bat" -disableMetrics
+            if (-not (Test-Path $bootstrapBat)) {
+              Write-Error "bootstrap script not found at $bootstrapBat"
+              exit 1
+            }
+            cmd.exe /c "`"$bootstrapBat`" -disableMetrics"
           }
           echo "VCPKG_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
           echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $env:GITHUB_ENV
