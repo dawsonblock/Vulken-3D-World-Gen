@@ -179,29 +179,38 @@ jobs:
 
       - name: Configure (CMake)
         run: |
+          PRESET="default"
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            PRESET="windows-default"
+          fi
           if [ "${{ matrix.preset }}" = "headless" ]; then
-            cmake --preset headless \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DVOXELVK_ENABLE_CUDA=OFF \
-              -DVOXELVK_ENABLE_TENSORRT=OFF \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-              -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+            if [ "${{ matrix.os }}" = "windows-latest" ]; then
+              # No dedicated windows headless preset; override the option
+              cmake --preset windows-default -DVOXELVK_HEADLESS_ONLY=ON \
+                -DCMAKE_BUILD_TYPE=Release -DVOXELVK_ENABLE_CUDA=OFF -DVOXELVK_ENABLE_TENSORRT=OFF \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+            else
+              cmake --preset headless -DCMAKE_BUILD_TYPE=Release \
+                -DVOXELVK_ENABLE_CUDA=OFF -DVOXELVK_ENABLE_TENSORRT=OFF \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+            fi
           else
-            cmake --preset default \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DVOXELVK_ENABLE_CUDA=OFF \
-              -DVOXELVK_ENABLE_TENSORRT=OFF \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-              -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+            cmake --preset "$PRESET" -DCMAKE_BUILD_TYPE=Release \
+              -DVOXELVK_ENABLE_CUDA=OFF -DVOXELVK_ENABLE_TENSORRT=OFF \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
           fi
         shell: bash
 
       - name: Build
         run: |
-          if [ "${{ matrix.preset }}" = "headless" ]; then
-            cmake --build build_headless --config Release --parallel;
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cmake --build build-windows --config Release --parallel;
           else
-            cmake --build build --config Release --parallel;
+            if [ "${{ matrix.preset }}" = "headless" ]; then
+              cmake --build build_headless --config Release --parallel;
+            else
+              cmake --build build --config Release --parallel;
+            fi
           fi
         shell: bash
 
@@ -224,7 +233,7 @@ jobs:
         if: matrix.os == 'windows-latest' && matrix.preset == 'headless'
         shell: powershell
         run: |
-          $exe = "build\apps\smoke_headless.exe"
+          $exe = "build-windows\apps\smoke_headless.exe"
           if (Test-Path $exe) {
             Write-Host "Starting smoke_headless for 10s..."
             $p = Start-Process -FilePath $exe -PassThru
