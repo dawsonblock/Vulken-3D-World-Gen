@@ -12,6 +12,9 @@
 #include <algorithm>
 #include <string>
 #include "../src/core/fullscreen_toggle.hpp"
+#include "redis_asset_store.h"
+#include <iostream>
+
 static VkPipelineCache g_pipelineCache = VK_NULL_HANDLE;
 
 #include "../src/ai/ai_palette_config_io.hpp"
@@ -68,6 +71,22 @@ private:
 
 static void framebuffer_size_cb(GLFWwindow* w, int, int){ (void)w; g_resize_requested=true; }
 
+std::unique_ptr<RedisAssetStore> redis_store;
+
+void init_redis() {
+    try {
+        redis_store = std::make_unique<RedisAssetStore>("config/redis.yaml");
+        redis_store->set_reload_callback([](const std::string& asset_id) {
+            // This callback will be invoked from a background thread.
+            // Flag the asset for reload on the main thread.
+            std::cout << "Hot-reload triggered for asset: " << asset_id << std::endl;
+            // Example: add asset_id to a concurrent queue to be processed in the main loop
+        });
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to initialize RedisAssetStore: " << e.what() << std::endl;
+    }
+}
+
 int main(){
     if(!glfwInit()){ std::fprintf(stderr, "Failed to init GLFW\n"); return 1; }
     if(!glfwVulkanSupported()){ std::fprintf(stderr, "Vulkan not supported by GLFW\n"); return 2; }
@@ -87,6 +106,20 @@ int main(){
     VulkanApp app;
     try { app.create(window); }
     catch(const std::exception& e){ std::fprintf(stderr, "Init error: %s\n", e.what()); glfwDestroyWindow(window); glfwTerminate(); return 4; }
+
+    // Initialize Redis asset store
+    init_redis();
+
+    // Example of fetching an asset on startup
+    if (redis_store) {
+        MeshBlob rock_mesh;
+        if (redis_store->fetch_mesh("rock01", rock_mesh)) {
+            std::cout << "Successfully fetched mesh 'rock01' with size " << rock_mesh.data.size() << " bytes." << std::endl;
+            // Upload to GPU or process the mesh data
+        } else {
+            std::cerr << "Failed to fetch mesh 'rock01'." << std::endl;
+        }
+    }
 
     double last = glfwGetTime(); double fps=0.0; double acc=0.0; int frames=0;
 
