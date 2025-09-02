@@ -11,10 +11,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+    - name: Install dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y cmake ninja-build mesa-vulkan-drivers libvulkan1 vulkan-tools xvfb x11vnc websockify fluxbox
+      sudo apt-get install -y cmake ninja-build mesa-vulkan-drivers libvulkan1 vulkan-tools xvfb x11vnc websockify fluxbox novnc imagemagick
 
       - name: Build
         run: |
@@ -24,18 +24,17 @@ jobs:
         run: |
           ctest --test-dir build --output-on-failure -j2
 
-      - name: GUI smoke (xvfb + screenshot)
+    - name: GUI smoke (xvfb + screenshot)
         env:
           GUI_ARGS: --smoke --benchmark --frames 120 --autoscreenshot --export-perf --perf-out .
           PORT: 6080
         run: |
           set -e
           # Start virtual desktop + app (auto-exits after ~2s)
-          scripts/start_gui_web.sh || true
+      scripts/start_gui_web.sh || true
           # Give some time to render at least a couple frames
           sleep 3
           # Take a screenshot from the virtual display
-          sudo apt-get install -y imagemagick
           DISPLAY=:99 import -window root screenshot.png || true
           # Always stop services
           scripts/stop_gui_web.sh || true

@@ -25,7 +25,12 @@ jobs:
           FILES=$(git ls-files '*.cpp' '*.hpp' '*.h' '*.cc' '*.cxx' | tr '\n' ' ')
           if [ -n "$FILES" ]; then
             clang-format --version
-            for f in $FILES; do clang-format -style=file --dry-run --Werror "$f"; done
+            STYLE_OPT="-style=file"
+            if [ ! -f .clang-format ]; then
+              echo "No .clang-format found, using LLVM default style"
+              STYLE_OPT="-style=LLVM"
+            fi
+            for f in $FILES; do clang-format $STYLE_OPT --dry-run --Werror "$f"; done
           else
             echo "No C/C++ files to check."
           fi
@@ -62,82 +67,13 @@ jobs:
           if [ "${{ env.TIDY_FAIL_ON_WARNINGS }}" = "true" ]; then
             WARN=$(grep -E "\bwarning:\b" -c artifacts/clang-tidy-report.txt || true)
             echo "clang-tidy warnings: $WARN"
-            name: CI
-
-            on:
-              push:
-                branches: [ main, master ]
-              pull_request:
-
-            permissions:
-              contents: read
-              pull-requests: write
-
-            jobs:
-              format_check:
-                name: Formatting (clang-format)
-                runs-on: ubuntu-latest
-                steps:
-                  - uses: actions/checkout@v4
-                  - name: Install clang-format
-                    run: |
-                      sudo apt-get update
-                      sudo apt-get install -y clang-format
-                  - name: Check formatting
-                    run: |
-                      set -e
-                      FILES=$(git ls-files '*.cpp' '*.hpp' '*.h' '*.cc' '*.cxx' | tr '\n' ' ')
-                      if [ -n "$FILES" ]; then
-                        clang-format --version
-                        for f in $FILES; do clang-format -style=file --dry-run --Werror "$f"; done
-                      else
-                        echo "No C/C++ files to check."
-                      fi
-
-              tidy:
-                name: Clang-Tidy (Linux)
-                runs-on: ubuntu-latest
-                needs: [format_check]
-                env:
-                  TIDY_FAIL_ON_WARNINGS: ${{ vars.TIDY_FAIL_ON_WARNINGS || 'false' }}
-                steps:
-                  - uses: actions/checkout@v4
-                  - name: Install toolchain & tidy
-                    run: |
-                      sudo apt-get update
-                      sudo apt-get install -y clang-tidy build-essential cmake ninja-build \
-                        ccache libvulkan-dev vulkan-validationlayers-dev glslang-tools shaderc
-                  - name: Configure (export compile commands)
-                    run: |
-                      cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-                        -DVOXELVK_HEADLESS_ONLY=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-                  - name: Run clang-tidy
-                    run: |
-                      mkdir -p artifacts
-                      FILES=$(git ls-files '*.cpp' '*.cc' '*.cxx' | tr '\n' ' ')
-                      if [ -z "$FILES" ]; then
-                        echo "No C++ sources." | tee artifacts/clang-tidy-report.txt
-                        exit 0
-                      fi
-                      echo "Running clang-tidy..."
-                      clang-tidy -p build $FILES | tee artifacts/clang-tidy-report.txt || true
-                  - name: Fail on warnings (configurable)
-                    run: |
-                      if [ "${{ env.TIDY_FAIL_ON_WARNINGS }}" = "true" ]; then
-                        WARN=$(grep -E "\bwarning:\b" -c artifacts/clang-tidy-report.txt || true)
-                        echo "clang-tidy warnings: $WARN"
-                        if [ "$WARN" -gt 0 ]; then
-                          echo "Failing build due to clang-tidy warnings."
-                          exit 1
-                        fi
-                      else
-                        echo "TIDY_FAIL_ON_WARNINGS=false — not failing on warnings."
-                      fi
-                  - name: Upload tidy report
-                    uses: actions/upload-artifact@v4
-                    with:
-                      name: clang-tidy-report
-                      path: artifacts/clang-tidy-report.txt
+            if [ "$WARN" -gt 0 ]; then
+              echo "Failing build due to clang-tidy warnings."
+              exit 1
+            fi
+          else
+            echo "TIDY_FAIL_ON_WARNINGS=false — not failing on warnings."
+          fi
 
               shader_check:
                 name: Shader Compile Check
