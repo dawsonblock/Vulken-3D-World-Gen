@@ -537,14 +537,45 @@ static void updateCameraInput(FlyCamera& cam, GLFWwindow* window, float dt) {
 }
 
 #if defined(__linux__)
-// Simple X11-based screenshot of the window contents; avoids Vulkan readbacks
+// Simple X11-based screenshot using the root window region for the target window; avoids Vulkan readbacks
 static bool SaveWindowScreenshot(GLFWwindow* window, const char* path) {
-    int w=0,h=0; glfwGetFramebufferSize(window, &w, &h);
-    if (w<=0 || h<=0) return false;
     Display* dpy = glfwGetX11Display();
     if (!dpy) return false;
     Window xw = glfwGetX11Window(window);
-    XImage* img = XGetImage(dpy, xw, 0, 0, (unsigned)w, (unsigned)h, AllPlanes, ZPixmap);
+
+    // Query window geometry and translate to root coords
+    XWindowAttributes attr{};
+    if (!XGetWindowAttributes(dpy, xw, &attr)) return false;
+    Window root = DefaultRootWindow(dpy);
+    int rx=0, ry=0; Window child;
+    XTranslateCoordinates(dpy, xw, root, 0, 0, &rx, &ry, &child);
+
+    int w = attr.width;
+    int h = attr.height;
+    if (w<=0 || h<=0) return false;
+
+    // Ensure server processed recent drawing before capture
+    XSync(dpy, False);
+
+    // Clamp capture region to root bounds
+    Window rr; int rrx, rry; unsigned int rw, rh, rb, rd;
+    if (XGetGeometry(dpy, root, &rr, &rrx, &rry, &rw, &rh, &rb, &rd)) {
+        if (rx < 0) { w += rx; rx = 0; }
+        if (ry < 0) { h += ry; ry = 0; }
+        if (rx + w > (int)rw) w = std::max(0, (int)rw - rx);
+        if (ry + h > (int)rh) h = std::max(0, (int)rh - ry);
+        if (w <= 0 || h <= 0) return false;
+    }
+
+    // Temporary X error handler to swallow BadMatch
+    int hadError = 0;
+    auto prevHandler = XSetErrorHandler([](Display*, XErrorEvent* e)->int { (void)e; return 0; });
+
+    // Capture from the root window region covering our app window
+    XImage* img = XGetImage(dpy, root, (int)rx, (int)ry, (unsigned)w, (unsigned)h, AllPlanes, ZPixmap);
+    // Force error delivery, then restore handler
+    XSync(dpy, False);
+    XSetErrorHandler(prevHandler);
     if (!img) return false;
 
     auto popcount = [](unsigned long x){ int c=0; while(x){ c += (x&1ul); x >>= 1; } return c; };
