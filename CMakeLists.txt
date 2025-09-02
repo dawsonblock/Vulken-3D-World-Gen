@@ -6,11 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# vcpkg manifest toolchain (if available)
-if(DEFINED ENV{VCPKG_ROOT})
-  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "" FORCE)
-  message(STATUS "Using vcpkg toolchain from: $ENV{VCPKG_ROOT}")
-endif()
+# Toolchain selection is driven by CMakePresets and CI; avoid overriding here
 
 # === AI System Sources ===
 set(VOXELVK_ENABLE_AI ON CACHE BOOL "Enable AI system")
@@ -45,13 +41,19 @@ if(VOXELVK_ENABLE_WEATHER)
     endif()
   endif()
 
-  # Prefer modern CMake target if available, else fall back to pkg-config, else legacy target name
+  # Prefer modern CMake target if available; otherwise, wrap pkg-config in an INTERFACE target; else legacy
   if(TARGET yaml-cpp::yaml-cpp)
     set(WEATHER_YAML_LIB yaml-cpp::yaml-cpp)
     message(STATUS "Found yaml-cpp target: yaml-cpp::yaml-cpp")
   elseif(YAML_CPP_FOUND)
-    set(WEATHER_YAML_LIB ${YAML_CPP_LIBRARIES})
-    message(STATUS "Found yaml-cpp via pkg-config")
+    if(NOT TARGET yaml_cpp_pkg)
+      add_library(yaml_cpp_pkg INTERFACE)
+      target_include_directories(yaml_cpp_pkg INTERFACE ${YAML_CPP_INCLUDE_DIRS})
+      target_link_libraries(yaml_cpp_pkg INTERFACE ${YAML_CPP_LIBRARIES})
+      add_library(yaml-cpp::yaml-cpp ALIAS yaml_cpp_pkg)
+    endif()
+    set(WEATHER_YAML_LIB yaml-cpp::yaml-cpp)
+    message(STATUS "Found yaml-cpp via pkg-config (wrapped as target)")
   elseif(yaml-cpp_FOUND)
     # Legacy target alias maintained for backward compatibility in some distros
     set(WEATHER_YAML_LIB yaml-cpp)
@@ -692,6 +694,8 @@ else()
   elseif(yaml-cpp_FOUND)
     # Legacy target name on some distros
     set(REDIS_YAML_LIB yaml-cpp)
+  elseif(TARGET yaml_cpp_pkg)
+    set(REDIS_YAML_LIB yaml-cpp::yaml-cpp)
   endif()
 endif()
 
