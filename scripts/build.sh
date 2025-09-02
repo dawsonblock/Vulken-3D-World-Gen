@@ -1,21 +1,4 @@
-#!/bin/bash
 #!/usr/bin/env bash
-set -euo pipefail
-
-# Convenience build script wiring RAG optional deps if available
-ROOT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)/..
-BUILD_DIR="${ROOT_DIR}/build"
-mkdir -p "$BUILD_DIR"
-
-cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
-  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-RelWithDebInfo}
-cmake --build "$BUILD_DIR" --parallel
-
-echo "[OK] Build finished."
-
-# VoxelRL_All Build Script
-# cmake+ninja RelWithDebInfo LTO
-
 set -euo pipefail
 
 echo "=== VoxelRL_All Build Script ==="
@@ -30,6 +13,9 @@ PARALLEL_JOBS=${PARALLEL_JOBS:-$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/n
 ENABLE_LTO=${ENABLE_LTO:-ON}
 ENABLE_CUDA=${ENABLE_CUDA:-ON}
 ENABLE_TESTS=${ENABLE_TESTS:-ON}
+BUILD_TARGET=${BUILD_TARGET:-}
+GENERATOR=""
+BUILD_DIR=""
 
 echo "Project root: $PROJECT_ROOT"
 echo "Build type: $BUILD_TYPE"
@@ -73,7 +59,7 @@ check_dependencies() {
     fi
     
     # Enhanced Vulkan checking
-    if [[ -z "$VULKAN_SDK" ]]; then
+    if [[ -z "${VULKAN_SDK:-}" ]]; then
         if ! pkg-config --exists vulkan; then
             echo "Error: Vulkan development libraries not found"
             echo "  Install with: sudo apt install libvulkan-dev vulkan-tools"
@@ -118,11 +104,26 @@ check_dependencies() {
     echo "Generator: $GENERATOR"
 }
 
+# Determine build directory (shared across steps)
+compute_build_dir() {
+    if [[ -f "$PROJECT_ROOT/CMakePresets.json" ]]; then
+        case "$PRESET" in
+            debug|Debug) BUILD_DIR="$PROJECT_ROOT/build_debug" ;;
+            release|Release) BUILD_DIR="$PROJECT_ROOT/build_release" ;;
+            headless) BUILD_DIR="$PROJECT_ROOT/build_headless" ;;
+            *) BUILD_DIR="$PROJECT_ROOT/build" ;;
+        esac
+    else
+        BUILD_DIR="$PROJECT_ROOT/build"
+    fi
+}
+
 # Configure build
 configure_build() {
     echo "Configuring build..."
     
     cd "$PROJECT_ROOT"
+    compute_build_dir
     
     # Use preset if available, otherwise manual configuration
     if [[ -f "CMakePresets.json" ]]; then
@@ -130,9 +131,7 @@ configure_build() {
         cmake --preset="$PRESET"
     else
         echo "Manual CMake configuration"
-        
-        BUILD_DIR="build"
-        
+
         # Additional CMake flags
         CMAKE_FLAGS=(
             -G "$GENERATOR"
@@ -153,16 +152,16 @@ configure_build() {
         fi
         
         # Add vcpkg toolchain if available
-        if [[ -n "$VCPKG_ROOT" && -f "$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" ]]; then
-            CMAKE_FLAGS+=(-DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake")
+        if [[ -n "${VCPKG_ROOT:-}" && -f "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" ]]; then
+            CMAKE_FLAGS+=(-DCMAKE_TOOLCHAIN_FILE="${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
         fi
         
         # Add LibTorch if available
-        if [[ -n "$LIBTORCH_ROOT" && -d "$LIBTORCH_ROOT" ]]; then
-            CMAKE_FLAGS+=(-DCMAKE_PREFIX_PATH="$LIBTORCH_ROOT")
+        if [[ -n "${LIBTORCH_ROOT:-}" && -d "${LIBTORCH_ROOT}" ]]; then
+            CMAKE_FLAGS+=(-DCMAKE_PREFIX_PATH="${LIBTORCH_ROOT}")
         fi
         
-        cmake "${CMAKE_FLAGS[@]}"
+    cmake "${CMAKE_FLAGS[@]}"
     fi
     
     echo "Configuration complete"
@@ -174,25 +173,26 @@ build_project() {
     
     cd "$PROJECT_ROOT"
     
-    # Determine build directory
-    if [[ -f "CMakePresets.json" ]]; then
-        # Extract build directory from preset (simplified)
-        case "$PRESET" in
-            "debug") BUILD_DIR="build_debug" ;;
-            "release") BUILD_DIR="build_release" ;;
-            "headless") BUILD_DIR="build_headless" ;;
-            *) BUILD_DIR="build" ;;
-        esac
-    else
-        BUILD_DIR="build"
-    fi
+    # Ensure BUILD_DIR set
+    compute_build_dir
     
     echo "Building in directory: $BUILD_DIR"
     
+    if [[ -n "$BUILD_TARGET" ]]; then
+        echo "Building target: $BUILD_TARGET"
+    fi
     if [[ "$GENERATOR" == "Ninja" ]]; then
-        cmake --build "$BUILD_DIR" --parallel "$PARALLEL_JOBS"
+        if [[ -n "$BUILD_TARGET" ]]; then
+            cmake --build "$BUILD_DIR" --parallel "$PARALLEL_JOBS" --target "$BUILD_TARGET"
+        else
+            cmake --build "$BUILD_DIR" --parallel "$PARALLEL_JOBS"
+        fi
     else
-        cmake --build "$BUILD_DIR" -- -j"$PARALLEL_JOBS"
+        if [[ -n "$BUILD_TARGET" ]]; then
+            cmake --build "$BUILD_DIR" --target "$BUILD_TARGET" -- -j"$PARALLEL_JOBS"
+        else
+            cmake --build "$BUILD_DIR" -- -j"$PARALLEL_JOBS"
+        fi
     fi
     
     echo "Build complete"
@@ -205,6 +205,7 @@ run_tests() {
         
         cd "$PROJECT_ROOT"
         
+        compute_build_dir
         if [[ -f "CMakePresets.json" ]]; then
             ctest --preset="$PRESET" --output-on-failure
         else
@@ -227,6 +228,7 @@ print_summary() {
     echo "CUDA enabled: $ENABLE_CUDA"
     echo "LTO enabled: $ENABLE_LTO"
     echo "Tests enabled: $ENABLE_TESTS"
+    compute_build_dir
     echo "Build directory: $BUILD_DIR"
     echo ""
     
@@ -250,12 +252,21 @@ main() {
 # Handle command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --config)
+            # Map CMake multi-config style to BUILD_TYPE
+            BUILD_TYPE="$2"
+            shift 2
+            ;;
         --preset)
             PRESET="$2"
             shift 2
             ;;
         --build-type)
             BUILD_TYPE="$2"
+            shift 2
+            ;;
+        --target)
+            BUILD_TARGET="$2"
             shift 2
             ;;
         --no-cuda)
@@ -277,8 +288,10 @@ while [[ $# -gt 0 ]]; do
         --help)
             echo "Usage: $0 [options]"
             echo "Options:"
+            echo "  --config TYPE      Same as --build-type (Debug|Release|RelWithDebInfo)"
             echo "  --preset NAME      Use CMake preset (default: default)"
             echo "  --build-type TYPE  Build type (Debug|Release|RelWithDebInfo)"
+            echo "  --target NAME      Build a specific target"
             echo "  --no-cuda          Disable CUDA support"
             echo "  --no-lto           Disable Link Time Optimization"
             echo "  --no-tests         Disable tests"

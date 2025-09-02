@@ -450,6 +450,9 @@ static bool createFramebuffersOnly(){
 static void recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex){
     VkCommandBufferBeginInfo bi{}; bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     vkBeginCommandBuffer(cmd, &bi);
+    // GPU timestamp: whole render pass region
+    auto& pm_top = voxelvk::PerformanceMonitor::instance();
+    uint32_t tsRenderBegin = pm_top.getGPUTimer().beginTimestamp(cmd, "RenderPass");
     VkClearValue clear{}; clear.color = { { 0.10f, 0.12f, 0.16f, 1.0f } };
     VkRenderPassBeginInfo rpbi{}; rpbi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rpbi.renderPass = g_RenderPass; rpbi.framebuffer = g_Framebuffers[imageIndex];
@@ -467,6 +470,7 @@ static void recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex){
     }
 #endif
     vkCmdEndRenderPass(cmd);
+    pm_top.getGPUTimer().endTimestamp(cmd, tsRenderBegin);
     vkEndCommandBuffer(cmd);
 }
 
@@ -613,6 +617,13 @@ static bool hasArg(int argc, char** argv, const char* flag) {
     for (int i=0;i<argc;++i) if (std::string(argv[i]) == flag) return true; return false;
 }
 
+static const char* getArgValue(int argc, char** argv, const char* key) {
+    for (int i=0; i<argc-1; ++i) {
+        if (std::string(argv[i]) == key) return argv[i+1];
+    }
+    return nullptr;
+}
+
 int main(int argc, char** argv) {
     g_logger.Info("=== VoxelVK Production ImGui Demo ===");
     
@@ -753,12 +764,23 @@ int main(int argc, char** argv) {
     int frameCount = 0;
     double fpsAccum = 0.0;
 
-    // Smoke auto-exit if requested
+    // Smoke/benchmark options
     double exitAfterSec = 0.0;
     if (hasArg(argc, argv, "--smoke")) exitAfterSec = 2.0;
     if (const char* envExit = std::getenv("VOXELVK_EXIT_AFTER_SEC")) {
         try { exitAfterSec = std::max(exitAfterSec, std::stod(envExit)); } catch(...) {}
     }
+    bool benchmarkMode = hasArg(argc, argv, "--benchmark") || std::getenv("VOXELVK_BENCHMARK");
+    int maxFrames = -1;
+    if (const char* v = getArgValue(argc, argv, "--frames")) {
+        try { maxFrames = std::stoi(v); } catch(...) {}
+    }
+    if (const char* envFrames = std::getenv("VOXELVK_BENCH_FRAMES")) {
+        try { maxFrames = std::max(maxFrames, std::stoi(envFrames)); } catch(...) {}
+    }
+    std::string perfOutDir = ".";
+    if (const char* v = getArgValue(argc, argv, "--perf-out")) perfOutDir = v;
+    if (const char* envDir = std::getenv("VOXELVK_PERF_OUT")) perfOutDir = envDir;
 
     FlyCamera cam; // track camera state
     bool autoScreenshotPending = false;
@@ -789,7 +811,10 @@ int main(int argc, char** argv) {
         }
         
     // Update weather system
-        weatherSystem.tick(deltaTime);
+        {
+            PERF_WEATHER_TIMER("WeatherTick");
+            weatherSystem.tick(deltaTime);
+        }
         
     // Hot reload palette and propagate RAG settings (only on change)
         paletteRuntime.tick_hot_reload();
@@ -830,7 +855,9 @@ int main(int argc, char** argv) {
         
     // Start a new ImGui frame (if available)
 #ifdef MAIN_HAS_IMGUI_VULKAN
-        ImGui_ImplVulkan_NewFrame();
+        {
+            PERF_FRAME_TIMER("UI_Build");
+            ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
@@ -873,7 +900,7 @@ int main(int argc, char** argv) {
             isFullscreen = !isFullscreen;
             voxelvk::RequestFullscreen(isFullscreen);
         }
-        if (ImGui::CollapsingHeader("Perf HUD", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Perf HUD", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto& pm = voxelvk::PerformanceMonitor::instance();
             auto& tracker = pm.getBudgetTracker();
             ImGui::Text("Avg frame: %.2f ms", tracker.getAverageTime(voxelvk::PerformanceBudget::FRAME_TOTAL));
@@ -889,8 +916,9 @@ int main(int argc, char** argv) {
                 ImGui::TextDisabled("GPU timings not available");
             }
         }
-        ImGui::End();
-        ImGui::Render();
+    ImGui::End();
+    }
+    ImGui::Render();
 #elif defined(MAIN_HAS_IMGUI_MINIMAL)
         // Minimal ImGui without backend: just ensure we log once
         static bool firstRun = true;
@@ -954,6 +982,10 @@ int main(int argc, char** argv) {
         if (exitAfterSec > 0.0) {
             static double accum = 0.0; accum += deltaTime; if (accum >= exitAfterSec) { g_logger.Info("Smoke time reached; exiting."); break; }
         }
+        // Benchmark frame budget (deterministic count)
+        if (benchmarkMode && maxFrames > 0) {
+            static int frames = 0; if (++frames >= maxFrames) { g_logger.Info("Benchmark frames reached ({}); exiting.", maxFrames); break; }
+        }
     }
     
     g_logger.Info("Main loop exited, shutting down...");
@@ -968,6 +1000,11 @@ int main(int argc, char** argv) {
     shutdownVulkan();
     glfwDestroyWindow(window);
     glfwTerminate();
+
+    // Export performance data if requested (also when in benchmark or smoke)
+    if (benchmarkMode || hasArg(argc, argv, "--export-perf") || std::getenv("VOXELVK_EXPORT_PERF")) {
+        voxelvk::PerformanceMonitor::instance().exportPerformanceData(perfOutDir);
+    }
     
     g_logger.Info("VoxelVK Production App shutdown complete");
     return 0;

@@ -226,6 +226,7 @@ public:
     
     // GPU timing integration
     GPUTimer& getGPUTimer() { return gpuTimer_; }
+    const GPUTimer& getGPUTimer() const { return gpuTimer_; }
     PerformanceBudgetTracker& getBudgetTracker() { return budgetTracker_; }
     
     // Performance gates for CI

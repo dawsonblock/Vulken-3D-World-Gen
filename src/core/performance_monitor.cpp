@@ -220,7 +220,8 @@ bool GPUTimer::initialize(uint32_t framesInFlight, uint32_t maxTimestampsPerFram
     frameData_.resize(framesInFlight_);
     for (auto& frame : frameData_) {
         frame.timestampNames.reserve(maxTimestampsPerFrame_);
-        frame.timestampResults.resize(maxTimestampsPerFrame_);
+        // We store both begin and end results (2 per timestamp)
+        frame.timestampResults.resize(maxTimestampsPerFrame_ * 2);
     }
     
     if (!createQueryPools()) {
@@ -257,7 +258,8 @@ void GPUTimer::beginFrame(uint32_t frameIndex) {
     
     // Reset query pool for this frame
     if (currentFrameIndex_ < queryPools_.size()) {
-        // vkCmdResetQueryPool would be called with command buffer
+        // Use host-side reset (Vulkan 1.2+) to clear all queries for this frame
+        vkResetQueryPool(device_, queryPools_[currentFrameIndex_], 0, maxTimestampsPerFrame_ * 2);
         g_perfLogger.Debug("Frame {} begun (timer index: {})", frameIndex, currentFrameIndex_);
     }
 }
@@ -293,8 +295,9 @@ void GPUTimer::endTimestamp(VkCommandBuffer cmd, uint32_t timestampID) {
     
     // Write end timestamp
     if (currentFrameIndex_ < queryPools_.size()) {
+        // End timestamps are written at an offset region to avoid overwriting begins
         vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-            queryPools_[currentFrameIndex_], timestampID + maxTimestampsPerFrame_ / 2);
+            queryPools_[currentFrameIndex_], timestampID + maxTimestampsPerFrame_);
     }
 }
 
@@ -306,14 +309,19 @@ bool GPUTimer::collectResults() {
     }
     
     VkQueryPool pool = queryPools_[currentFrameIndex_];
-    uint32_t queryCount = frame.nextTimestampIndex * 2; // Begin + end for each timestamp
-    
-    VkResult result = vkGetQueryPoolResults(device_, pool, 0, queryCount,
-        frame.timestampResults.size() * sizeof(uint64_t),
+    uint32_t n = frame.nextTimestampIndex;
+    // Fetch begin timestamps [0, n)
+    VkResult r0 = vkGetQueryPoolResults(device_, pool, 0, n,
+        n * sizeof(uint64_t),
         frame.timestampResults.data(), sizeof(uint64_t),
         VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
+    // Fetch end timestamps [max, max+n)
+    VkResult r1 = vkGetQueryPoolResults(device_, pool, maxTimestampsPerFrame_, n,
+        n * sizeof(uint64_t),
+        frame.timestampResults.data() + maxTimestampsPerFrame_, sizeof(uint64_t),
+        VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
     
-    if (result != VK_SUCCESS) {
+    if (r0 != VK_SUCCESS || r1 != VK_SUCCESS) {
         g_perfLogger.Warn("Failed to collect GPU timestamp results");
         return false;
     }
@@ -322,9 +330,9 @@ bool GPUTimer::collectResults() {
     namedTimings_.clear();
     
     for (uint32_t i = 0; i < frame.nextTimestampIndex; i++) {
-        if (i < frame.timestampNames.size() && i * 2 + 1 < frame.timestampResults.size()) {
+        if (i < frame.timestampNames.size() && (i + maxTimestampsPerFrame_) < frame.timestampResults.size()) {
             uint64_t beginTime = frame.timestampResults[i];
-            uint64_t endTime = frame.timestampResults[i + maxTimestampsPerFrame_ / 2];
+            uint64_t endTime = frame.timestampResults[i + maxTimestampsPerFrame_];
             
             if (endTime > beginTime) {
                 double deltaMs = (endTime - beginTime) * timestampPeriod_ / 1000000.0;
@@ -343,7 +351,8 @@ bool GPUTimer::createQueryPools() {
         VkQueryPoolCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
         createInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
-        createInfo.queryCount = maxTimestampsPerFrame_; // Begin + end timestamps
+    // Allocate enough slots for begin and end timestamps
+    createInfo.queryCount = maxTimestampsPerFrame_ * 2;
         
         VkResult result = vkCreateQueryPool(device_, &createInfo, nullptr, &queryPools_[i]);
         if (result != VK_SUCCESS) {
@@ -581,6 +590,19 @@ void PerformanceMonitor::exportPerformanceData(const std::string& directory) con
         file << "\n";
     }
     
+    file << "  },\n";
+
+    // Export GPU timings if available
+    file << "  \"gpu_timings\": {\n";
+    bool first = true;
+    if (gpuTimerEnabled_) {
+        const auto& timings = gpuTimer_.getAllTimings();
+        for (const auto& kv : timings) {
+            if (!first) file << ",\n"; else first = false;
+            file << "    \"" << kv.first << "\": " << kv.second;
+        }
+    }
+    if (!first) file << "\n";
     file << "  }\n";
     file << "}\n";
     
