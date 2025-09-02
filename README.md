@@ -1,6 +1,6 @@
 # VoxelVK - Production Voxel Rendering Engine
 
-[![CI](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml)
+[![CI](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci-linux.yml)
 
 ## CI
 
