@@ -171,11 +171,21 @@ jobs:
         run: |
           set -e
           VCPKG_DIR="${GITHUB_WORKSPACE}/vcpkg"
+          if [ -d "$VCPKG_DIR" ] && [ ! -f "$VCPKG_DIR/bootstrap-vcpkg.sh" ]; then
+            echo "Found incomplete vcpkg dir at $VCPKG_DIR (missing bootstrap). Replacing..."
+            rm -rf "$VCPKG_DIR"
+          fi
           if [ ! -d "$VCPKG_DIR" ]; then
             git clone --depth 1 https://github.com/microsoft/vcpkg "$VCPKG_DIR"
           fi
           if [ ! -x "$VCPKG_DIR/vcpkg" ]; then
             "$VCPKG_DIR/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+          if [ ! -f "$VCPKG_DIR/scripts/buildsystems/vcpkg.cmake" ]; then
+            echo "vcpkg toolchain file missing: $VCPKG_DIR/scripts/buildsystems/vcpkg.cmake"
+            ls -la "$VCPKG_DIR" || true
+            ls -la "$VCPKG_DIR/scripts" || true
+            exit 1
           fi
           echo "VCPKG_ROOT=$VCPKG_DIR" >> $GITHUB_ENV
           echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $GITHUB_ENV
@@ -202,16 +212,19 @@ jobs:
               # No dedicated windows headless preset; override the option
               cmake --preset windows-default -DVOXELVK_HEADLESS_ONLY=ON \
                 -DCMAKE_BUILD_TYPE=Release -DVOXELVK_ENABLE_CUDA=OFF -DVOXELVK_ENABLE_TENSORRT=OFF \
-                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}" \
+                -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake";
             else
               cmake --preset headless -DCMAKE_BUILD_TYPE=Release \
                 -DVOXELVK_ENABLE_CUDA=OFF -DVOXELVK_ENABLE_TENSORRT=OFF \
-                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}" \
+                -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake";
             fi
           else
             cmake --preset "$PRESET" -DCMAKE_BUILD_TYPE=Release \
               -DVOXELVK_ENABLE_CUDA=OFF -DVOXELVK_ENABLE_TENSORRT=OFF \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}" \
+              -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake";
           fi
         shell: bash
 
@@ -340,11 +353,21 @@ jobs:
         run: |
           set -e
           VCPKG_DIR="${GITHUB_WORKSPACE}/vcpkg"
+          if [ -d "$VCPKG_DIR" ] && [ ! -f "$VCPKG_DIR/bootstrap-vcpkg.sh" ]; then
+            echo "Found incomplete vcpkg dir at $VCPKG_DIR (missing bootstrap). Replacing..."
+            rm -rf "$VCPKG_DIR"
+          fi
           if [ ! -d "$VCPKG_DIR" ]; then
             git clone --depth 1 https://github.com/microsoft/vcpkg "$VCPKG_DIR"
           fi
           if [ ! -x "$VCPKG_DIR/vcpkg" ]; then
             "$VCPKG_DIR/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+          if [ ! -f "$VCPKG_DIR/scripts/buildsystems/vcpkg.cmake" ]; then
+            echo "vcpkg toolchain file missing: $VCPKG_DIR/scripts/buildsystems/vcpkg.cmake"
+            ls -la "$VCPKG_DIR" || true
+            ls -la "$VCPKG_DIR/scripts" || true
+            exit 1
           fi
           echo "VCPKG_ROOT=$VCPKG_DIR" >> $GITHUB_ENV
           echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $GITHUB_ENV
@@ -355,9 +378,11 @@ jobs:
       - name: Configure (tests only)
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            cmake --preset windows-default -DVOXELVK_HEADLESS_ONLY=ON -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release;
+            cmake --preset windows-default -DVOXELVK_HEADLESS_ONLY=ON -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake";
           else
-            cmake --preset headless -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release;
+            cmake --preset headless -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake";
           fi
       - name: Build tests
         run: |

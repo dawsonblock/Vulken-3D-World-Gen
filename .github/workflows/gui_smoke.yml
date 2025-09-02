@@ -24,11 +24,21 @@ jobs:
         run: |
           set -e
           VCPKG_ROOT="${GITHUB_WORKSPACE}/vcpkg"
+          if [ -d "$VCPKG_ROOT" ] && [ ! -f "$VCPKG_ROOT/bootstrap-vcpkg.sh" ]; then
+            echo "Found incomplete vcpkg dir at $VCPKG_ROOT (missing bootstrap). Replacing..."
+            rm -rf "$VCPKG_ROOT"
+          fi
           if [ ! -d "$VCPKG_ROOT" ]; then
             git clone --depth 1 https://github.com/microsoft/vcpkg "$VCPKG_ROOT"
           fi
           if [ ! -x "$VCPKG_ROOT/vcpkg" ]; then
             "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+          if [ ! -f "$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" ]; then
+            echo "vcpkg toolchain file missing: $VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+            ls -la "$VCPKG_ROOT" || true
+            ls -la "$VCPKG_ROOT/scripts" || true
+            exit 1
           fi
           echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
           echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $GITHUB_ENV

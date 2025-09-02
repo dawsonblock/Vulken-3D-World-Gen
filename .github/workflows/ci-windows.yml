@@ -23,6 +23,12 @@ jobs:
         shell: pwsh
         run: |
           $vcpkgRoot = Join-Path $env:GITHUB_WORKSPACE 'vcpkg'
+          if (Test-Path $vcpkgRoot) {
+            if (-not (Test-Path (Join-Path $vcpkgRoot 'bootstrap-vcpkg.bat'))) {
+              Write-Host "Found incomplete vcpkg dir at $vcpkgRoot (missing bootstrap). Recreating..."
+              Remove-Item -Recurse -Force $vcpkgRoot
+            }
+          }
           if (-not (Test-Path $vcpkgRoot)) {
             git clone --depth 1 https://github.com/microsoft/vcpkg $vcpkgRoot
           }
@@ -35,6 +41,13 @@ jobs:
               exit 1
             }
             cmd.exe /c "`"$bootstrapBat`" -disableMetrics"
+          }
+          # Verify toolchain file exists
+          $toolchain = Join-Path $vcpkgRoot 'scripts/buildsystems/vcpkg.cmake'
+          if (-not (Test-Path $toolchain)) {
+            Write-Error "vcpkg toolchain file missing: $toolchain"
+            Get-ChildItem -Recurse -Depth 2 $vcpkgRoot | Select-Object -First 100 | ForEach-Object { $_.FullName }
+            exit 1
           }
           echo "VCPKG_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
           echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $env:GITHUB_ENV
