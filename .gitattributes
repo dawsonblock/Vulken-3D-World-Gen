@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+# Images/binaries
+*.png binary
+*.jpg binary
+*.ktx2 binary
+*.spv binary
+
+# Preserve shader formatting
+*.glsl text eol=lf
+*.vert text eol=lf
+*.frag text eol=lf
+*.comp text eol=lf
