@@ -25,7 +25,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             libvulkan-dev mesa-vulkan-drivers \
             libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
-            libgl1-mesa-dev libglu1-mesa-dev
+            libgl1-mesa-dev libglu1-mesa-dev \
+            glslang-tools
 
       - name: Cache vcpkg and build artifacts
         uses: actions/cache@v4
