@@ -1,5 +1,5 @@
 {
-  "timestamp": "1756842384923544329",
+  "timestamp": "1756842859488221706",
   "performance_gates": true,
   "budget_config": {
     "target_frame_time_ms": 16.67,
@@ -7,12 +7,12 @@
   },
   "timings": {
     "frame_total": {
-      "average_ms": 3.01539,
-      "p95_ms": 8.7948
+      "average_ms": 2.99951,
+      "p95_ms": 8.77215
     },
     "weather_system": {
-      "average_ms": 0.001553,
-      "p95_ms": 0.001814
+      "average_ms": 0.0015974,
+      "p95_ms": 0.002225
     },
     "screen_space": {
       "average_ms": 0,
@@ -40,7 +40,7 @@
     }
   },
   "gpu_timings": {
-    "ImGui": 1.0827,
-    "RenderPass": 1.84509
+    "ImGui": 1.23125,
+    "RenderPass": 2.04936
   }
 }

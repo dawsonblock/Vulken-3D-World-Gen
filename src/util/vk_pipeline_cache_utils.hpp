@@ -42,7 +42,7 @@ inline VkPipelineCache create_pipeline_cache_from_env(VkDevice device, const cha
     VkPipelineCache cache = VK_NULL_HANDLE;
 
     std::vector<char> bytes;
-    VkPipelineCacheCreateInfo ci{ VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
+    VkPipelineCacheCreateInfo ci{}; ci.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
     if(!path.empty() && read_file(path, bytes) && !bytes.empty()){
         ci.initialDataSize = bytes.size();
         ci.pInitialData = bytes.data();

@@ -76,6 +76,22 @@ Run demos (Linux):
 ./build/apps/main_imgui_vulkan
 ```
 
+GUI flags and env vars:
+
+- main_imgui_vulkan supports:
+  - --ui-scale <0.5..2.0> or VOXELVK_UI_SCALE to adjust UI scale (CLI overrides env)
+  - --imgui-ini <path> or VOXELVK_IMGUI_INI to set the ImGui ini path (CLI overrides env)
+  - --viewports or VOXELVK_VIEWPORTS=1 to enable multi-viewport windows (if compiled in)
+  - --smoke, --benchmark, --frames N, --export-perf, --perf-out DIR for CI-friendly runs
+  - F11 toggles fullscreen; P captures a screenshot on Linux
+
+Headless GUI smoke example:
+
+```bash
+DISPLAY= xvfb-run -a -s "-screen 0 1280x720x24" ./build/main_imgui_vulkan \
+  --smoke --autoscreenshot --benchmark --frames 10 --export-perf --perf-out .
+```
+
 Run demos (Windows):
 
 ```powershell

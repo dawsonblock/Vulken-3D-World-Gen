@@ -334,7 +334,7 @@ static bool createSwapchainAndViews(GLFWwindow* window){
 
     uint32_t imageCount = caps.minImageCount + 1; if(caps.maxImageCount>0 && imageCount>caps.maxImageCount) imageCount = caps.maxImageCount;
 
-    VkSwapchainCreateInfoKHR sci{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
+    VkSwapchainCreateInfoKHR sci{}; sci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     sci.surface = g_Surface;
     sci.minImageCount = imageCount;
     sci.imageFormat = surfaceFormat.format;
@@ -370,7 +370,7 @@ static bool createSwapchainAndViews(GLFWwindow* window){
 
     g_SwapchainImageViews.resize(imgCount);
     for(size_t i=0;i<imgCount;++i){
-        VkImageViewCreateInfo ivci{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+    VkImageViewCreateInfo ivci{}; ivci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         ivci.image = g_SwapchainImages[i];
         ivci.viewType = VK_IMAGE_VIEW_TYPE_2D;
         ivci.format = g_SwapchainImageFormat;
@@ -534,7 +534,12 @@ static void updateCameraInput(FlyCamera& cam, GLFWwindow* window, float dt) {
         double dx = mx - pmx, dy = my - pmy; pmx = mx; pmy = my;
         cam.yaw   -= float(dx) * cam.lookSpeed * 0.01f;
         cam.pitch -= float(dy) * cam.lookSpeed * 0.01f;
-        if (cam.pitch > 1.5f) cam.pitch = 1.5f; if (cam.pitch < -1.5f) cam.pitch = -1.5f;
+        if (cam.pitch > 1.5f) {
+            cam.pitch = 1.5f;
+        }
+        if (cam.pitch < -1.5f) {
+            cam.pitch = -1.5f;
+        }
     } else {
         first = true;
     }
@@ -582,7 +587,6 @@ static bool SaveWindowScreenshot(GLFWwindow* window, const char* path) {
     }
 
     // Temporary X error handler to swallow BadMatch
-    int hadError = 0;
     auto prevHandler = XSetErrorHandler([](Display*, XErrorEvent* e)->int { (void)e; return 0; });
 
     // Capture from the root window region covering our app window
@@ -624,7 +628,10 @@ static bool SaveWindowScreenshot(GLFWwindow* window, const char* path) {
 #endif
 
 static bool hasArg(int argc, char** argv, const char* flag) {
-    for (int i=0;i<argc;++i) if (std::string(argv[i]) == flag) return true; return false;
+    for (int i=0;i<argc;++i) {
+        if (std::string(argv[i]) == flag) return true;
+    }
+    return false;
 }
 
 static const char* getArgValue(int argc, char** argv, const char* key) {
@@ -717,8 +724,8 @@ int main(int argc, char** argv) {
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     #endif
     // Optional multi-viewport: enabled by flag/env to avoid quirks on some WMs
-    const bool enableViewports = hasArg(argc, argv, "--viewports") || std::getenv("VOXELVK_VIEWPORTS");
     #ifdef IMGUI_HAS_VIEWPORT
+    const bool enableViewports = hasArg(argc, argv, "--viewports") || std::getenv("VOXELVK_VIEWPORTS");
     if (enableViewports) io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     #endif
 
@@ -923,9 +930,10 @@ int main(int argc, char** argv) {
     f11Prev = f11Now;
         
         // Config hot-reload on F5
-        if (glfwGetKey(window, GLFW_KEY_F5) == GLFW_PRESS) {
+        {
             static bool reloadPressed = false;
-            if (!reloadPressed) {
+            if (glfwGetKey(window, GLFW_KEY_F5) == GLFW_PRESS) {
+                if (!reloadPressed) {
                 g_logger.Info("F5 pressed - hot reloading configuration...");
                 try {
                     weatherSystem.loadFromYaml("config/weather.yaml");
@@ -934,11 +942,11 @@ int main(int argc, char** argv) {
                 } catch (const std::exception& e) {
                     g_logger.Warn("Hot-reload failed: {}", e.what());
                 }
-                reloadPressed = true;
+                    reloadPressed = true;
+                }
+            } else {
+                reloadPressed = false;
             }
-        } else {
-            static bool reloadPressed = false;
-            reloadPressed = false;
         }
         
     // Start a new ImGui frame (if available)
@@ -1018,9 +1026,20 @@ int main(int argc, char** argv) {
                 ImGui::Text("Window: %dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
                 ImGui::TextDisabled("Controls: WASD/QE move, hold RMB to look, Shift to sprint, F11 toggle fullscreen");
 #if defined(__linux__)
-                static bool screenshot_ok = false; static double screenshot_msg_t = 0;
+                static bool screenshot_ok = false; static double screenshot_msg_t = 0.0;
                 if (ImGui::Button("Save Screenshot (P)")) { screenshot_ok = SaveWindowScreenshot(window, "screenshot.png"); screenshot_msg_t = glfwGetTime(); }
-                if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) { static bool ppressed=false; if(!ppressed){ screenshot_ok = SaveWindowScreenshot(window, "screenshot.png"); screenshot_msg_t = glfwGetTime(); ppressed=true; } } else { static bool ppressed=false; ppressed=false; }
+                {
+                    static bool ppressed = false;
+                    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+                        if (!ppressed) {
+                            screenshot_ok = SaveWindowScreenshot(window, "screenshot.png");
+                            screenshot_msg_t = glfwGetTime();
+                            ppressed = true;
+                        }
+                    } else {
+                        ppressed = false;
+                    }
+                }
                 if (glfwGetTime() - screenshot_msg_t < 2.0) {
                     ImGui::TextColored(screenshot_ok ? ImVec4(0.3f,1,0.3f,1) : ImVec4(1,0.3f,0.3f,1), screenshot_ok ? "Saved to screenshot.png" : "Screenshot failed");
                 }
@@ -1030,9 +1049,9 @@ int main(int argc, char** argv) {
 
             if (ImGui::Begin("Camera")) {
                 ImGui::Text("Position");
-                ImGui::BulletText("(%.2f, %.2f, %.2f)", cam.x, cam.y, cam.z);
+                ImGui::BulletText("(%.2f, %.2f, %.2f)", static_cast<double>(cam.x), static_cast<double>(cam.y), static_cast<double>(cam.z));
                 ImGui::Text("Orientation");
-                ImGui::BulletText("Yaw/Pitch: (%.2f, %.2f)", cam.yaw, cam.pitch);
+                ImGui::BulletText("Yaw/Pitch: (%.2f, %.2f)", static_cast<double>(cam.yaw), static_cast<double>(cam.pitch));
                 ImGui::SliderFloat("Move speed", &cam.moveSpeed, 0.5f, 20.0f);
             }
             ImGui::End();

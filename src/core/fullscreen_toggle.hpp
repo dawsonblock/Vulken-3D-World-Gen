@@ -34,8 +34,11 @@ inline GLFWmonitor* GetNearestMonitor(GLFWwindow* window){
     long bestOverlap = -1; GLFWmonitor* best = mons[0];
     for(int i=0;i<count;i++){
         int mx, my, mw, mh;
-        if(glfwGetMonitorWorkarea) glfwGetMonitorWorkarea(mons[i], &mx, &my, &mw, &mh);
-        else {
+        // Use workarea if supported by GLFW >= 3.3, otherwise fall back to video mode
+        int maj=0,min=0,rev=0; glfwGetVersion(&maj,&min,&rev);
+        if (maj > 3 || (maj == 3 && min >= 3)) {
+            glfwGetMonitorWorkarea(mons[i], &mx, &my, &mw, &mh);
+        } else {
             const GLFWvidmode* m = glfwGetVideoMode(mons[i]); mx = my = 0; mw = m? m->width : 1920; mh = m? m->height : 1080;
         }
         int x1 = std::max(wx, mx);
