@@ -64,7 +64,7 @@ jobs:
       - name: Configure (CMake Preset)
         shell: bash
         run: |
-          cmake --preset windows-default
+          cmake --preset windows-default -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
 
       - name: Build
         shell: bash

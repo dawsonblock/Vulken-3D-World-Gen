@@ -45,7 +45,7 @@ jobs:
 
       - name: Build
         run: |
-          ./scripts/build.sh
+          CMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" ./scripts/build.sh
 
       - name: Tests
         run: |
