@@ -44,13 +44,18 @@ if(VOXELVK_ENABLE_WEATHER)
       pkg_check_modules(YAML_CPP QUIET yaml-cpp)
     endif()
   endif()
-  
-  if(yaml-cpp_FOUND OR YAML_CPP_FOUND)
+
+  # Prefer modern CMake target if available, else fall back to pkg-config, else legacy target name
+  if(TARGET yaml-cpp::yaml-cpp)
+    set(WEATHER_YAML_LIB yaml-cpp::yaml-cpp)
+    message(STATUS "Found yaml-cpp target: yaml-cpp::yaml-cpp")
+  elseif(YAML_CPP_FOUND)
+    set(WEATHER_YAML_LIB ${YAML_CPP_LIBRARIES})
+    message(STATUS "Found yaml-cpp via pkg-config")
+  elseif(yaml-cpp_FOUND)
+    # Legacy target alias maintained for backward compatibility in some distros
     set(WEATHER_YAML_LIB yaml-cpp)
-    if(YAML_CPP_FOUND)
-      set(WEATHER_YAML_LIB ${YAML_CPP_LIBRARIES})
-    endif()
-    message(STATUS "Found yaml-cpp for weather system")
+    message(WARNING "Using deprecated target 'yaml-cpp'. Consider switching to yaml-cpp::yaml-cpp")
   else()
     message(WARNING "yaml-cpp not found - weather system will use fallback config")
   endif()
@@ -63,6 +68,11 @@ option(ENABLE_TESTS             "Enable CTest targets" ON)
 option(VOXELVK_ENABLE_CUDA      "Enable CUDA acceleration" OFF)
 option(VOXELVK_ENABLE_TENSORRT  "Enable TensorRT (requires CUDA)" OFF)
 option(VOXELVK_HEADLESS_ONLY    "Build minimal headless utilities without Vulkan/GLFW" OFF)
+
+# Propagate debug markers flag to all targets when enabled
+add_compile_definitions(
+  $<$<BOOL:${ENABLE_VK_DEBUG_MARKERS}>:ENABLE_VK_DEBUG_MARKERS=1>
+)
 
 # Include shader compilation system
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")

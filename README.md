@@ -50,6 +50,21 @@
 ### Build
 ```bash
 # Linux
+
+### vcpkg setup (pinned)
+
+This repo uses vcpkg manifest mode with a pinned builtin registry baseline in `vcpkg-configuration.json`. This ensures reproducible dependencies across machines and CI. To update dependencies:
+
+1. Update the `vcpkg` submodule to a newer commit.
+2. Copy that commit SHA into `vcpkg-configuration.json` as the `baseline`.
+3. Reconfigure using a CMake preset (these already set the vcpkg toolchain, triplets, and verbose logs):
+
+  - default: Ninja + RelWithDebInfo
+  - debug: Ninja + Debug
+  - release: Ninja + Release + LTO
+  - headless: Ninja + RelWithDebInfo (no graphics)
+
+Triplets are set to `x64-linux` by default. Adjust in `CMakePresets.json` if needed.
 sudo apt install -y cmake ninja-build build-essential \
   libvulkan1 vulkan-tools libglfw3-dev libglm-dev libyaml-cpp-dev
 

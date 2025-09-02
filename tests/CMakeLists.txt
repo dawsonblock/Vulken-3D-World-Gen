@@ -35,7 +35,11 @@ target_sources(voxelvk_tests PRIVATE
 )
 
 target_link_libraries(voxelvk_tests PRIVATE GTest::gtest_main)
-if (yaml-cpp_FOUND)
+if (TARGET yaml-cpp::yaml-cpp)
+  target_compile_definitions(voxelvk_tests PRIVATE HAS_YAML_CPP=1)
+  target_link_libraries(voxelvk_tests PRIVATE yaml-cpp::yaml-cpp)
+elseif(yaml-cpp_FOUND)
+  # Legacy target alias
   target_compile_definitions(voxelvk_tests PRIVATE HAS_YAML_CPP=1)
   target_link_libraries(voxelvk_tests PRIVATE yaml-cpp)
 endif()

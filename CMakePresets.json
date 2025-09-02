@@ -15,7 +15,10 @@
         "ENABLE_TESTS": true,
         "VOXELVK_ENABLE_CUDA": true,
         "VOXELVK_ENABLE_TENSORRT": true,
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux",
+        "VCPKG_VERBOSE": true
       }
     },
     {
@@ -32,7 +35,10 @@
         "ENABLE_TESTS": true,
         "VOXELVK_ENABLE_CUDA": true,
         "VOXELVK_ENABLE_TENSORRT": false,
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux",
+        "VCPKG_VERBOSE": true
       }
     },
     {
@@ -50,7 +56,10 @@
         "ENABLE_TESTS": true,
         "VOXELVK_ENABLE_CUDA": true,
         "VOXELVK_ENABLE_TENSORRT": true,
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux",
+        "VCPKG_VERBOSE": true
       }
     },
     {
@@ -68,7 +77,10 @@
         "VOXELVK_ENABLE_CUDA": true,
         "VOXELVK_ENABLE_TENSORRT": true,
         "VOXELVK_HEADLESS_ONLY": true,
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux",
+        "VCPKG_VERBOSE": true
       }
     }
   ],
