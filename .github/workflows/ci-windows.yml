@@ -13,8 +13,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup MSVC (Developer Command Prompt)
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v4
+
+      - name: Bootstrap vcpkg (manifest mode)
+        shell: pwsh
+        run: |
+          $vcpkgRoot = Join-Path $env:GITHUB_WORKSPACE 'vcpkg'
+          if (-not (Test-Path $vcpkgRoot)) {
+            git clone --depth 1 https://github.com/microsoft/vcpkg $vcpkgRoot
+          }
+          if (-not (Test-Path (Join-Path $vcpkgRoot 'vcpkg.exe'))) {
+            & "$vcpkgRoot\bootstrap-vcpkg.bat" -disableMetrics
+          }
+          echo "VCPKG_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
+          echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $env:GITHUB_ENV
 
       - name: Cache vcpkg and build artifacts
         uses: actions/cache@v4
