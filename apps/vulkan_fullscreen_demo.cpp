@@ -1,5 +1,6 @@
-#include <GLFW/glfw3.h>
+// Ensure GLFW includes Vulkan prototypes
 #define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 #include <cstdio>
 #include <cstdlib>
 #include "../src/util/vk_pipeline_cache_utils.hpp"
@@ -52,11 +53,51 @@ struct VulkanApp {
 
     // ... [Other methods unchanged from previous version for brevity] ...
 private:
-    void create_instance(){ VkApplicationInfo app{VK_STRUCTURE_TYPE_APPLICATION_INFO}; app.pApplicationName = "vulkan_fullscreen_demo"; app.apiVersion = VK_API_VERSION_1_2; uint32_t ec=0; const char** exts = glfwGetRequiredInstanceExtensions(&ec); std::vector<const char*> extensions(exts, exts+ec); #ifndef NDEBUG extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); #endif VkInstanceCreateInfo ici{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO}; ici.pApplicationInfo=&app; ici.enabledExtensionCount=(uint32_t)extensions.size(); ici.ppEnabledExtensionNames=extensions.data(); #ifndef NDEBUG const char* layers[] = {"VK_LAYER_KHRONOS_validation"}; ici.enabledLayerCount = 1; ici.ppEnabledLayerNames = layers; #endif if(vkCreateInstance(&ici,nullptr,&instance)!=VK_SUCCESS) throw std::runtime_error("vkCreateInstance failed"); }
-    void create_debug(){ #ifndef NDEBUG auto p=(PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance,"vkCreateDebugUtilsMessengerEXT"); if(!p) return; VkDebugUtilsMessengerCreateInfoEXT ci{VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT}; ci.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT; ci.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT|VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT|VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT; ci.pfnUserCallback = dbg_cb; p(instance,&ci,nullptr,&debug); #endif }
+    void create_instance(){
+    VkApplicationInfo app{VK_STRUCTURE_TYPE_APPLICATION_INFO};
+    app.pApplicationName = "vulkan_fullscreen_demo";
+    app.apiVersion = VK_API_VERSION_1_2;
+    uint32_t ec=0;
+    const char** exts = glfwGetRequiredInstanceExtensions(&ec);
+    std::vector<const char*> extensions(exts, exts+ec);
+#ifndef NDEBUG
+    extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
+    VkInstanceCreateInfo ici{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
+    ici.pApplicationInfo=&app;
+    ici.enabledExtensionCount=(uint32_t)extensions.size();
+    ici.ppEnabledExtensionNames=extensions.data();
+#ifndef NDEBUG
+    const char* layers[] = {"VK_LAYER_KHRONOS_validation"};
+    ici.enabledLayerCount = 1;
+    ici.ppEnabledLayerNames = layers;
+#endif
+    if(vkCreateInstance(&ici,nullptr,&instance)!=VK_SUCCESS) throw std::runtime_error("vkCreateInstance failed");
+    }
+    void create_debug(){
+#ifndef NDEBUG
+        auto p=(PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance,"vkCreateDebugUtilsMessengerEXT");
+        if(!p) return;
+        VkDebugUtilsMessengerCreateInfoEXT ci{VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
+        ci.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        ci.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        ci.pfnUserCallback = dbg_cb;
+        p(instance,&ci,nullptr,&debug);
+#endif
+    }
     void create_surface(){ if(glfwCreateWindowSurface(instance, window, nullptr, &surface)!=VK_SUCCESS) throw std::runtime_error("create surface failed"); }
     static QueueFamilyIndices find_queues(VkPhysicalDevice pd, VkSurfaceKHR surf){ QueueFamilyIndices idx{}; uint32_t n=0; vkGetPhysicalDeviceQueueFamilyProperties(pd,&n,nullptr); std::vector<VkQueueFamilyProperties> props(n); vkGetPhysicalDeviceQueueFamilyProperties(pd,&n,props.data()); for(uint32_t i=0;i<n;i++){ if(props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) idx.graphics = i; VkBool32 present=false; vkGetPhysicalDeviceSurfaceSupportKHR(pd,i,surf,&present); if(present) idx.present = i; if(idx.complete()) break; } return idx; }
-    static SwapchainSupport query_swap(VkPhysicalDevice pd, VkSurfaceKHR surf){ SwapchainSupport s{}; uint32_t n=0; vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pd, surf, &s.caps); vkGetPhysicalDeviceSurfaceFormatsKHR(pd,surf,&n,nullptr); s.formats.resize(n); if(n) vkGetPhysicalDeviceSurfaceFormatsKHR(pd,surf,&n,s.formats.data()); vkGetPhysicalDevicePresentModesKHR(pd,surf,&n,nullptr); s.modes.resize(n); if(n) vkGetPhysicalDevicePresentModesKHR(pd,surf,&n,s.modes.data()); return s; }
+    static SwapchainSupport query_swap(VkPhysicalDevice pd, VkSurfaceKHR surf){
+        SwapchainSupport s{}; uint32_t n=0;
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pd, surf, &s.caps);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(pd,surf,&n,nullptr);
+        s.formats.resize(n);
+        if(n) vkGetPhysicalDeviceSurfaceFormatsKHR(pd,surf,&n,s.formats.data());
+        vkGetPhysicalDeviceSurfacePresentModesKHR(pd,surf,&n,nullptr);
+        s.modes.resize(n);
+        if(n) vkGetPhysicalDeviceSurfacePresentModesKHR(pd,surf,&n,s.modes.data());
+        return s;
+    }
     void pick_device(){ uint32_t n=0; vkEnumeratePhysicalDevices(instance,&n,nullptr); if(!n) throw std::runtime_error("no device"); std::vector<VkPhysicalDevice> pds(n); vkEnumeratePhysicalDevices(instance,&n,pds.data()); for(auto pd: pds){ auto idx=find_queues(pd,surface); if(!idx.complete()) continue; auto sup=query_swap(pd,surface); if(sup.formats.empty()||sup.modes.empty()) continue; phys=pd; break; } if(!phys) throw std::runtime_error("no suitable device"); auto idx=find_queues(phys,surface); qf_graphics=*idx.graphics; qf_present=*idx.present; }
     void create_device(){ float prio=1.f; std::vector<VkDeviceQueueCreateInfo> qs; std::vector<uint32_t> unique = {qf_graphics}; if(qf_present!=qf_graphics) unique.push_back(qf_present); for(uint32_t qf: unique){ VkDeviceQueueCreateInfo q{VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO}; q.queueFamilyIndex=qf; q.queueCount=1; q.pQueuePriorities=&prio; qs.push_back(q);} const char* exts[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME }; VkDeviceCreateInfo dci{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO}; dci.queueCreateInfoCount=(uint32_t)qs.size(); dci.pQueueCreateInfos=qs.data(); dci.enabledExtensionCount=1; dci.ppEnabledExtensionNames=exts; if(vkCreateDevice(phys,&dci,nullptr,&device)!=VK_SUCCESS) throw std::runtime_error("vkCreateDevice failed"); g_pipelineCache = voxelvk::util::create_pipeline_cache_from_env(device);
     vkGetDeviceQueue(device,qf_graphics,0,&q_graphics); vkGetDeviceQueue(device,qf_present,0,&q_present); }

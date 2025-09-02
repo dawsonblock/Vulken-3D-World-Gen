@@ -44,13 +44,18 @@ if(VOXELVK_ENABLE_WEATHER)
       pkg_check_modules(YAML_CPP QUIET yaml-cpp)
     endif()
   endif()
-  
-  if(yaml-cpp_FOUND OR YAML_CPP_FOUND)
+
+  # Prefer modern CMake target if available, else fall back to pkg-config, else legacy target name
+  if(TARGET yaml-cpp::yaml-cpp)
+    set(WEATHER_YAML_LIB yaml-cpp::yaml-cpp)
+    message(STATUS "Found yaml-cpp target: yaml-cpp::yaml-cpp")
+  elseif(YAML_CPP_FOUND)
+    set(WEATHER_YAML_LIB ${YAML_CPP_LIBRARIES})
+    message(STATUS "Found yaml-cpp via pkg-config")
+  elseif(yaml-cpp_FOUND)
+    # Legacy target alias maintained for backward compatibility in some distros
     set(WEATHER_YAML_LIB yaml-cpp)
-    if(YAML_CPP_FOUND)
-      set(WEATHER_YAML_LIB ${YAML_CPP_LIBRARIES})
-    endif()
-    message(STATUS "Found yaml-cpp for weather system")
+    message(WARNING "Using deprecated target 'yaml-cpp'. Consider switching to yaml-cpp::yaml-cpp")
   else()
     message(WARNING "yaml-cpp not found - weather system will use fallback config")
   endif()
@@ -63,6 +68,11 @@ option(ENABLE_TESTS             "Enable CTest targets" ON)
 option(VOXELVK_ENABLE_CUDA      "Enable CUDA acceleration" OFF)
 option(VOXELVK_ENABLE_TENSORRT  "Enable TensorRT (requires CUDA)" OFF)
 option(VOXELVK_HEADLESS_ONLY    "Build minimal headless utilities without Vulkan/GLFW" OFF)
+
+# Propagate debug markers flag to all targets when enabled
+add_compile_definitions(
+  $<$<BOOL:${ENABLE_VK_DEBUG_MARKERS}>:ENABLE_VK_DEBUG_MARKERS=1>
+)
 
 # Include shader compilation system
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -177,6 +187,10 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   # Production ImGui application with Vulkan backend
   add_executable(main_imgui_vulkan apps/main_imgui_vulkan.cpp ${WEATHER_SRC} src/core/logger.cpp src/core/performance_monitor.cpp ${AI_SRC})
   target_include_directories(main_imgui_vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src)
+  # Provide stb include dir (vcpkg header-only) for Linux screenshots
+  if(EXISTS "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/stb_image_write.h")
+    target_include_directories(main_imgui_vulkan PRIVATE "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include")
+  endif()
   target_link_libraries(main_imgui_vulkan PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
   if(JSON_LIB)
     target_link_libraries(main_imgui_vulkan PRIVATE ${JSON_LIB})
@@ -666,7 +680,22 @@ endif()
 
 add_library(redis_assets src/redis_asset_store.cpp)
 target_include_directories(redis_assets PUBLIC ${REDISPLUSPLUS_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(redis_assets PUBLIC ${REDISPLUSPLUS_LIBRARY} ${HIREDIS_LIBRARY})
+# Ensure yaml-cpp is linked for config parsing used by redis_assets
+# Prefer previously detected modern target if available; otherwise, attempt a local find.
+set(REDIS_YAML_LIB "")
+if(DEFINED WEATHER_YAML_LIB AND WEATHER_YAML_LIB)
+  set(REDIS_YAML_LIB ${WEATHER_YAML_LIB})
+else()
+  find_package(yaml-cpp QUIET)
+  if(TARGET yaml-cpp::yaml-cpp)
+    set(REDIS_YAML_LIB yaml-cpp::yaml-cpp)
+  elseif(yaml-cpp_FOUND)
+    # Legacy target name on some distros
+    set(REDIS_YAML_LIB yaml-cpp)
+  endif()
+endif()
+
+target_link_libraries(redis_assets PUBLIC ${REDISPLUSPLUS_LIBRARY} ${HIREDIS_LIBRARY} ${REDIS_YAML_LIB})
 target_compile_features(redis_assets PUBLIC cxx_std_20)
 
 # Link into chosen apps for hot-reload

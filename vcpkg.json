@@ -11,8 +11,9 @@
     "vulkan-memory-allocator",
     "nlohmann-json",
     "curl",
-    "hiredis",
-    "redis-plus-plus"
+  "hiredis",
+  "redis-plus-plus",
+  "stb"
   ],
   "features": {
     "rl": {

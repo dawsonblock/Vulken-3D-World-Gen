@@ -1,5 +1,18 @@
 # VoxelVK - Production Voxel Rendering Engine
 
+[![CI](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci-linux.yml)
+
+## CI
+
+- Linux build and tests run on GitHub Actions using CMake Presets and vcpkg cache.
+- Workflow file: `.github/workflows/ci-linux.yml`.
+- Local run mirrors CI:
+  - Configure: cmake --preset default
+  - Build: cmake --build --preset default -j
+  - Test: ctest --test-dir build --output-on-failure
+
+# VoxelVK - Production Voxel Rendering Engine
+
 [![CI](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml)
 
 **VoxelVK** is a production-grade voxel rendering engine built on Vulkan 1.3, featuring advanced weather simulation, AI integration, and 120 FPS performance optimization.
@@ -50,6 +63,21 @@
 ### Build
 ```bash
 # Linux
+
+### vcpkg setup (pinned)
+
+This repo uses vcpkg manifest mode with a pinned builtin registry baseline in `vcpkg-configuration.json`. This ensures reproducible dependencies across machines and CI. To update dependencies:
+
+1. Update the `vcpkg` submodule to a newer commit.
+2. Copy that commit SHA into `vcpkg-configuration.json` as the `baseline`.
+3. Reconfigure using a CMake preset (these already set the vcpkg toolchain, triplets, and verbose logs):
+
+  - default: Ninja + RelWithDebInfo
+  - debug: Ninja + Debug
+  - release: Ninja + Release + LTO
+  - headless: Ninja + RelWithDebInfo (no graphics)
+
+Triplets are set to `x64-linux` by default. Adjust in `CMakePresets.json` if needed.
 sudo apt install -y cmake ninja-build build-essential \
   libvulkan1 vulkan-tools libglfw3-dev libglm-dev libyaml-cpp-dev
 
