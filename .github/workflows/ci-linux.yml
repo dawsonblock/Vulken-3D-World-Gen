@@ -37,6 +37,19 @@ jobs:
             ${{ github.workspace }}/vcpkg/buildtrees
           key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
+      - name: Bootstrap vcpkg (manifest mode)
+        run: |
+          set -e
+          VCPKG_ROOT="${GITHUB_WORKSPACE}/vcpkg"
+          if [ ! -d "$VCPKG_ROOT" ]; then
+            git clone --depth 1 https://github.com/microsoft/vcpkg "$VCPKG_ROOT"
+          fi
+          if [ ! -x "$VCPKG_ROOT/vcpkg" ]; then
+            "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
+          echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $GITHUB_ENV
+
       - name: Configure (CMake Preset)
         run: |
           cmake --preset default
