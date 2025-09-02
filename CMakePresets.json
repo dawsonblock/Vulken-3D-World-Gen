@@ -7,6 +7,7 @@
       "description": "Default configuration with CUDA and GUI support",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
+  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_IMGUI_OVERLAY": true,
@@ -15,7 +16,6 @@
         "ENABLE_TESTS": true,
         "VOXELVK_ENABLE_CUDA": true,
         "VOXELVK_ENABLE_TENSORRT": true,
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "VCPKG_HOST_TRIPLET": "x64-linux",
         "VCPKG_VERBOSE": true
@@ -27,6 +27,7 @@
       "description": "Debug configuration with all checks enabled",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build_debug",
+  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "ENABLE_IMGUI_OVERLAY": true,
@@ -35,7 +36,6 @@
         "ENABLE_TESTS": true,
         "VOXELVK_ENABLE_CUDA": true,
         "VOXELVK_ENABLE_TENSORRT": false,
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "VCPKG_HOST_TRIPLET": "x64-linux",
         "VCPKG_VERBOSE": true
@@ -47,6 +47,7 @@
       "description": "Optimized release build with LTO",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build_release",
+  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_INTERPROCEDURAL_OPTIMIZATION": true,
@@ -56,7 +57,6 @@
         "ENABLE_TESTS": true,
         "VOXELVK_ENABLE_CUDA": true,
         "VOXELVK_ENABLE_TENSORRT": true,
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "VCPKG_HOST_TRIPLET": "x64-linux",
         "VCPKG_VERBOSE": true
@@ -68,6 +68,7 @@
       "description": "Server/headless build without Vulkan preview",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build_headless",
+  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_IMGUI_OVERLAY": false,
@@ -77,7 +78,6 @@
         "VOXELVK_ENABLE_CUDA": true,
         "VOXELVK_ENABLE_TENSORRT": true,
         "VOXELVK_HEADLESS_ONLY": true,
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "VCPKG_HOST_TRIPLET": "x64-linux",
         "VCPKG_VERBOSE": true
@@ -90,6 +90,7 @@
       "description": "Default configuration on Windows",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-windows",
+  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_IMGUI_OVERLAY": true,
@@ -98,7 +99,6 @@
         "ENABLE_TESTS": true,
         "VOXELVK_ENABLE_CUDA": false,
         "VOXELVK_ENABLE_TENSORRT": false,
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-windows",
         "VCPKG_HOST_TRIPLET": "x64-windows",
         "VCPKG_VERBOSE": true
@@ -110,6 +110,7 @@
       "description": "Debug configuration on Windows",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-windows-debug",
+  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "ENABLE_IMGUI_OVERLAY": true,
@@ -118,7 +119,6 @@
         "ENABLE_TESTS": true,
         "VOXELVK_ENABLE_CUDA": false,
         "VOXELVK_ENABLE_TENSORRT": false,
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-windows",
         "VCPKG_HOST_TRIPLET": "x64-windows",
         "VCPKG_VERBOSE": true

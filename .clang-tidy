@@ -1,3 +1,9 @@
+Checks: '-*,clang-analyzer-*,bugprone-*,performance-*,modernize-*,-modernize-use-trailing-return-type,readability-*,-readability-magic-numbers'
+WarningsAsErrors: ''
+HeaderFilterRegex: 'src/|apps/|tests/'
+FormatStyle: none
+AnalyzeTemporaryDtors: false
+InheritParentConfig: false
 Checks: >
   bugprone-*,performance-*,readability-*,modernize-*,
   cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-narrowing-conversions,

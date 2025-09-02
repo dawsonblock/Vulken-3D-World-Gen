@@ -15,6 +15,8 @@ find_program(GLSLC glslc
     "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin"
     "${CMAKE_SOURCE_DIR}/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/tools/shaderc"
     "${CMAKE_SOURCE_DIR}/vcpkg/installed/${VCPKG_HOST_TRIPLET}/tools/shaderc"
+    "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/tools/shaderc"
+    "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_HOST_TRIPLET}/tools/shaderc"
 )
 if(NOT GLSLC)
   find_program(GLSLANG_VALIDATOR glslangValidator
@@ -22,6 +24,8 @@ if(NOT GLSLC)
       "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin"
       "${CMAKE_SOURCE_DIR}/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/tools/shaderc"
       "${CMAKE_SOURCE_DIR}/vcpkg/installed/${VCPKG_HOST_TRIPLET}/tools/shaderc"
+      "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/tools/shaderc"
+      "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_HOST_TRIPLET}/tools/shaderc"
   )
   if(NOT GLSLANG_VALIDATOR)
     message(FATAL_ERROR "Neither glslc nor glslangValidator found. Install Vulkan SDK or shaderc tools.")

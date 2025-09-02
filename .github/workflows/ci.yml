@@ -25,7 +25,12 @@ jobs:
           FILES=$(git ls-files '*.cpp' '*.hpp' '*.h' '*.cc' '*.cxx' | tr '\n' ' ')
           if [ -n "$FILES" ]; then
             clang-format --version
-            for f in $FILES; do clang-format -style=file --dry-run --Werror "$f"; done
+            STYLE_OPT="-style=file"
+            if [ ! -f .clang-format ]; then
+              echo "No .clang-format found, using LLVM default style"
+              STYLE_OPT="-style=LLVM"
+            fi
+            for f in $FILES; do clang-format $STYLE_OPT --dry-run --Werror "$f"; done
           else
             echo "No C/C++ files to check."
           fi
@@ -62,521 +67,483 @@ jobs:
           if [ "${{ env.TIDY_FAIL_ON_WARNINGS }}" = "true" ]; then
             WARN=$(grep -E "\bwarning:\b" -c artifacts/clang-tidy-report.txt || true)
             echo "clang-tidy warnings: $WARN"
-            name: CI
+            if [ "$WARN" -gt 0 ]; then
+              echo "Failing build due to clang-tidy warnings."
+              exit 1
+            fi
+          else
+            echo "TIDY_FAIL_ON_WARNINGS=false — not failing on warnings."
+          fi
 
-            on:
-              push:
-                branches: [ main, master ]
-              pull_request:
+  shader_check:
+    name: Shader Compile Check
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix: { os: [ubuntu-latest, windows-latest] }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Vulkan tools (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y glslang-tools shaderc
+      - name: Install Vulkan SDK (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          choco install vulkan-sdk -y
+      - name: Compile shaders
+        shell: bash
+        run: |
+          bash ./scripts/compile_shaders.sh
+      - name: Cache SPIR-V
+        uses: actions/cache@v4
+        with:
+          path: .cache/spv
+          key: ${{ runner.os }}-spv-${{ hashFiles('**/*.vert', '**/*.frag', '**/*.comp', '**/*.glsl') }}
+      - name: Upload compiled shaders
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shaders-${{ matrix.os }}
+          path: .cache/spv/**
 
-            permissions:
-              contents: read
-              pull-requests: write
+  build:
+    name: ${{ matrix.os }} / ${{ matrix.preset }}
+    runs-on: ${{ matrix.os }}
+    needs: [format_check, tidy, shader_check]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        preset: [gui, headless]
 
-            jobs:
-              format_check:
-                name: Formatting (clang-format)
-                runs-on: ubuntu-latest
-                steps:
-                  - uses: actions/checkout@v4
-                  - name: Install clang-format
-                    run: |
-                      sudo apt-get update
-                      sudo apt-get install -y clang-format
-                  - name: Check formatting
-                    run: |
-                      set -e
-                      FILES=$(git ls-files '*.cpp' '*.hpp' '*.h' '*.cc' '*.cxx' | tr '\n' ' ')
-                      if [ -n "$FILES" ]; then
-                        clang-format --version
-                        for f in $FILES; do clang-format -style=file --dry-run --Werror "$f"; done
-                      else
-                        echo "No C/C++ files to check."
-                      fi
+    env:
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ runner.temp }}/vcpkg_bin_cache
+      VCPKG_DEFAULT_TRIPLET: ${{ runner.os == 'Windows' && 'x64-windows' || 'x64-linux' }}
+      VCPKG_ROOT: ${{ runner.temp }}/vcpkg
+      CCACHE_DIR: ${{ runner.temp }}/.ccache
+      PIPE_CACHE_DIR: ${{ github.workspace }}/.cache/vk_pipeline_cache
+      VK_PIPELINE_CACHE_PATH: ${{ github.workspace }}/.cache/vk_pipeline_cache/voxelvk_pipelines.cache
 
-              tidy:
-                name: Clang-Tidy (Linux)
-                runs-on: ubuntu-latest
-                needs: [format_check]
-                env:
-                  TIDY_FAIL_ON_WARNINGS: ${{ vars.TIDY_FAIL_ON_WARNINGS || 'false' }}
-                steps:
-                  - uses: actions/checkout@v4
-                  - name: Install toolchain & tidy
-                    run: |
-                      sudo apt-get update
-                      sudo apt-get install -y clang-tidy build-essential cmake ninja-build \
-                        ccache libvulkan-dev vulkan-validationlayers-dev glslang-tools shaderc
-                  - name: Configure (export compile commands)
-                    run: |
-                      cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-                        -DVOXELVK_HEADLESS_ONLY=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-                  - name: Run clang-tidy
-                    run: |
-                      mkdir -p artifacts
-                      FILES=$(git ls-files '*.cpp' '*.cc' '*.cxx' | tr '\n' ' ')
-                      if [ -z "$FILES" ]; then
-                        echo "No C++ sources." | tee artifacts/clang-tidy-report.txt
-                        exit 0
-                      fi
-                      echo "Running clang-tidy..."
-                      clang-tidy -p build $FILES | tee artifacts/clang-tidy-report.txt || true
-                  - name: Fail on warnings (configurable)
-                    run: |
-                      if [ "${{ env.TIDY_FAIL_ON_WARNINGS }}" = "true" ]; then
-                        WARN=$(grep -E "\bwarning:\b" -c artifacts/clang-tidy-report.txt || true)
-                        echo "clang-tidy warnings: $WARN"
-                        if [ "$WARN" -gt 0 ]; then
-                          echo "Failing build due to clang-tidy warnings."
-                          exit 1
-                        fi
-                      else
-                        echo "TIDY_FAIL_ON_WARNINGS=false — not failing on warnings."
-                      fi
-                  - name: Upload tidy report
-                    uses: actions/upload-artifact@v4
-                    with:
-                      name: clang-tidy-report
-                      path: artifacts/clang-tidy-report.txt
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-              shader_check:
-                name: Shader Compile Check
-                runs-on: ${{ matrix.os }}
-                strategy:
-                  matrix: { os: [ubuntu-latest, windows-latest] }
-                steps:
-                  - uses: actions/checkout@v4
-                  - name: Install Vulkan tools (Ubuntu)
-                    if: matrix.os == 'ubuntu-latest'
-                    run: |
-                      sudo apt-get update
-                      sudo apt-get install -y glslang-tools shaderc
-                  - name: Install Vulkan SDK (Windows)
-                    if: matrix.os == 'windows-latest'
-                    shell: powershell
-                    run: |
-                      choco install vulkan-sdk -y
-                  - name: Compile shaders
-                    shell: bash
-                    run: |
-                      bash ./scripts/compile_shaders.sh
-                  - name: Cache SPIR-V
-                    uses: actions/cache@v4
-                    with:
-                      path: .cache/spv
-                      key: ${{ runner.os }}-spv-${{ hashFiles('**/*.vert', '**/*.frag', '**/*.comp', '**/*.glsl') }}
-                  - name: Upload compiled shaders
-                    if: always()
-                    uses: actions/upload-artifact@v4
-                    with:
-                      name: shaders-${{ matrix.os }}
-                      path: .cache/spv/**
+      - name: Pipeline cache (Vulkan)
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PIPE_CACHE_DIR }}
+          key: ${{ runner.os }}-vkpipe-${{ github.ref }}
 
-              build:
-                name: ${{ matrix.os }} / ${{ matrix.preset }}
-                runs-on: ${{ matrix.os }}
-                needs: [format_check, tidy, shader_check]
-                strategy:
-                  fail-fast: false
-                  matrix:
-                    os: [ubuntu-latest, windows-latest]
-                    preset: [gui, headless]
+      - name: ccache cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake', 'vcpkg.json') }}
 
-                env:
-                  VCPKG_DEFAULT_BINARY_CACHE: ${{ runner.temp }}/vcpkg_bin_cache
-                  VCPKG_DEFAULT_TRIPLET: ${{ runner.os == 'Windows' && 'x64-windows' || 'x64-linux' }}
-                  VCPKG_ROOT: ${{ runner.temp }}/vcpkg
-                  CCACHE_DIR: ${{ runner.temp }}/.ccache
-                  PIPE_CACHE_DIR: ${{ github.workspace }}/.cache/vk_pipeline_cache
-                  VK_PIPELINE_CACHE_PATH: ${{ github.workspace }}/.cache/vk_pipeline_cache/voxelvk_pipelines.cache
+      - name: Install deps (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config git python3 \
+            ccache libvulkan-dev vulkan-validationlayers-dev vulkan-tools \
+            glslang-tools shaderc python3-matplotlib
+          ccache -s || true
 
-                steps:
-                  - name: Checkout
-                    uses: actions/checkout@v4
+      - name: Install Vulkan SDK (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          choco install vulkan-sdk -y
+          choco install ccache -y || echo "ccache not available on Windows runner"
+          echo "VULKAN_SDK=$Env:VULKAN_SDK" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-                  - name: Pipeline cache (Vulkan)
-                    uses: actions/cache@v4
-                    with:
-                      path: ${{ env.PIPE_CACHE_DIR }}
-                      key: ${{ runner.os }}-vkpipe-${{ github.ref }}
+      - name: Setup vcpkg
+        uses: microsoft/vcpkg-action@v1
+        with:
+          vcpkgGitCommitId: 1b5a7a7e1aee5b287f2e7a9e0f9a8f9510b5c3f8
+          appendedCacheKey: ${{ matrix.os }}
 
-                  - name: ccache cache
-                    uses: actions/cache@v4
-                    with:
-                      path: ${{ env.CCACHE_DIR }}
-                      key: ${{ runner.os }}-ccache-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake', 'vcpkg.json') }}
+      - name: vcpkg install
+        run: |
+          "${{ env.VCPKG_ROOT }}/vcpkg" install
+        shell: bash
 
-                  - name: Install deps (Ubuntu)
-                    if: matrix.os == 'ubuntu-latest'
-                    run: |
-                      sudo apt-get update
-                      sudo apt-get install -y --no-install-recommends \
-                        build-essential cmake ninja-build pkg-config git python3 \
-                        ccache libvulkan-dev vulkan-validationlayers-dev vulkan-tools \
-                        glslang-tools shaderc python3-matplotlib
-                      ccache -s || true
+      - name: Download shader artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: shaders-${{ matrix.os }}
+          path: build/shaders_prebuilt
 
-                  - name: Install Vulkan SDK (Windows)
-                    if: matrix.os == 'windows-latest'
-                    shell: powershell
-                    run: |
-                      choco install vulkan-sdk -y
-                      choco install ccache -y || echo "ccache not available on Windows runner"
-                      echo "VULKAN_SDK=$Env:VULKAN_SDK" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Configure (CMake)
+        run: |
+          PRESET="default"
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            PRESET="windows-default"
+          fi
+          if [ "${{ matrix.preset }}" = "headless" ]; then
+            if [ "${{ matrix.os }}" = "windows-latest" ]; then
+              # No dedicated windows headless preset; override the option
+              cmake --preset windows-default -DVOXELVK_HEADLESS_ONLY=ON \
+                -DCMAKE_BUILD_TYPE=Release -DVOXELVK_ENABLE_CUDA=OFF -DVOXELVK_ENABLE_TENSORRT=OFF \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+            else
+              cmake --preset headless -DCMAKE_BUILD_TYPE=Release \
+                -DVOXELVK_ENABLE_CUDA=OFF -DVOXELVK_ENABLE_TENSORRT=OFF \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+            fi
+          else
+            cmake --preset "$PRESET" -DCMAKE_BUILD_TYPE=Release \
+              -DVOXELVK_ENABLE_CUDA=OFF -DVOXELVK_ENABLE_TENSORRT=OFF \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}";
+          fi
+        shell: bash
 
-                  - name: Setup vcpkg
-                    uses: microsoft/vcpkg-action@v1
-                    with:
-                      vcpkgGitCommitId: 1b5a7a7e1aee5b287f2e7a9e0f9a8f9510b5c3f8
-                      appendedCacheKey: ${{ matrix.os }}
+      - name: Build
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cmake --build build-windows --config Release --parallel;
+          else
+            if [ "${{ matrix.preset }}" = "headless" ]; then
+              cmake --build build_headless --config Release --parallel;
+            else
+              cmake --build build --config Release --parallel;
+            fi
+          fi
+        shell: bash
 
-                  - name: vcpkg install
-                    run: |
-                      "${{ env.VCPKG_ROOT }}/vcpkg" install
-                    shell: bash
+      - name: Run smoke test (Linux headless)
+        if: matrix.os == 'ubuntu-latest' && matrix.preset == 'headless'
+        env:
+          VK_PIPELINE_CACHE_PATH: ${{ env.VK_PIPELINE_CACHE_PATH }}
+        run: |
+          mkdir -p "$(dirname "$VK_PIPELINE_CACHE_PATH")"
+          if [ -x "./scripts/run_headless.sh" ]; then
+            timeout 20s ./scripts/run_headless.sh || true
+          elif [ -x "./build_headless/apps/smoke_headless" ]; then
+            timeout 10s ./build_headless/apps/smoke_headless || true
+          else
+            echo "No headless runner found."
+          fi
+        shell: bash
 
-                  - name: Download shader artifact
-                    uses: actions/download-artifact@v4
-                    with:
-                      name: shaders-${{ matrix.os }}
-                      path: build/shaders_prebuilt
+      - name: Run smoke test (Windows headless)
+        if: matrix.os == 'windows-latest' && matrix.preset == 'headless'
+        shell: powershell
+        run: |
+          $exe = "build-windows\apps\smoke_headless.exe"
+          if (Test-Path $exe) {
+            Write-Host "Starting smoke_headless for 10s..."
+            $p = Start-Process -FilePath $exe -PassThru
+            Start-Sleep -Seconds 10
+            if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+          } elseif (Test-Path ".\scripts\run_headless.ps1") {
+            Write-Host "Running scripts\run_headless.ps1"
+            $p = Start-Process -FilePath "powershell" -ArgumentList "-File .\scripts\run_headless.ps1" -PassThru
+            Start-Sleep -Seconds 10
+            if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+          } else {
+            Write-Host "No Windows headless runner found."
+          }
 
-                  - name: Configure (CMake)
-                    run: |
-                      cmake -S . -B build -G "Ninja" \
-                        -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" \
-                        -DCMAKE_BUILD_TYPE=Release \
-                        -DVOXELVK_ENABLE_CUDA=OFF \
-                        -DVOXELVK_ENABLE_TENSORRT=OFF \
-                        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                        -DVK_PIPELINE_CACHE_PATH="${{ env.VK_PIPELINE_CACHE_PATH }}" \
-                        ${{ matrix.preset == 'headless' && '-DVOXELVK_HEADLESS_ONLY=ON' || '' }}
-                    shell: bash
+      - name: Upload vcpkg installed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-installed-${{ matrix.os }}
+          path: |
+            ${{ env.VCPKG_ROOT }}/installed/**
 
-                  - name: Build
-                    run: cmake --build build --config Release --parallel
-                    shell: bash
+      - name: Archive build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-${{ matrix.preset }}-build
+          path: |
+            build/**
+            !**/*.obj
+            !**/*.o
 
-                  - name: Run smoke test (Linux headless)
-                    if: matrix.os == 'ubuntu-latest' && matrix.preset == 'headless'
-                    env:
-                      VK_PIPELINE_CACHE_PATH: ${{ env.VK_PIPELINE_CACHE_PATH }}
-                    run: |
-                      mkdir -p "$(dirname "$VK_PIPELINE_CACHE_PATH")"
-                      if [ -x "./scripts/run_headless.sh" ]; then
-                        timeout 20s ./scripts/run_headless.sh || true
-                      elif [ -x "./build/apps/smoke_headless" ]; then
-                        timeout 10s ./build/apps/smoke_headless || true
-                      else
-                        echo "No headless runner found."
-                      fi
-                    shell: bash
+  perf_cpu:
+    name: Perf CPU (Linux)
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install perf
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y linux-tools-common linux-tools-generic || true
+          which perf || true
+          sudo sysctl -w kernel.perf_event_paranoid=1 || true
+          sudo sysctl -w kernel.kptr_restrict=0 || true
+      - name: Configure & build headless
+        run: |
+          cmake -S . -B build -G Ninja -DVOXELVK_HEADLESS_ONLY=ON
+          cmake --build build --config Release -j
+      - name: Record CPU profile (10s)
+        run: |
+          bash ./scripts/perf_headless.sh 10 || true
+      - name: Upload CPU perf artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-cpu
+          path: |
+            perf.data
+            perf_report.txt
 
-                  - name: Run smoke test (Windows headless)
-                    if: matrix.os == 'windows-latest' && matrix.preset == 'headless'
-                    shell: powershell
-                    run: |
-                      $exe = "build\apps\smoke_headless.exe"
-                      if (Test-Path $exe) {
-                        Write-Host "Starting smoke_headless for 10s..."
-                        $p = Start-Process -FilePath $exe -PassThru
-                        Start-Sleep -Seconds 10
-                        if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
-                      } elseif (Test-Path ".\scripts\run_headless.ps1") {
-                        Write-Host "Running scripts\run_headless.ps1"
-                        $p = Start-Process -FilePath "powershell" -ArgumentList "-File .\scripts\run_headless.ps1" -PassThru
-                        Start-Sleep -Seconds 10
-                        if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
-                      } else {
-                        Write-Host "No Windows headless runner found."
-                      }
+  unit_tests:
+    name: Unit Tests
+    runs-on: ${{ matrix.os }}
+    needs: [format_check, tidy]
+    strategy:
+      matrix: { os: [ubuntu-latest, windows-latest] }
+    env:
+      VCPKG_DEFAULT_TRIPLET: ${{ runner.os == 'Windows' && 'x64-windows' || 'x64-linux' }}
+      VCPKG_ROOT: ${{ runner.temp }}/vcpkg
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build
+      - name: Install deps (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          echo "Windows tests using vcpkg toolchain"
+      - name: Setup vcpkg
+        uses: microsoft/vcpkg-action@v1
+        with:
+          vcpkgGitCommitId: 1b5a7a7e1aee5b287f2e7a9e0f9a8f9510b5c3f8
+          appendedCacheKey: ${{ matrix.os }}
+      - name: vcpkg install
+        run: |
+          "${{ env.VCPKG_ROOT }}/vcpkg" install
+        shell: bash
+      - name: Configure (tests only)
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cmake --preset windows-default -DVOXELVK_HEADLESS_ONLY=ON -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release;
+          else
+            cmake --preset headless -DENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Release;
+          fi
+      - name: Build tests
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cmake --build build-windows --config Release --parallel;
+          else
+            cmake --build build_headless --config Release --parallel;
+          fi
+      - name: Run tests
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            ctest --test-dir build-windows -C Release --output-on-failure;
+          else
+            ctest --test-dir build_headless -C Release --output-on-failure;
+          fi
 
-                  - name: Upload vcpkg installed
-                    if: always()
-                    uses: actions/upload-artifact@v4
-                    with:
-                      name: vcpkg-installed-${{ matrix.os }}
-                      path: |
-                        ${{ env.VCPKG_ROOT }}/installed/**
+  perf_bench:
+    name: Perf Bench (Linux headless)
+    runs-on: ubuntu-latest
+    needs: [build]
+    env:
+      PERF_REGRESSION_TOLERANCE: ${{ vars.PERF_REGRESSION_TOLERANCE || '0.20' }}
+      STRICT_BASELINE: ${{ vars.STRICT_BASELINE || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-matplotlib
+      - name: Configure & build headless
+        run: |
+          cmake -S . -B build -G Ninja -DVOXELVK_HEADLESS_ONLY=ON
+          cmake --build build --config Release -j
+      - name: Run bench (30s)
+        run: |
+          bash ./scripts/bench_headless.sh 30 | tee bench.log
+      - name: Parse & plot
+        run: |
+          python3 .github/scripts/bench_parse.py bench.log
+      - name: Compare to baseline
+        run: |
+          python3 .github/scripts/bench_compare.py
+      - name: Upload perf artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-bench
+          path: |
+            bench.log
+            bench_stats.json
+            perf_compare_report.md
+            perf_frametime_hist.png
+            perf_fps_hist.png
 
-                  - name: Archive build artifacts
-                    if: always()
-                    uses: actions/upload-artifact@v4
-                    with:
-                      name: ${{ matrix.os }}-${{ matrix.preset }}-build
-                      path: |
-                        build/**
-                        !**/*.obj
-                        !**/*.o
-
-              perf_cpu:
-                name: Perf CPU (Linux)
-                runs-on: ubuntu-latest
-                needs: [build]
-                steps:
-                  - uses: actions/checkout@v4
-                  - name: Install perf
-                    run: |
-                      sudo apt-get update
-                      sudo apt-get install -y linux-tools-common linux-tools-generic || true
-                      which perf || true
-                      sudo sysctl -w kernel.perf_event_paranoid=1 || true
-                      sudo sysctl -w kernel.kptr_restrict=0 || true
-                  - name: Configure & build headless
-                    run: |
-                      cmake -S . -B build -G Ninja -DVOXELVK_HEADLESS_ONLY=ON
-                      cmake --build build --config Release -j
-                  - name: Record CPU profile (10s)
-                    run: |
-                      bash ./scripts/perf_headless.sh 10 || true
-                  - name: Upload CPU perf artifacts
-                    if: always()
-                    uses: actions/upload-artifact@v4
-                    with:
-                      name: perf-cpu
-                      path: |
-                        perf.data
-                        perf_report.txt
-
-              unit_tests:
-                name: Unit Tests
-                runs-on: ${{ matrix.os }}
-                needs: [format_check, tidy]
-                strategy:
-                  matrix: { os: [ubuntu-latest, windows-latest] }
-                env:
-                  VCPKG_DEFAULT_TRIPLET: ${{ runner.os == 'Windows' && 'x64-windows' || 'x64-linux' }}
-                  VCPKG_ROOT: ${{ runner.temp }}/vcpkg
-                steps:
-                  - uses: actions/checkout@v4
-                  - name: Install deps (Ubuntu)
-                    if: matrix.os == 'ubuntu-latest'
-                    run: |
-                      sudo apt-get update
-                      sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build
-                  - name: Install deps (Windows)
-                    if: matrix.os == 'windows-latest'
-                    shell: powershell
-                    run: |
-                      echo "Windows tests using vcpkg toolchain"
-                  - name: Setup vcpkg
-                    uses: microsoft/vcpkg-action@v1
-                    with:
-                      vcpkgGitCommitId: 1b5a7a7e1aee5b287f2e7a9e0f9a8f9510b5c3f8
-                      appendedCacheKey: ${{ matrix.os }}
-                  - name: vcpkg install
-                    run: |
-                      "${{ env.VCPKG_ROOT }}/vcpkg" install
-                    shell: bash
-                  - name: Configure (tests only)
-                    run: |
-                      cmake -S . -B build-tests -G "Ninja" \
-                        -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" \
-                        -DCMAKE_BUILD_TYPE=Release \
-                        -DVOXELVK_HEADLESS_ONLY=ON \
-                        -DENABLE_TESTS=ON
-                  - name: Build tests
-                    run: cmake --build build-tests --config Release --target voxelvk_tests --parallel
-                  - name: Run tests
-                    run: ctest --test-dir build-tests -C Release --output-on-failure
-
-              perf_bench:
-                name: Perf Bench (Linux headless)
-                runs-on: ubuntu-latest
-                needs: [build]
-                env:
-                  PERF_REGRESSION_TOLERANCE: ${{ vars.PERF_REGRESSION_TOLERANCE || '0.20' }}
-                  STRICT_BASELINE: ${{ vars.STRICT_BASELINE || 'false' }}
-                steps:
-                  - uses: actions/checkout@v4
-                  - name: Install tools
-                    run: |
-                      sudo apt-get update
-                      sudo apt-get install -y python3 python3-matplotlib
-                  - name: Configure & build headless
-                    run: |
-                      cmake -S . -B build -G Ninja -DVOXELVK_HEADLESS_ONLY=ON
-                      cmake --build build --config Release -j
-                  - name: Run bench (30s)
-                    run: |
-                      bash ./scripts/bench_headless.sh 30 | tee bench.log
-                  - name: Parse & plot
-                    run: |
-                      python3 .github/scripts/bench_parse.py bench.log
-                  - name: Compare to baseline
-                    run: |
-                      python3 .github/scripts/bench_compare.py
-                  - name: Upload perf artifacts
-                    if: always()
-                    uses: actions/upload-artifact@v4
-                    with:
-                      name: perf-bench
-                      path: |
-                        bench.log
-                        bench_stats.json
-                        perf_compare_report.md
-                        perf_frametime_hist.png
-                        perf_fps_hist.png
-
-              pr_comment:
-                name: PR Perf Comment
-                if: github.event_name == 'pull_request'
-                needs: [perf_bench]
-                runs-on: ubuntu-latest
-                steps:
-                  - name: Download perf artifacts
-                    uses: actions/download-artifact@v4
-                    with:
-                      name: perf-bench
-                      path: perf
-                  - name: Read report
-                    id: read
-                    run: |
-                      echo "text<<EOF" >> $GITHUB_OUTPUT
-                      cat perf/perf_compare_report.md >> $GITHUB_OUTPUT
-                      echo "EOF" >> $GITHUB_OUTPUT
-                  - name: Post sticky comment
-                    uses: marocchino/sticky-pull-request-comment@v2
-                    with:
-                      message: |
-                        **Perf Report**
-                        ${{ steps.read.outputs.text }}
+  pr_comment:
+    name: PR Perf Comment
+    if: github.event_name == 'pull_request'
+    needs: [perf_bench]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download perf artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: perf-bench
+          path: perf
+      - name: Read report
+        id: read
+        run: |
+          echo "text<<EOF" >> $GITHUB_OUTPUT
+          cat perf/perf_compare_report.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Post sticky comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: |
+            **Perf Report**
+            ${{ steps.read.outputs.text }}
             
-                        Artifacts: perf_bench (histograms + stats).
+            Artifacts: perf_bench (histograms + stats).
 
-              image_golden:
-                name: Image Golden Diff
-                needs: [build]
-                runs-on: ${{ matrix.os }}
-                strategy:
-                  matrix: { os: [ubuntu-latest, windows-latest] }
-                env:
-                  GOLDEN_STRICT: ${{ vars.GOLDEN_STRICT || '0' }}
-                  PSNR_MIN: ${{ vars.GOLDEN_PSNR_MIN || '30' }}
-                  MAE_MAX: ${{ vars.GOLDEN_MAE_MAX || '2' }}
-                steps:
-                  - uses: actions/checkout@v4
-                  - name: Install build deps (Ubuntu)
-                    if: matrix.os == 'ubuntu-latest'
-                    run: |
-                      sudo apt-get update
-                      sudo apt-get install -y build-essential cmake ninja-build
-                  - name: Run golden diff (Ubuntu)
-                    if: matrix.os == 'ubuntu-latest'
-                    run: |
-                      bash ./scripts/golden_diff.sh
-                  - name: Run golden diff (Windows)
-                    if: matrix.os == 'windows-latest'
-                    shell: powershell
-                    run: |
-                      .\scripts\golden_diff.ps1
-                  - name: Upload image diff artifacts
-                    if: always()
-                    uses: actions/upload-artifact@v4
-                    with:
-                      name: golden-${{ matrix.os }}
-                      path: |
-                        imagediff.png
-                        imagediff_report.json
+  image_golden:
+    name: Image Golden Diff
+    needs: [build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix: { os: [ubuntu-latest, windows-latest] }
+    env:
+      GOLDEN_STRICT: ${{ vars.GOLDEN_STRICT || '0' }}
+      PSNR_MIN: ${{ vars.GOLDEN_PSNR_MIN || '30' }}
+      MAE_MAX: ${{ vars.GOLDEN_MAE_MAX || '2' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build deps (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build
+      - name: Run golden diff (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          bash ./scripts/golden_diff.sh
+      - name: Run golden diff (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          .\scripts\golden_diff.ps1
+      - name: Upload image diff artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-${{ matrix.os }}
+          path: |
+            imagediff.png
+            imagediff_report.json
 
-              publish_pages:
-                name: Publish Perf Report (GitHub Pages)
-                if: github.ref == 'refs/heads/main'
-                needs: [perf_bench]
-                permissions:
-                  pages: write
-                  id-token: write
-                environment:
-                  name: github-pages
-                  url: ${{ steps.deployment.outputs.page_url }}
-                runs-on: ubuntu-latest
-                steps:
-                  - name: Download perf artifacts
-                    uses: actions/download-artifact@v4
-                    with:
-                      name: perf-bench
-                      path: pages
-                  - name: Generate badge.json
-                    run: |
-                      python3 - <<'PY'
-            import json
-            j=None
-            try:
-              j=json.load(open('pages/bench_stats.json'))
-            except Exception:
-              j={}
-            m=j.get('mean_frametime_ms') if isinstance(j,dict) else None
-            color='lightgrey'; msg='n/a'
-            if isinstance(m,(int,float)):
-              msg=f"{m:.1f} ms"
-              if m<12: color='brightgreen'
-              elif m<16: color='green'
-              elif m<22: color='yellow'
-              else: color='red'
-            badge={'schemaVersion':1,'label':'frametime','message':msg,'color':color}
-            open('pages/badge.json','w').write(json.dumps(badge))
-            print('badge',badge)
-            PY
-                  - name: Generate index.html
-                    run: |
-                      cat > pages/index.html <<'HTML'
-                      <!doctype html>
-                      <html>
-                      <head><meta charset="utf-8"><title>VoxelVK Perf Report</title>
-                      <style>body{font-family:sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem} table{border-collapse:collapse} td,th{border:1px solid #ddd;padding:6px 10px}</style>
-                      </head>
-                      <body>
-                        <h1>VoxelVK Perf Report</h1>
-                        <p>Branch: ${GITHUB_REF}</p>
-                        <h2>Regression Summary</h2>
-                        <pre id="report"></pre>
-                        <h2>Key Metrics</h2>
-                        <table id="stats"><tr><th>Metric</th><th>Value</th></tr></table>
-                        <h2>Frametime</h2>
-                        <img src="perf_frametime_hist.png" alt="frametime" style="max-width: 900px;">
-                        <h2>FPS</h2>
-                        <img src="perf_fps_hist.png" alt="fps" style="max-width: 900px;">
-                        <script>
-                        fetch('perf_compare_report.md').then(r=>r.text()).then(t=>document.getElementById('report').textContent=t);
-                        fetch('bench_stats.json').then(r=>r.json()).then(j=>{
-                          const tbl=document.getElementById('stats');
-                          const entries=[["mean_fps",j.mean_fps],["median_fps",j.median_fps],["mean_frametime_ms",j.mean_frametime_ms],["median_frametime_ms",j.median_frametime_ms],["p95_frametime_ms",j.p95_frametime_ms],["count_fps",j.count_fps],["count_ms",j.count_ms]];
-                          for(const [k,v] of entries){ const tr=document.createElement('tr'); const td1=document.createElement('td'); td1.textContent=k; const td2=document.createElement('td'); td2.textContent=(v===null||v===undefined)?'—':(typeof v==='number'?v.toFixed(2):v); tr.append(td1,td2); tbl.append(tr); }
-                        }).catch(()=>{});
-                        </script>
-                      </body></html>
-                      HTML
+  publish_pages:
+    name: Publish Perf Report (GitHub Pages)
+    if: github.ref == 'refs/heads/main'
+    needs: [perf_bench]
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download perf artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: perf-bench
+          path: pages
+      - name: Generate badge.json
+        run: |
+          python3 - <<'PY'
+          import json
+          j=None
+          try:
+            j=json.load(open('pages/bench_stats.json'))
+          except Exception:
+            j={}
+          m=j.get('mean_frametime_ms') if isinstance(j,dict) else None
+          color='lightgrey'; msg='n/a'
+          if isinstance(m,(int,float)):
+            msg=f"{m:.1f} ms"
+            if m<12: color='brightgreen'
+            elif m<16: color='green'
+            elif m<22: color='yellow'
+            else: color='red'
+          badge={'schemaVersion':1,'label':'frametime','message':msg,'color':color}
+          open('pages/badge.json','w').write(json.dumps(badge))
+          print('badge',badge)
+          PY
+      - name: Generate index.html
+        run: |
+          cat > pages/index.html <<'HTML'
+          <!doctype html>
+          <html>
+          <head><meta charset="utf-8"><title>VoxelVK Perf Report</title>
+          <style>body{font-family:sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem} table{border-collapse:collapse} td,th{border:1px solid #ddd;padding:6px 10px}</style>
+          </head>
+          <body>
+            <h1>VoxelVK Perf Report</h1>
+            <p>Branch: ${GITHUB_REF}</p>
+            <h2>Regression Summary</h2>
+            <pre id="report"></pre>
+            <h2>Key Metrics</h2>
+            <table id="stats"><tr><th>Metric</th><th>Value</th></tr></table>
+            <h2>Frametime</h2>
+            <img src="perf_frametime_hist.png" alt="frametime" style="max-width: 900px;">
+            <h2>FPS</h2>
+            <img src="perf_fps_hist.png" alt="fps" style="max-width: 900px;">
+            <script>
+            fetch('perf_compare_report.md').then(r=>r.text()).then(t=>document.getElementById('report').textContent=t);
+            fetch('bench_stats.json').then(r=>r.json()).then(j=>{
+              const tbl=document.getElementById('stats');
+              const entries=[["mean_fps",j.mean_fps],["median_fps",j.median_fps],["mean_frametime_ms",j.mean_frametime_ms],["median_frametime_ms",j.median_frametime_ms],["p95_frametime_ms",j.p95_frametime_ms],["count_fps",j.count_fps],["count_ms",j.count_ms]];
+              for(const [k,v] of entries){ const tr=document.createElement('tr'); const td1=document.createElement('td'); td1.textContent=k; const td2=document.createElement('td'); td2.textContent=(v===null||v===undefined)?'—':(typeof v==='number'?v.toFixed(2):v); tr.append(td1,td2); tbl.append(tr); }
+            }).catch(()=>{});
+            </script>
+          </body></html>
+          HTML
 
-                  - name: Upload artifact
-                    uses: actions/upload-pages-artifact@v3
-                    with:
-                      path: pages
-                  - name: Deploy to GitHub Pages
-                    id: deployment
-                    uses: actions/deploy-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
-              nsys_trace:
-                name: Nsight Systems Trace (self-hosted GPU)
-                if: ${{ vars.ENABLE_NSIGHT == 'true' }}
-                runs-on: ${{ vars.NSYS_RUNNER || 'self-hosted' }}
-                needs: [build]
-                steps:
-                  - uses: actions/checkout@v4
-                  - name: Verify nsys
-                    run: |
-                      which nsys || (echo "nsys not found; install Nsight Systems CLI on the runner" && exit 1)
-                      nsys --version || true
-                  - name: Configure & build headless
-                    run: |
-                      cmake -S . -B build -G Ninja -DVOXELVK_HEADLESS_ONLY=ON
-                      cmake --build build --config Release -j
-                  - name: Run nsys trace (10s)
-                    run: |
-                      bash ./scripts/nsys_headless.sh 10
-                  - name: Upload nsys artifacts
-                    uses: actions/upload-artifact@v4
-                    with:
-                      name: nsys-trace
-                      path: |
-                        nsys_report.qdrep
-                        nsys_report.sqlite
+  nsys_trace:
+    name: Nsight Systems Trace (self-hosted GPU)
+    if: ${{ vars.ENABLE_NSIGHT == 'true' }}
+    runs-on: ${{ vars.NSYS_RUNNER || 'self-hosted' }}
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify nsys
+        run: |
+          which nsys || (echo "nsys not found; install Nsight Systems CLI on the runner" && exit 1)
+          nsys --version || true
+      - name: Configure & build headless
+        run: |
+          cmake -S . -B build -G Ninja -DVOXELVK_HEADLESS_ONLY=ON
+          cmake --build build --config Release -j
+      - name: Run nsys trace (10s)
+        run: |
+          bash ./scripts/nsys_headless.sh 10
+      - name: Upload nsys artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nsys-trace
+          path: |
+            nsys_report.qdrep
+            nsys_report.sqlite
