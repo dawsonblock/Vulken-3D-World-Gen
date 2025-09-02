@@ -702,8 +702,57 @@ int main(int argc, char** argv) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    // Optional multi-viewport: enabled by flag/env to avoid quirks on some WMs
+    const bool enableViewports = hasArg(argc, argv, "--viewports") || std::getenv("VOXELVK_VIEWPORTS");
+    if (enableViewports) io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+    // UI scale from arg/env
+    float uiScale = 1.0f;
+    if (const char* s = getArgValue(argc, argv, "--ui-scale")) { try { uiScale = std::max(0.5f, std::min(2.0f, std::stof(s))); } catch(...){} }
+    if (const char* e = std::getenv("VOXELVK_UI_SCALE")) { try { uiScale = std::max(0.5f, std::min(2.0f, std::stof(e))); } catch(...){} }
+    io.FontGlobalScale = uiScale;
+
+    // Modern dark theme with rounded corners and subtle accents
     ImGui::StyleColorsDark();
+    {
+        ImGuiStyle& s = ImGui::GetStyle();
+        s.WindowRounding = 8.0f;
+        s.FrameRounding = 6.0f;
+        s.GrabRounding = 6.0f;
+        s.PopupRounding = 8.0f;
+        s.TabRounding = 6.0f;
+        s.ScrollbarRounding = 9.0f;
+        s.FrameBorderSize = 1.0f;
+        s.WindowBorderSize = 1.0f;
+        s.ItemSpacing = ImVec2(10, 8);
+        s.ItemInnerSpacing = ImVec2(8, 6);
+        s.WindowPadding = ImVec2(12, 10);
+        s.FramePadding = ImVec2(10, 6);
+        ImVec4* c = s.Colors;
+        c[ImGuiCol_WindowBg]        = ImVec4(0.10f,0.11f,0.14f,1.00f);
+        c[ImGuiCol_TitleBg]         = ImVec4(0.08f,0.09f,0.12f,1.00f);
+        c[ImGuiCol_TitleBgActive]   = ImVec4(0.18f,0.19f,0.24f,1.00f);
+        c[ImGuiCol_TitleBgCollapsed]= ImVec4(0.08f,0.09f,0.12f,1.00f);
+        c[ImGuiCol_Header]          = ImVec4(0.20f,0.45f,0.85f,0.22f);
+        c[ImGuiCol_HeaderHovered]   = ImVec4(0.20f,0.45f,0.85f,0.40f);
+        c[ImGuiCol_HeaderActive]    = ImVec4(0.20f,0.45f,0.85f,0.55f);
+        c[ImGuiCol_Button]          = ImVec4(0.20f,0.45f,0.85f,0.35f);
+        c[ImGuiCol_ButtonHovered]   = ImVec4(0.20f,0.45f,0.85f,0.55f);
+        c[ImGuiCol_ButtonActive]    = ImVec4(0.20f,0.45f,0.85f,0.75f);
+        c[ImGuiCol_CheckMark]       = ImVec4(0.95f,0.95f,0.95f,1.00f);
+        c[ImGuiCol_SliderGrab]      = ImVec4(0.30f,0.60f,1.00f,0.80f);
+        c[ImGuiCol_SliderGrabActive]= ImVec4(0.30f,0.60f,1.00f,1.00f);
+        c[ImGuiCol_Separator]       = ImVec4(0.25f,0.28f,0.32f,1.00f);
+        c[ImGuiCol_Tab]             = ImVec4(0.16f,0.18f,0.22f,1.00f);
+        c[ImGuiCol_TabHovered]      = ImVec4(0.20f,0.45f,0.85f,0.45f);
+        c[ImGuiCol_TabActive]       = ImVec4(0.18f,0.20f,0.25f,1.00f);
+        c[ImGuiCol_NavHighlight]    = ImVec4(0.20f,0.45f,0.85f,0.60f);
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            s.WindowRounding = 8.0f;
+            s.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        }
+    }
     
     // Initialize ImGui backends
     ImGui_ImplGlfw_InitForVulkan(window, true);
@@ -858,67 +907,80 @@ int main(int argc, char** argv) {
         {
             PERF_FRAME_TIMER("UI_Build");
             ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
 
-        // Simple demo UI
-    ImGui::Begin("VoxelVK UI");
-        ImGui::Text("FPS: %.1f", fps);
-        ImGui::Text("Frame time: %.2f ms", 1000.0 * (fps > 0.0 ? 1.0 / fps : 0.0));
-        ImGui::Text("Window: %dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
-    ImGui::Separator();
-    ImGui::Text("Camera pos: (%.2f, %.2f, %.2f)", cam.x, cam.y, cam.z);
-    ImGui::Text("Yaw/Pitch: (%.2f, %.2f)", cam.yaw, cam.pitch);
-    ImGui::SliderFloat("Move speed", &cam.moveSpeed, 0.5f, 20.0f);
-        ImGui::TextDisabled("Controls: WASD/QE move, hold RMB to look, Shift to sprint, F11 toggle fullscreen");
-#if defined(__linux__)
-        static bool screenshot_ok = false; static double screenshot_msg_t = 0;
-        if (ImGui::Button("Save Screenshot (P)")) {
-            screenshot_ok = SaveWindowScreenshot(window, "screenshot.png");
-            screenshot_msg_t = glfwGetTime();
-        }
-        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-            static bool ppressed=false; if(!ppressed){ screenshot_ok = SaveWindowScreenshot(window, "screenshot.png"); screenshot_msg_t = glfwGetTime(); ppressed=true; }
-        } else { static bool ppressed=false; ppressed=false; }
-        if (glfwGetTime() - screenshot_msg_t < 2.0) {
-            ImGui::TextColored(screenshot_ok ? ImVec4(0.3f,1,0.3f,1) : ImVec4(1,0.3f,0.3f,1),
-                               screenshot_ok ? "Saved to screenshot.png" : "Screenshot failed");
-        }
-#endif
-        static bool rag_enabled = last_rag_enabled;
-        static int rag_top_k = last_rag_top_k;
-        if (ImGui::Checkbox("Enable RAG", &rag_enabled)) {
-            voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k);
-            last_rag_enabled = rag_enabled;
-        }
-        if (ImGui::SliderInt("RAG Top-K", &rag_top_k, 1, 16)) {
-            voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k);
-            last_rag_top_k = rag_top_k;
-        }
-        if (ImGui::Button("Toggle Fullscreen (F11)")) {
-            static bool isFullscreen = false;
-            isFullscreen = !isFullscreen;
-            voxelvk::RequestFullscreen(isFullscreen);
-        }
-    if (ImGui::CollapsingHeader("Perf HUD", ImGuiTreeNodeFlags_DefaultOpen)) {
-            auto& pm = voxelvk::PerformanceMonitor::instance();
-            auto& tracker = pm.getBudgetTracker();
-            ImGui::Text("Avg frame: %.2f ms", tracker.getAverageTime(voxelvk::PerformanceBudget::FRAME_TOTAL));
-            ImGui::Text("P95 frame: %.2f ms", tracker.getP95Time(voxelvk::PerformanceBudget::FRAME_TOTAL));
-            const auto& timings = pm.getGPUTimer().getAllTimings();
-            if (!timings.empty()) {
-                ImGui::Separator();
-                ImGui::Text("GPU timings:");
-                for (const auto& kv : timings) {
-                    ImGui::BulletText("%s: %.3f ms", kv.first.c_str(), kv.second);
+            // Dockspace & main menu
+            ImGuiViewport* vp = ImGui::GetMainViewport();
+            ImGui::DockSpaceOverViewport(vp, ImGuiDockNodeFlags_PassthruCentralNode);
+            if (ImGui::BeginMainMenuBar()) {
+                if (ImGui::BeginMenu("View")) {
+                    static bool showOverview = true, showCamera = true, showSystems = true, showPerf = true;
+                    ImGui::MenuItem("Overview", nullptr, &showOverview);
+                    ImGui::MenuItem("Camera", nullptr, &showCamera);
+                    ImGui::MenuItem("Systems", nullptr, &showSystems);
+                    ImGui::MenuItem("Performance", nullptr, &showPerf);
+                    ImGui::Separator();
+                    ImGui::Text("UI Scale"); ImGui::SameLine();
+                    static float uiScaleRuntime = io.FontGlobalScale; if (ImGui::SliderFloat("##uiscale", &uiScaleRuntime, 0.75f, 1.75f, "%.2fx")) io.FontGlobalScale = uiScaleRuntime;
+                    ImGui::EndMenu();
                 }
-            } else {
-                ImGui::TextDisabled("GPU timings not available");
+                if (ImGui::BeginMenu("Actions")) {
+                    if (ImGui::MenuItem("Toggle Fullscreen (F11)")) { static bool isFullscreen=false; isFullscreen=!isFullscreen; voxelvk::RequestFullscreen(isFullscreen);}            
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMainMenuBar();
             }
+
+            // Panels
+            if (ImGui::Begin("Overview")) {
+                ImGui::Text("FPS: %.1f", fps);
+                ImGui::Text("Frame time: %.2f ms", 1000.0 * (fps > 0.0 ? 1.0 / fps : 0.0));
+                ImGui::Text("Window: %dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
+                ImGui::TextDisabled("Controls: WASD/QE move, hold RMB to look, Shift to sprint, F11 toggle fullscreen");
+#if defined(__linux__)
+                static bool screenshot_ok = false; static double screenshot_msg_t = 0;
+                if (ImGui::Button("Save Screenshot (P)")) { screenshot_ok = SaveWindowScreenshot(window, "screenshot.png"); screenshot_msg_t = glfwGetTime(); }
+                if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) { static bool ppressed=false; if(!ppressed){ screenshot_ok = SaveWindowScreenshot(window, "screenshot.png"); screenshot_msg_t = glfwGetTime(); ppressed=true; } } else { static bool ppressed=false; ppressed=false; }
+                if (glfwGetTime() - screenshot_msg_t < 2.0) {
+                    ImGui::TextColored(screenshot_ok ? ImVec4(0.3f,1,0.3f,1) : ImVec4(1,0.3f,0.3f,1), screenshot_ok ? "Saved to screenshot.png" : "Screenshot failed");
+                }
+#endif
+            }
+            ImGui::End();
+
+            if (ImGui::Begin("Camera")) {
+                ImGui::Text("Position");
+                ImGui::BulletText("(%.2f, %.2f, %.2f)", cam.x, cam.y, cam.z);
+                ImGui::Text("Orientation");
+                ImGui::BulletText("Yaw/Pitch: (%.2f, %.2f)", cam.yaw, cam.pitch);
+                ImGui::SliderFloat("Move speed", &cam.moveSpeed, 0.5f, 20.0f);
+            }
+            ImGui::End();
+
+            if (ImGui::Begin("Systems")) {
+                static bool rag_enabled = last_rag_enabled; static int rag_top_k = last_rag_top_k;
+                if (ImGui::Checkbox("Enable RAG", &rag_enabled)) { voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); last_rag_enabled = rag_enabled; }
+                if (ImGui::SliderInt("RAG Top-K", &rag_top_k, 1, 16)) { voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); last_rag_top_k = rag_top_k; }
+            }
+            ImGui::End();
+
+            if (ImGui::Begin("Performance")) {
+                auto& pm = voxelvk::PerformanceMonitor::instance();
+                auto& tracker = pm.getBudgetTracker();
+                ImGui::Text("Avg frame: %.2f ms", tracker.getAverageTime(voxelvk::PerformanceBudget::FRAME_TOTAL));
+                ImGui::Text("P95 frame: %.2f ms", tracker.getP95Time(voxelvk::PerformanceBudget::FRAME_TOTAL));
+                const auto& timings = pm.getGPUTimer().getAllTimings();
+                if (!timings.empty()) { ImGui::Separator(); ImGui::Text("GPU timings:"); for (const auto& kv : timings) { ImGui::BulletText("%s: %.3f ms", kv.first.c_str(), kv.second); } }
+                else { ImGui::TextDisabled("GPU timings not available"); }
+            }
+            ImGui::End();
         }
-    ImGui::End();
-    }
-    ImGui::Render();
+        ImGui::Render();
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
 #elif defined(MAIN_HAS_IMGUI_MINIMAL)
         // Minimal ImGui without backend: just ensure we log once
         static bool firstRun = true;
