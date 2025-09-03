@@ -38,20 +38,22 @@ endif()
 if(VULKEN_ENGINE_ENABLE_SANITIZERS AND NOT MSVC)
   set(_VULKEN_SAN_FLAGS "-fsanitize=address,undefined")
   target_compile_options(vulken_engine PRIVATE
-    $<$<CONFIG:Debug,RelWithDebInfo>:${_VULKEN_SAN_FLAGS}>
+    $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:${_VULKEN_SAN_FLAGS}>
   )
   target_link_options(vulken_engine PRIVATE
-    $<$<CONFIG:Debug,RelWithDebInfo>:${_VULKEN_SAN_FLAGS}>
+    $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:${_VULKEN_SAN_FLAGS}>
   )
 endif()
 
 # Coverage (GCC/Clang, debug-like configs)
 if(VULKEN_ENGINE_ENABLE_COVERAGE AND NOT MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(vulken_engine PRIVATE
-    $<$<CONFIG:Debug,RelWithDebInfo>:-O0 -g --coverage>
+    $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:-O0>
+    $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:-g>
+    $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:--coverage>
   )
   target_link_options(vulken_engine PRIVATE
-    $<$<CONFIG:Debug,RelWithDebInfo>:--coverage>
+    $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:--coverage>
   )
 endif()
 
