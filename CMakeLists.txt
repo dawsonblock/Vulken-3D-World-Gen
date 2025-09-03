@@ -589,6 +589,15 @@ endif() # NOT VOXELVK_HEADLESS_ONLY
     endif()
   endif()
 
+# Add engine sublibrary
+add_subdirectory(src/engine)
+
+# Link into selected apps if they exist
+foreach(tgt IN ITEMS p0_reliability_test p1_concepts_simple p2_concepts_validator weather_integration_test weather_demo)
+  if(TARGET ${tgt})
+    target_link_libraries(${tgt} PRIVATE vulken_engine)
+  endif()
+endforeach()
 
 # Tests
 if(ENABLE_TESTS)
