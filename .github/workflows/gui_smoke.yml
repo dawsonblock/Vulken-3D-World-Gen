@@ -18,6 +18,7 @@ jobs:
             build-essential cmake ninja-build \
             mesa-vulkan-drivers libvulkan1 vulkan-tools glslang-tools \
             libglfw3-dev libglm-dev \
+            libxinerama-dev libxcursor-dev libxi-dev libxrandr-dev \
             xvfb x11vnc websockify fluxbox novnc imagemagick
 
       - name: Bootstrap vcpkg (manifest mode)
