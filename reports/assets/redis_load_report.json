@@ -1,0 +1,62 @@
+{
+  "redis_connection": {
+    "offline_mode": true
+  },
+  "loaded_assets": [
+    {
+      "type": "texture",
+      "name": "default_albedo",
+      "size": 54
+    },
+    {
+      "type": "texture",
+      "name": "grass_albedo",
+      "size": 38
+    },
+    {
+      "type": "texture",
+      "name": "water_normal",
+      "size": 37
+    },
+    {
+      "type": "texture",
+      "name": "stone_albedo",
+      "size": 38
+    },
+    {
+      "type": "mesh",
+      "name": "cube",
+      "vertices": 0
+    },
+    {
+      "type": "palette",
+      "name": "desert",
+      "biome": "desert"
+    },
+    {
+      "type": "palette",
+      "name": "arctic",
+      "biome": "arctic"
+    },
+    {
+      "type": "palette",
+      "name": "forest",
+      "biome": "forest"
+    },
+    {
+      "type": "palette",
+      "name": "volcanic",
+      "biome": "volcanic"
+    }
+  ],
+  "summary": {
+    "total_assets": 9,
+    "textures": 4,
+    "meshes": 1,
+    "palettes": 4,
+    "total_size_bytes": 167
+  },
+  "validation": {
+    "storage_valid": true
+  }
+}
