@@ -14,6 +14,9 @@ add_library(voxelvk::engine ALIAS vulken_engine)
 
 target_include_directories(vulken_engine
     PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
@@ -26,6 +29,10 @@ set_target_properties(vulken_engine PROPERTIES
 )
 
 target_compile_definitions(vulken_engine PUBLIC VULKEN_ENGINE_ENABLE_LOGGING=1)
+# Export symbols on Windows builds
+if(WIN32)
+  target_compile_definitions(vulken_engine PRIVATE ENGINE_BUILD=1)
+endif()
 
 # Per-compiler warnings (optional)
 if(MSVC)
