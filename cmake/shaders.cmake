@@ -27,7 +27,8 @@ find_program(SPIRV_CROSS_EXECUTABLE NAMES spirv-cross
 )
 
 if(NOT GLSLC_EXECUTABLE)
-    message(FATAL_ERROR "glslc not found! Please install Vulkan SDK or set VULKAN_SDK environment variable")
+    message(WARNING "glslc not found! Shader compilation will be disabled. Install Vulkan SDK for full functionality.")
+    return()
 endif()
 
 if(NOT SPIRV_CROSS_EXECUTABLE)
