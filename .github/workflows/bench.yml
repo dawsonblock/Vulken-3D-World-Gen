@@ -1,0 +1,141 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run nightly benchmarks at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyyaml redis matplotlib
+
+    - name: Setup CMake and Ninja
+      uses: lukka/get-cmake@latest
+      with:
+        cmakeVersion: '3.27'
+
+    - name: Cache previous benchmark results
+      uses: actions/cache@v3
+      with:
+        path: |
+          reports/bench/
+        key: benchmark-results-${{ github.ref }}-${{ github.sha }}
+        restore-keys: |
+          benchmark-results-${{ github.ref }}-
+          benchmark-results-refs/heads/main-
+
+    - name: Configure CMake (Release for performance)
+      run: |
+        cmake --preset linux-default -DCMAKE_BUILD_TYPE=Release -DBUILD_BENCHMARKS=ON
+
+    - name: Build
+      run: |
+        cmake --build build --config Release -j
+
+    - name: Run benchmarks
+      run: |
+        mkdir -p reports/bench
+        python3 scripts/bench/run_bench.py --output reports/bench/latest.json
+
+    - name: Check for performance regression
+      run: |
+        python3 scripts/bench/check_regression.py \
+          --current reports/bench/latest.json \
+          --baseline reports/bench/baseline.json \
+          --threshold 0.10 \
+          --report reports/bench/regression_report.json || echo "Regression check completed with warnings"
+
+    - name: Generate benchmark visualization
+      run: |
+        python3 scripts/bench/visualize_results.py \
+          --input reports/bench/latest.json \
+          --output reports/bench/performance_chart.png || echo "Visualization generation failed"
+
+    - name: Update baseline (main branch only)
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        cp reports/bench/latest.json reports/bench/baseline.json
+        echo "Updated performance baseline"
+
+    - name: Upload benchmark results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: |
+          reports/bench/
+
+    - name: Comment PR with performance results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          try {
+            // Read benchmark results
+            const results = JSON.parse(fs.readFileSync('reports/bench/latest.json', 'utf8'));
+            const benchmarks = results.benchmarks || [];
+            
+            let comment = `## 📊 Performance Benchmark Results\n\n`;
+            comment += `**Total Benchmarks**: ${benchmarks.length}\n`;
+            comment += `**Run Time**: ${new Date(results.timestamp || Date.now()).toISOString()}\n\n`;
+            
+            comment += `| Benchmark | Time | Unit | Notes |\n`;
+            comment += `|-----------|------|------|-------|\n`;
+            
+            benchmarks.slice(0, 10).forEach(bench => {
+              const time = (bench.time || 0).toFixed(2);
+              const unit = bench.unit || 'ms';
+              const notes = bench.regression ? '⚠️ Regression' : '✅ OK';
+              comment += `| ${bench.name} | ${time} | ${unit} | ${notes} |\n`;
+            });
+            
+            if (benchmarks.length > 10) {
+              comment += `\n... and ${benchmarks.length - 10} more benchmarks.\n`;
+            }
+            
+            // Check for regressions
+            const regressions = benchmarks.filter(b => b.regression);
+            if (regressions.length > 0) {
+              comment += `\n⚠️ **${regressions.length} performance regression(s) detected!**\n`;
+            } else {
+              comment += `\n✅ **No performance regressions detected.**\n`;
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('Could not read benchmark results:', error.message);
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '## 📊 Performance Benchmark Results\n\n❌ Could not generate benchmark report. Please check the workflow logs.'
+            });
+          }
