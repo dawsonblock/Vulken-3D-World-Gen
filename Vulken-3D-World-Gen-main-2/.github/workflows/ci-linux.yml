@@ -1,0 +1,85 @@
+name: CI Linux
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install base toolchain (gcc/g++/cmake/ninja)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build
+
+      - name: Install system dependencies (Vulkan, X11)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libvulkan-dev mesa-vulkan-drivers \
+            libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+            libgl1-mesa-dev libglu1-mesa-dev \
+            glslang-tools
+
+      - name: Cache vcpkg and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/build/vcpkg_installed
+            ${{ github.workspace }}/vcpkg/downloads
+            ${{ github.workspace }}/vcpkg/buildtrees
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+
+      - name: Bootstrap vcpkg (manifest mode)
+        run: |
+          set -e
+          VCPKG_ROOT="${GITHUB_WORKSPACE}/vcpkg"
+          # If a stray 'vcpkg' dir exists but is not a proper clone (no bootstrap script), replace it
+          if [ -d "$VCPKG_ROOT" ] && [ ! -f "$VCPKG_ROOT/bootstrap-vcpkg.sh" ]; then
+            echo "Found incomplete vcpkg dir at $VCPKG_ROOT (missing bootstrap). Replacing..."
+            rm -rf "$VCPKG_ROOT"
+          fi
+          if [ ! -d "$VCPKG_ROOT" ]; then
+            git clone --depth 1 https://github.com/microsoft/vcpkg "$VCPKG_ROOT"
+          fi
+          if [ ! -x "$VCPKG_ROOT/vcpkg" ]; then
+            "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+          # Verify toolchain file exists
+          if [ ! -f "$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" ]; then
+            echo "vcpkg toolchain file missing: $VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+            ls -la "$VCPKG_ROOT" || true
+            ls -la "$VCPKG_ROOT/scripts" || true
+            exit 1
+          fi
+          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
+          echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $GITHUB_ENV
+
+      - name: Configure (CMake Preset)
+        run: |
+          cmake --preset default -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Build
+        run: |
+          cmake --build --preset default -j 3
+
+      - name: Run tests
+        run: |
+          ctest --test-dir build --output-on-failure -j 2
+
+      - name: Upload test reports (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-outputs
+          path: |
+            build/compile_commands.json
+            build/*.log
+            performance_report.json

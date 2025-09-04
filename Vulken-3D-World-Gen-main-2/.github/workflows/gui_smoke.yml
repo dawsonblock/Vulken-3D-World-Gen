@@ -1,0 +1,102 @@
+name: GUI Smoke
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gui-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            build-essential cmake ninja-build \
+            mesa-vulkan-drivers libvulkan1 vulkan-tools glslang-tools \
+            libglfw3-dev libglm-dev \
+            libxinerama-dev libxcursor-dev libxi-dev libxrandr-dev \
+            xvfb x11vnc websockify fluxbox novnc imagemagick
+
+      - name: Bootstrap vcpkg (manifest mode)
+        run: |
+          set -e
+          VCPKG_ROOT="${GITHUB_WORKSPACE}/vcpkg"
+          if [ -d "$VCPKG_ROOT" ] && [ ! -f "$VCPKG_ROOT/bootstrap-vcpkg.sh" ]; then
+            echo "Found incomplete vcpkg dir at $VCPKG_ROOT (missing bootstrap). Replacing..."
+            rm -rf "$VCPKG_ROOT"
+          fi
+          if [ ! -d "$VCPKG_ROOT" ]; then
+            git clone --depth 1 https://github.com/microsoft/vcpkg "$VCPKG_ROOT"
+          fi
+          if [ ! -x "$VCPKG_ROOT/vcpkg" ]; then
+            "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+          if [ ! -f "$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" ]; then
+            echo "vcpkg toolchain file missing: $VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+            ls -la "$VCPKG_ROOT" || true
+            ls -la "$VCPKG_ROOT/scripts" || true
+            exit 1
+          fi
+          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
+          echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $GITHUB_ENV
+
+      - name: Build
+        run: |
+          CMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" ./scripts/build.sh
+
+      - name: Tests
+        run: |
+          ctest --test-dir build --output-on-failure -j2
+
+      - name: GUI smoke (xvfb + screenshot)
+        env:
+          GUI_ARGS: --smoke --benchmark --frames 120 --autoscreenshot --export-perf --perf-out .
+          PORT: 6080
+        run: |
+          set -e
+          # Start virtual desktop + app (auto-exits after ~2s)
+          scripts/start_gui_web.sh || true
+          # Give some time to render at least a couple frames
+          sleep 3
+          # Take a screenshot from the virtual display
+          DISPLAY=:99 import -window root screenshot.png || true
+          # Always stop services
+          scripts/stop_gui_web.sh || true
+
+      - name: Upload screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: gui-screenshot
+          path: screenshot.png
+
+      - name: Upload performance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gui-performance
+          path: performance_report.json
+
+      - name: Gate on performance (optional)
+        if: always()
+        run: |
+          set -e
+          sudo apt-get update -y
+          sudo apt-get install -y jq
+          if [ ! -f performance_report.json ]; then
+            echo "No performance_report.json found"
+            exit 1
+          fi
+          cat performance_report.json | jq .
+          PASS=$(jq -r '.performance_gates' performance_report.json)
+          echo "Performance gates: $PASS"
+          if [ "$PASS" != "true" ]; then
+            echo "Performance gates failed"
+            # Fail the job if strict gating is requested
+            if [ "${{ vars.GUI_SMOKE_STRICT || 'false' }}" = "true" ]; then
+              exit 1
+            fi
+          fi

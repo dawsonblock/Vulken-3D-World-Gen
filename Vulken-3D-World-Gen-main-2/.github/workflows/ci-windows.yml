@@ -1,0 +1,86 @@
+name: CI Windows
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSVC (Developer Command Prompt)
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v4
+
+      - name: Bootstrap vcpkg (manifest mode)
+        shell: pwsh
+        run: |
+          $vcpkgRoot = Join-Path $env:GITHUB_WORKSPACE 'vcpkg'
+          if (Test-Path $vcpkgRoot) {
+            if (-not (Test-Path (Join-Path $vcpkgRoot 'bootstrap-vcpkg.bat'))) {
+              Write-Host "Found incomplete vcpkg dir at $vcpkgRoot (missing bootstrap). Recreating..."
+              Remove-Item -Recurse -Force $vcpkgRoot
+            }
+          }
+          if (-not (Test-Path $vcpkgRoot)) {
+            git clone --depth 1 https://github.com/microsoft/vcpkg $vcpkgRoot
+          }
+          Write-Host "vcpkg root: $vcpkgRoot"
+          Get-ChildItem -Force $vcpkgRoot | Select-Object -ExpandProperty Name
+          $bootstrapBat = Join-Path $vcpkgRoot 'bootstrap-vcpkg.bat'
+          if (-not (Test-Path (Join-Path $vcpkgRoot 'vcpkg.exe'))) {
+            if (-not (Test-Path $bootstrapBat)) {
+              Write-Error "bootstrap script not found at $bootstrapBat"
+              exit 1
+            }
+            cmd.exe /c "`"$bootstrapBat`" -disableMetrics"
+          }
+          # Verify toolchain file exists
+          $toolchain = Join-Path $vcpkgRoot 'scripts/buildsystems/vcpkg.cmake'
+          if (-not (Test-Path $toolchain)) {
+            Write-Error "vcpkg toolchain file missing: $toolchain"
+            Get-ChildItem -Recurse -Depth 2 $vcpkgRoot | Select-Object -First 100 | ForEach-Object { $_.FullName }
+            exit 1
+          }
+          echo "VCPKG_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
+          echo "VCPKG_FEATURE_FLAGS=manifests,registries" >> $env:GITHUB_ENV
+
+      - name: Cache vcpkg and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}\build-windows\vcpkg_installed
+            ${{ github.workspace }}\vcpkg\downloads
+            ${{ github.workspace }}\vcpkg\buildtrees
+          key: vcpkg-win-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+
+      - name: Configure (CMake Preset)
+        shell: bash
+        run: |
+          cmake --preset windows-default -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+
+      - name: Build
+        shell: bash
+        run: |
+          cmake --build --preset windows-default -j 3
+
+      - name: Run tests
+        shell: bash
+        run: |
+          ctest --test-dir build-windows --output-on-failure -j 2
+
+      - name: Upload test reports (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-windows-outputs
+          path: |
+            build-windows/compile_commands.json
+            build-windows/*.log

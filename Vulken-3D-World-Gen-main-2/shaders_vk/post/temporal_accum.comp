@@ -1,0 +1,39 @@
+#version 460
+#extension GL_GOOGLE_include_directive : enable
+#include "../common/weather_ubo.glsl"
+layout(local_size_x=8, local_size_y=8) in;
+
+layout(binding=0, rgba16f) uniform readonly  image2D Curr;      // current overlay (clouds or precip)
+layout(binding=1) uniform sampler2D History;                   // previous accumulated (as sampler)
+layout(binding=2, rgba16f) uniform writeonly image2D Out;      // new accumulated
+
+layout(push_constant) uniform PC { vec2 invSize; float dt; float alpha; } pc;
+// alpha ~ 0.85 for clouds, 0.65 for precip
+
+vec4 sampleBilinear(sampler2D tex, vec2 uv){
+  return texture(tex, uv);
+}
+
+void main(){
+  ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+  ivec2 size = imageSize(Out);
+  if(any(greaterThanEqual(p, size))) return;
+
+  // Wind-based advection for history lookup
+  vec2 uv = (vec2(p)+0.5) / vec2(size);
+  vec2 wind = normalize(uWeather.windDir.xz);
+  float speed = uWeather.windSpeed;             // m/s
+  // Scale for texture space drift: tune factor to scene scale (use 0.02 as starter)
+  vec2 drift = wind * speed * pc.dt * 0.02;
+  vec2 uvHist = uv - drift;
+
+  vec4 curr = imageLoad(Curr, p);
+  vec4 hist = sampleBilinear(History, uvHist);
+
+  // Neighborhood clamp (cheap): limit history to +/- 20% of current to reduce smearing
+  vec4 lo = curr*0.8, hi = curr*1.2;
+  hist = clamp(hist, min(lo,hi), max(lo,hi));
+
+  vec4 acc = mix(curr, hist, pc.alpha);
+  imageStore(Out, p, acc);
+}

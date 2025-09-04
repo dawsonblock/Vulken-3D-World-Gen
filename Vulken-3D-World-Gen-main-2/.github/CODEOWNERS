@@ -1,0 +1,8 @@
+# Default owners for everything
+* @dawsonblock
+
+# Docs
+/docs/ @dawsonblock
+
+# CI workflows
+/.github/workflows/ @dawsonblock

@@ -1,0 +1,16 @@
+BasedOnStyle: LLVM
+IndentWidth: 2
+ColumnLimit: 120
+AllowShortIfStatementsOnASingleLine: false
+SortIncludes: false
+BreakBeforeBraces: Attach
+PointerAlignment: Left
+DisableFormat: false
+
+Language: Cpp
+Standard: c++20
+ColumnLimit: 120
+AllowShortFunctionsOnASingleLine: Empty
+SortIncludes: true
+SpaceAfterTemplateKeyword: true
+ReflowComments: true
