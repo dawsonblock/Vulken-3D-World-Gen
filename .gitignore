@@ -88,3 +88,7 @@ screenshot.png
 *.7z
 *.rar
 *.tar.Z
+-e 
+# Environment files
+*.env
+*.env.*
