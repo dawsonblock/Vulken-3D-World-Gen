@@ -1,333 +1,319 @@
-# VoxelVK Runtime Guide
+# Vulken-3D Quick Start Guide
+=============================
 
-## Quick Start
+## Prerequisites
 
-### Basic Demo Sequence
+### System Requirements
+- **OS**: Windows 10+, Ubuntu 20.04+, or macOS 12+
+- **GPU**: Vulkan 1.1+ compatible (NVIDIA GTX 1060, AMD RX 580, or better)
+- **RAM**: 8GB minimum, 16GB recommended
+- **Storage**: 2GB free space
+
+### Software Dependencies
+- **Vulkan SDK**: Download from https://vulkan.lunarg.com/
+- **CMake 3.27+**: https://cmake.org/download/
+- **Python 3.8+**: For build scripts and tools
+
+## Quick Start (5 minutes)
+
+### Option A: Pre-built Release Bundle
 ```bash
-# 1. Basic functionality test
-./build/smoke_headless
+# Download release bundle
+wget https://github.com/your-org/vulken-3d/releases/latest/download/vulken3d_linux_x64.zip
 
-# 2. Weather system demonstration  
-./build/weather_demo
-
-# 3. Production system validation
-./scripts/p2_validation.sh
-
-# 4. Interactive demo with GUI
-./build/main_imgui_vulkan
+# Extract and run
+unzip vulken3d_linux_x64.zip
+cd vulken3d_linux_x64/
+./run.sh
 ```
 
-## Applications
-
-### Core Engine
-
-#### `smoke_headless`
-**Purpose**: Basic engine stability test  
-**Runtime**: <5 seconds  
-**Output**: "smoke_headless: OK"  
-**Use**: CI validation, system health check
-
-#### `weather_demo`  
-**Purpose**: Weather & sky system showcase  
-**Runtime**: ~10 seconds (automated demo)  
-**Features**: All weather states, lightning, frame graph execution  
-**Output**: Comprehensive weather system demonstration
-
-#### `weather_integration_test`
-**Purpose**: Weather system integration validation  
-**Runtime**: ~15 seconds  
-**Features**: Console commands, real-time changes, performance monitoring
-
-### Graphics Rendering
-
-#### `vulkan_fullscreen_demo`
-**Purpose**: Full Vulkan rendering pipeline  
-**Runtime**: Interactive (until ESC)  
-**Features**: Swapchain management, resize handling, fullscreen toggle  
-**Controls**:
-- **F11**: Toggle fullscreen
-- **ESC**: Exit
-- **Alt+Tab**: Test device resilience
-
-#### `main_imgui_vulkan`  
-**Purpose**: Production ImGui application with all systems  
-**Runtime**: Interactive  
-**Features**: Real-time HUD, weather controls, performance monitoring, RAG integration
-
-**Controls**:
-- **F11**: Fullscreen toggle
-- **F5**: Hot-reload configuration  
-- **Mouse**: ImGui interaction
-
-### AI & Machine Learning
-
-#### `rl_nav_demo`
-**Purpose**: Reinforcement learning demonstration  
-**Runtime**: ~2 minutes (100 episodes)  
-**Features**: Navigation task, MLP training, learning progress  
-**Output**: Saved model (`navigation_policy.vxml`)
-
-**Expected Results**:
-- Episode rewards improve over time
-- Policy learns to reach target efficiently
-- Model saves successfully
-
-### Performance & Validation
-
-#### `p2_concepts_validator`
-**Purpose**: P2 performance system validation  
-**Runtime**: ~5 seconds  
-**Features**: 120 FPS analysis, TAA concepts, screen space validation  
-**Expected**: All P2 systems validated
-
-#### System Validation Scripts
-
-**P0 Reliability**: `./scripts/p0_validation.sh`  
-- Device capabilities probing
-- Error handling infrastructure  
-- Swapchain resilience testing
-- Pipeline cache validation
-
-**P1 Memory Management**: `./scripts/p1_validation.sh`  
-- VMA integration validation
-- VRAM budget analysis
-- Frame allocator concepts  
-- Asset optimization verification
-
-**P2 Frame Pacing**: `./scripts/p2_validation.sh`  
-- 120 FPS target validation
-- TAA system verification
-- Screen space effects analysis
-- Performance monitoring validation
-
-## Interactive Usage
-
-### Weather System Controls
-
-When running `main_imgui_vulkan` or other ImGui applications:
-
-**Weather State Controls**:
-- Clear, Cloudy, Rain, Snow, Storm, Fog buttons
-- Real-time weather state transitions
-- Lightning toggle for storms
-
-**Weather Parameters**:
-- Wind speed and direction sliders
-- Cloud coverage adjustment  
-- Precipitation rate control
-- Fog density settings
-
-**Console Commands** (in applications with console):
+### Option B: Docker (Recommended for testing)
 ```bash
-wx.set STORM          # Change weather state
-wx.wind 15 270 0.8    # Wind: speed, direction, gustiness
-wx.clouds 0.9         # Cloud coverage
-wx.precip 25.0        # Precipitation rate (mm/h)
-wx.fog 0.05           # Fog density
-wx.lightning on       # Enable lightning flashes
+# Clone repository
+git clone https://github.com/your-org/vulken-3d-world-gen.git
+cd vulken-3d-world-gen/
+
+# Start with Docker Compose
+docker-compose up -d
+
+# Check status
+docker-compose ps
+docker-compose logs vulken3d
+
+# Access operator console
+open http://localhost:8080
 ```
 
-### Performance Monitoring
-
-**Real-Time HUD** (ImGui applications):
-- FPS counter and frame timing
-- GPU pass timing breakdown  
-- VRAM budget utilization
-- Weather system status
-- Performance budget compliance
-
-**Console Commands**:
+### Option C: Build from Source
 ```bash
-r.targetfps 120       # Set target frame rate
-r.framebudget 8.33    # Set frame time budget (ms)
-r.perf.monitor true   # Enable performance tracking
-r.perf.nvtx true      # Enable NVTX for Nsight
+# Clone repository
+git clone https://github.com/your-org/vulken-3d-world-gen.git
+cd vulken-3d-world-gen/
+
+# Install Python dependencies
+pip3 install pyyaml redis
+
+# Configure and build
+cmake --preset default
+cmake --build build -j$(nproc)
+
+# Run headless demo
+./build/apps/smoke_graphics_headless --config config/engine.yaml
+
+# Run operator console
+./build/apps/operator_console
 ```
 
-### Screen Space Effects
+## Available Applications
 
-**SSAO (Screen Space Ambient Occlusion)**:
+### Core Applications
+- **`smoke_graphics_headless`**: Validation and testing without GUI
+- **`operator_console`**: Real-time monitoring and control interface  
+- **`gui_fullscreen_demo`**: Full-screen graphics demonstration
+- **`weather_demo`**: Interactive weather system showcase
+
+### Usage Examples
 ```bash
-r.ssao.enable true    # Enable SSAO (default: ON)
-r.ssao.radius 1.5     # Sampling radius
-r.ssao.strength 1.0   # AO darkening strength
-r.ssao.halfres true   # Half-resolution rendering
+# Headless validation (CI/testing)
+./smoke_graphics_headless --headless --validate --config config/engine.yaml
+
+# Interactive operator console
+./operator_console --config config/renderer.yaml
+
+# Weather demonstration with specific conditions
+./weather_demo --weather thunderstorm --time 18:30
 ```
 
-**SSR (Screen Space Reflections)**:
+## Configuration
+
+### Quick Configuration Changes
+
+**Performance Tuning (`config/renderer.yaml`)**
+```yaml
+renderer:
+  msaa_samples: 4        # 1-8, lower = better performance
+  resolution:
+    width: 1920         
+    height: 1080
+
+post_processing:
+  ssao:
+    enabled: true       # Disable for better performance
+  ssr: 
+    enabled: false      # Expensive, disable on lower-end hardware
+```
+
+**World Settings (`config/engine.yaml`)**  
+```yaml
+world:
+  render_distance: 8    # 4-16, lower = better performance
+  chunk_size: 64
+  generation_threads: 4
+
+performance:
+  target_fps: 60
+  vsync: true
+```
+
+**Asset Storage (`config/datasets.yaml`)**
+```yaml
+storage:
+  mode: "filesystem"    # "filesystem" | "redis" | "s3"
+  cache_size_mb: 512
+```
+
+### Environment Variables
 ```bash
-r.ssr.enable false          # Enable SSR (default: OFF, expensive)
-r.ssr.maxdistance 50.0      # Maximum ray distance
-r.ssr.thickness 0.5         # Surface thickness
-r.ssr.roughnessaware true   # Fade with surface roughness
+# Logging control
+export VULKEN_LOG_LEVEL=INFO  # TRACE, DEBUG, INFO, WARN, ERROR
+
+# Performance tuning
+export VULKEN_HEADLESS=true   # Disable GUI for servers
+export VULKAN_DRIVER=swiftshader  # Software rendering fallback
+
+# Development options
+export VULKEN_DEBUG=1         # Enable debug features
+export VK_LAYER_PATH=/usr/share/vulkan/explicit_layer.d
 ```
-
-### AI Integration
-
-#### RAG (Retrieval-Augmented Generation)
-
-**Setup**:
-```bash
-# 1. Create knowledge base
-mkdir -p data/rag_kb
-echo "Elven architecture uses flowing organic curves" > data/rag_kb/elven_style.txt
-
-# 2. Build search index
-python scripts/build_rag_index.py
-
-# 3. Run application with RAG
-./build/main_imgui_vulkan
-```
-
-**Usage**:
-- Toggle "Enable RAG" in ImGui interface
-- Adjust "RAG Top-K" for retrieval count
-- Generated content will use retrieved context
-
-#### RL Training
-
-**Navigation Demo**:
-```bash
-./build/rl_nav_demo
-
-# Monitor training progress:
-# Episode 0: reward=-15.2, avg_reward=0.0
-# Episode 10: reward=2.3, avg_reward=1.2  
-# Episode 50: reward=8.7, avg_reward=6.1
-# Episode 90: reward=9.2, avg_reward=8.4
-# Training converged! Average reward: 8.4
-```
-
-**Custom RL Integration**:
-```cpp
-// Create backend
-auto backend = RLBackendFactory::create(RLBackendFactory::BackendType::MINIMAL_MLP);
-
-// Training loop
-std::vector<float> obs = env.reset();
-std::vector<float> actions, values;
-backend->forward(obs, actions, values);
-auto result = env.step(actions);
-
-// Update policy
-backend->update(observations, actions, rewards, values, advantages);
-```
-
-## Performance Optimization
-
-### Frame Rate Optimization
-
-**Target 120 FPS**:
-```bash
-# Performance mode
-r.targetfps 120
-r.ssao.halfres true
-r.ssr.enable false
-r.perf.monitor true
-
-# Check if target achieved
-./scripts/p2_validation.sh
-```
-
-**Target 60 FPS (High Quality)**:
-```bash
-# Quality mode  
-r.targetfps 60
-r.ssao.halfres false
-r.ssr.enable true
-r.ssr.halfres false
-```
-
-### Memory Optimization
-
-**VRAM Budget Management**:
-- Monitor memory usage in ImGui HUD
-- Automatic texture eviction when over budget
-- Mesh LOD reduction for distant geometry
-- Weather particle culling outside view frustum
-
-**Performance Categories**:
-- **Geometry**: Vertex/index buffers, mesh data
-- **Textures**: Diffuse, normal, material textures
-- **Weather**: Weather effects, particles, clouds
-- **Render Targets**: Framebuffers, intermediate textures
 
 ## Development Workflow
 
+### Building for Development
+```bash
+# Debug build with validation
+cmake --preset linux-default -DCMAKE_BUILD_TYPE=Debug -DVALIDATION_LAYERS=ON
+cmake --build build -j$(nproc)
+
+# Run with validation
+export VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation
+./build/apps/smoke_graphics_headless --vulkan-validation
+```
+
+### Testing Changes
+```bash
+# Run unit tests
+ctest --test-dir build -R unit --output-on-failure
+
+# Run integration tests
+ctest --test-dir build -R integration --output-on-failure
+
+# Run performance benchmarks
+python3 scripts/bench/run_bench.py
+```
+
 ### Hot-Reload Development
-
-**Configuration Hot-Reload** (F5):
-- Weather settings from `config/weather.yaml`
-- AI palette from `ai_palette.cfg`  
-- Shader hot-reload (Debug builds)
-
-**Live Tuning**:
-- Weather parameters via ImGui sliders
-- Performance budgets via console commands
-- Screen space effect parameters
-- AI generation settings
-
-### Debugging
-
-**Validation Layers** (Debug builds):
 ```bash
-# Enable comprehensive validation
-export VK_LAYER_PATH=$VULKAN_SDK/etc/vulkan/explicit_layer.d
-VK_LOADER_DEBUG=all ./build/weather_demo
+# Start operator console
+./build/apps/operator_console &
+
+# Edit shaders
+vim shaders/core/voxel_mesher.comp
+
+# Reload in console: Actions → Reload Shaders
 ```
 
-**NVTX Profiling**:
-```bash
-# Nsight Graphics capture
-nsight-gfx ./build/weather_demo
+## Common Operations
 
-# CPU profiling  
-perf record -g ./build/weather_demo
-perf report
+### Asset Management
+```bash
+# Load assets to Redis
+python3 scripts/data/load_assets_to_redis.py --seed
+
+# Validate asset integrity
+python3 tools/validate_redis_integration.py
+
+# Clear asset cache
+redis-cli FLUSHALL  # If using Redis
+rm -rf .cache/      # If using filesystem
 ```
 
-**Performance Analysis**:
+### Performance Analysis
 ```bash
 # Generate performance report
-./build/VoxelVK_Elite_ALL --bench performance.json
-cat performance.json
+python3 scripts/bench/run_bench.py --output reports/bench/current.json
 
-# System validation
-./build/test_integration
-./build/test_performance_monitoring
+# Visualize results
+python3 scripts/bench/visualize_results.py \
+  --input reports/bench/current.json \
+  --output performance_chart.png
 ```
 
-## Production Deployment
-
-### Performance Validation
+### Debugging
 ```bash
-# Complete validation suite
-./scripts/p0_validation.sh && ./scripts/p1_validation.sh && ./scripts/p2_validation.sh
+# Enable verbose logging
+./build/apps/smoke_graphics_headless --log-level DEBUG
 
-# Expected: All validation scripts report "COMPLETE SUCCESS"
+# Run with profiler
+perf record -g ./build/apps/smoke_graphics_headless --headless
+perf report
+
+# GPU profiling (NVIDIA)
+nsys profile --trace=vulkan ./build/apps/smoke_graphics_headless
 ```
 
-### Quality Assurance
+## Troubleshooting
+
+### Common Issues
+
+**"No Vulkan devices found"**
 ```bash
-# Full test suite
-ctest --test-dir build --output-on-failure
+# Check Vulkan installation
+vulkaninfo
 
-# Integration testing
-./build/test_integration
-./build/test_weather_system
-./build/test_rl_backend
+# Update graphics drivers
+# NVIDIA: Download from nvidia.com  
+# AMD: sudo apt install mesa-vulkan-drivers
+# Intel: sudo apt install intel-media-va-driver
 ```
 
-### Build Verification
+**Build failures**
 ```bash
-# Shader compilation
-cmake --build build --target ShaderSPV
+# Clean build directory
+rm -rf build/
+cmake --preset default
+cmake --build build -j$(nproc)
 
-# All applications
-cmake --build build -j
-
-# Performance benchmark
-./build/weather_demo && ./build/p2_concepts_validator
+# Check dependencies
+vcpkg list
 ```
 
-The VoxelVK engine is now production-ready with comprehensive weather systems, 120 FPS performance optimization, AI integration, and extensive validation systems.
+**Performance issues**
+```bash
+# Check GPU usage
+nvidia-smi  # NVIDIA
+radeontop   # AMD
+
+# Monitor system resources  
+htop
+
+# Reduce settings
+vim config/renderer.yaml  # Lower MSAA, disable post-processing
+```
+
+**Asset loading failures**
+```bash
+# Check Redis connectivity
+redis-cli ping
+
+# Reload assets
+python3 scripts/data/load_assets_to_redis.py --seed
+
+# Use filesystem fallback
+export VULKEN_STORAGE_MODE=filesystem
+```
+
+### Log Analysis
+```bash
+# Filter for errors
+grep ERROR logs/vulken3d.log
+
+# Monitor frame times
+grep "Frame time" logs/vulken3d.log | tail -20
+
+# Check memory usage
+grep "Memory" logs/vulken3d.log
+```
+
+### Getting Help
+1. Check documentation in `docs/` directory
+2. Review configuration options
+3. Enable debug logging (`--log-level DEBUG`)
+4. Check GitHub Issues for known problems
+5. Run validation tests to identify specific failures
+
+## Advanced Usage
+
+### Custom Configuration
+```bash
+# Create custom config
+cp config/engine.yaml config/my_config.yaml
+vim config/my_config.yaml
+
+# Run with custom config
+./build/apps/smoke_graphics_headless --config config/my_config.yaml
+```
+
+### Multi-GPU Setup
+```yaml
+# config/engine.yaml
+vulkan:
+  device_selection: "discrete"  # Prefer discrete GPU
+  enable_multi_gpu: true
+  memory_budget_mb: 4096
+```
+
+### Network Deployment (Kubernetes)
+```bash
+# Deploy to Kubernetes
+helm install vulken3d ./helm/vulken-3d \
+  --set resources.limits."nvidia\.com/gpu"=1 \
+  --set redis.enabled=true
+
+# Monitor deployment
+kubectl get pods -l app.kubernetes.io/name=vulken-3d
+kubectl logs deployment/vulken3d -f
+```
+
+---
+
+**Next Steps**: See `docs/ARCHITECTURE.md` for detailed engine information and `docs/OPERATOR_GUIDE.md` for advanced usage.
