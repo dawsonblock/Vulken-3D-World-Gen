@@ -1,15 +1,23 @@
 {
-  "removed_files": [],
-  "removed_directories": [],
+  "removed_files": [
+    "Unzipper-1.14.tar.Z",
+    "Unsure ply-1.1.tar.Z",
+    "voxel-models-main.zip",
+    "vulken-project.zip"
+  ],
+  "removed_directories": [
+    "__MACOSX",
+    "Vulken-3D-World-Gen-main-2"
+  ],
   "duplicates_resolved": [],
-  "bytes_saved": 0,
+  "bytes_saved": 10010702,
   "protected_files": [],
   "scan_summary": {
-    "total_files_removed": 0,
-    "total_directories_removed": 0,
+    "total_files_removed": 4,
+    "total_directories_removed": 2,
     "duplicates_resolved": 0,
-    "bytes_saved": 0,
-    "bytes_saved_mb": 0.0,
+    "bytes_saved": 10010702,
+    "bytes_saved_mb": 9.55,
     "protected_files_found": 0
   }
 }
