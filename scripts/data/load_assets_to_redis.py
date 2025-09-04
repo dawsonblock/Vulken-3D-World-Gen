@@ -357,12 +357,17 @@ f 8//6 5//6 1//6 4//6
     
     def generate_report(self, output_path: str) -> None:
         """Generate asset loading report."""
-        report = {
-            "redis_connection": {
+        if self.offline_mode:
+            redis_info = {"offline_mode": True}
+        else:
+            redis_info = {
                 "host": self.redis_client.connection_pool.connection_kwargs.get('host'),
                 "port": self.redis_client.connection_pool.connection_kwargs.get('port'),
                 "db": self.redis_client.connection_pool.connection_kwargs.get('db')
-            },
+            }
+        
+        report = {
+            "redis_connection": redis_info,
             "loaded_assets": self.loaded_assets,
             "summary": {
                 "total_assets": len(self.loaded_assets),
