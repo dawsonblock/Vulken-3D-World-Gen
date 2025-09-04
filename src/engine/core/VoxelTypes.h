@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 #include <optional>
+#include <functional>
 
 namespace vulken::core {
 
@@ -47,3 +48,20 @@ inline size_t linearIndex(uint32_t x, uint32_t y, uint32_t z,
 }
 
 } // namespace vulken::core
+
+// Hash specialization for use in unordered_map/set
+namespace std {
+template <>
+struct hash<vulken::core::ChunkCoord> {
+    size_t operator()(const vulken::core::ChunkCoord& c) const noexcept {
+        // 3D hash combine
+        size_t h1 = std::hash<int32_t>{}(c.x);
+        size_t h2 = std::hash<int32_t>{}(c.y);
+        size_t h3 = std::hash<int32_t>{}(c.z);
+        size_t seed = h1;
+        seed ^= h2 + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+        seed ^= h3 + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+} // namespace std
