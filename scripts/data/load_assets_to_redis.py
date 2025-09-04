@@ -29,10 +29,12 @@ class RedisAssetLoader:
             # Test connection
             self.redis_client.ping()
             print(f"✅ Connected to Redis at {redis_host}:{redis_port}")
+            self.offline_mode = False
         except redis.ConnectionError:
-            print(f"❌ Could not connect to Redis at {redis_host}:{redis_port}")
-            print("   Make sure Redis is running: docker run -d -p 6379:6379 redis")
-            sys.exit(1)
+            print(f"⚠️  Could not connect to Redis at {redis_host}:{redis_port}")
+            print("   Running in offline mode - will create seed assets only")
+            self.redis_client = None
+            self.offline_mode = True
         
         self.key_prefix = key_prefix
         self.loaded_assets = []
