@@ -5,8 +5,12 @@ option(VULKEN_ENGINE_WITH_TESTS "Enable building tests for vulken_engine (auto-a
 option(VULKEN_ENGINE_ENABLE_SANITIZERS "Enable Address/Undefined sanitizers for debug-like builds (non-MSVC)" OFF)
 option(VULKEN_ENGINE_ENABLE_COVERAGE "Enable code coverage instrumentation for GCC/Clang debug-like builds" OFF)
 
-file(GLOB_RECURSE VULKEN_ENGINE_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_LIST_DIR}/*.cpp"
+# Explicit source list (avoid building legacy/duplicate 'engine::' sources)
+set(VULKEN_ENGINE_SOURCES
+    ${CMAKE_CURRENT_LIST_DIR}/VoxelChunkManager.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/storage/FileStorageBackend.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/meshing/MeshGenerator.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/render/VulkanRenderer.cpp
 )
 
 add_library(vulken_engine STATIC ${VULKEN_ENGINE_SOURCES})
@@ -15,6 +19,7 @@ add_library(voxelvk::engine ALIAS vulken_engine)
 target_include_directories(vulken_engine
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>    # expose engine/core/* headers
         $<INSTALL_INTERFACE:include>
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}

@@ -619,12 +619,10 @@ if(ENABLE_TESTS)
     add_executable(test_weather_system tests/test_weather_system.cpp ${WEATHER_SRC} src/core/logger.cpp)
     target_include_directories(test_weather_system PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(test_weather_system PRIVATE Threads::Threads)
-    
     if(WEATHER_YAML_LIB)
       target_link_libraries(test_weather_system PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(test_weather_system PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
-    
     add_test(NAME test_weather_system COMMAND test_weather_system)
     set_tests_properties(test_weather_system PROPERTIES TIMEOUT 30)
   endif()
@@ -674,6 +672,9 @@ if(ENABLE_TESTS)
     add_test(NAME test_integration COMMAND test_integration)
     set_tests_properties(test_integration PROPERTIES TIMEOUT 60)
   endif()
+
+  # Also include tests/ subdirectory once
+  add_subdirectory(tests)
 endif()
 
 message(STATUS "=== Build Summary ===")
@@ -684,11 +685,6 @@ else()
   message(STATUS "Headless-only build: Vulkan/GLFW disabled")
 endif()
 message(STATUS "=====================")
-
-if(ENABLE_TESTS)
-  enable_testing()
-  add_subdirectory(tests)
-endif()
 
 # Tools
 add_subdirectory(tools)
