@@ -1,0 +1,133 @@
+#version 450
+
+layout (local_size_x = 64) in;
+
+// Input chunk data
+struct ChunkData {
+    vec3 center;
+    float radius;
+    vec4 bounds_min_max; // min.xyz, max.w  
+    uint mesh_vertex_count;
+    uint mesh_index_count;
+    uint visible_last_frame;
+    uint _padding;
+};
+
+layout (set = 0, binding = 0) readonly buffer ChunkBuffer {
+    ChunkData chunks[];
+} chunkBuffer;
+
+// Output visibility buffer
+layout (set = 0, binding = 1) writeonly buffer VisibilityBuffer {
+    uint visible[];
+} visibilityBuffer;
+
+// Camera and frustum data
+layout (set = 0, binding = 2) uniform CameraUBO {
+    mat4 viewMatrix;
+    mat4 projMatrix; 
+    mat4 viewProjMatrix;
+    vec3 cameraPos;
+    float near_plane;
+    vec3 cameraDir;
+    float far_plane;
+    vec4 frustumPlanes[6]; // Left, Right, Top, Bottom, Near, Far
+} camera;
+
+// Culling parameters
+layout (push_constant) uniform PushConstants {
+    uint chunkCount;
+    float occlusionThreshold;
+    uint enableOcclusion;
+    uint frameIndex;
+} pc;
+
+// Frustum culling test
+bool frustumCull(vec3 center, float radius) {
+    for (int i = 0; i < 6; i++) {
+        float distance = dot(camera.frustumPlanes[i].xyz, center) + camera.frustumPlanes[i].w;
+        if (distance < -radius) {
+            return true; // Outside frustum
+        }
+    }
+    return false; // Inside or intersecting frustum
+}
+
+// Distance-based culling
+bool distanceCull(vec3 center, float maxDistance) {
+    float distance = length(center - camera.cameraPos);
+    return distance > maxDistance;
+}
+
+// Backface culling for chunks
+bool backfaceCull(vec3 center) {
+    vec3 toCamera = normalize(camera.cameraPos - center);
+    vec3 chunkNormal = normalize(center); // Simplified - assumes chunks face outward
+    return dot(toCamera, chunkNormal) < 0.1;
+}
+
+// Occlusion culling (simplified - could use hierarchical Z-buffer)
+bool occlusionCull(vec3 center, float radius) {
+    if (pc.enableOcclusion == 0) return false;
+    
+    // Simple occlusion test: check if chunk is behind other large chunks
+    // This is a simplified version - real implementation would use depth buffer
+    
+    float distance = length(center - camera.cameraPos);
+    
+    // Skip occlusion for very close chunks
+    if (distance < radius * 4.0) return false;
+    
+    // Basic geometric occlusion - very simplified
+    return false; // Placeholder - implement proper occlusion later
+}
+
+void main() {
+    uint chunkIndex = gl_GlobalInvocationID.x;
+    
+    if (chunkIndex >= pc.chunkCount) {
+        return;
+    }
+    
+    ChunkData chunk = chunkBuffer.chunks[chunkIndex];
+    
+    // Skip empty chunks
+    if (chunk.mesh_vertex_count == 0) {
+        visibilityBuffer.visible[chunkIndex] = 0;
+        return;
+    }
+    
+    vec3 center = chunk.center;
+    float radius = chunk.radius;
+    
+    // Frustum culling
+    if (frustumCull(center, radius)) {
+        visibilityBuffer.visible[chunkIndex] = 0;
+        return;
+    }
+    
+    // Distance culling (adaptive based on chunk size)
+    float maxDistance = camera.far_plane * 0.9; // Stay within far plane
+    if (distanceCull(center, maxDistance)) {
+        visibilityBuffer.visible[chunkIndex] = 0;
+        return;
+    }
+    
+    // Backface culling (for chunks facing away)
+    if (backfaceCull(center)) {
+        visibilityBuffer.visible[chunkIndex] = 0;
+        return;
+    }
+    
+    // Occlusion culling
+    if (occlusionCull(center, radius)) {
+        visibilityBuffer.visible[chunkIndex] = 0;
+        return;
+    }
+    
+    // Chunk is visible
+    visibilityBuffer.visible[chunkIndex] = 1;
+    
+    // Optional: Update temporal coherence data
+    // This could be used for temporal reprojection or motion vectors
+}
