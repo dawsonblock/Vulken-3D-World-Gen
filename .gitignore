@@ -1,131 +1,87 @@
 # Build directories
-build/
-build_*/
-_build/
-out/
-
-# Generated files
-spv/
-generated/
+/build/
+/build_*/
+/_out/
+/out/
+/dist/
+/artifacts/
 
 # CMake
 CMakeCache.txt
 CMakeFiles/
-cmake_install.cmake
-CTestTestfile.cmake
-install_manifest.txt
+/cmake_install.cmake
+/CTestTestfile.cmake
+/install_manifest.txt
 
-# IDE files
+# Generators and compiled assets
+/spv/
+/generated/
+/vcpkg_installed/
+/_deps/
+
+# IDE/editor
 .vscode/
+.vscode/.cache/
 .vs/
-*.vcxproj*
-*.sln
+.idea/
+*.VC.db
 *.user
+*.sln
+*.vcxproj*
 
-# Temporary files
-*.tmp
-*.temp
-*~
+# OS/filesystem
 .DS_Store
+Thumbs.db
+*~
 
-# Logs
+# Logs and profiles
 *.log
-
-# Dependencies
-vcpkg_installed/
-_deps/
+*.nsys-rep
+*.qdrep
+*.sqlite
 
 # Python cache
 __pycache__/
 *.pyc
 *.pyo
 
-# Video recordings
+# Media and screenshots (not source)
+imgui.ini
+screenshot.png
 *.mp4
 *.avi
 
-# TensorRT engines
+# Engine/runtime blobs
 *.engine
 *.plan
-
-# LibTorch models
 *.pt
 *.pth
 *.torchscript
 
-# Profiling data
-*.nsys-rep
-*.qdrep
-*.sqlite
+# Archives (unless specifically tracked)
+*.zip
+*.7z
+*.rar
+*.tar.Z
+*.tar.gz
+*.tgz
 
-# Docker build context
+# Docker
 .dockerignore
-# Added by dedupe_and_purge.py
-# Build artifacts
-build*/
-out/
-dist/
-*.log
 
-# Editor artifacts
-*.DS_Store
-Thumbs.db
-*.user
-*.VC.db
-.idea/
-.vscode/.cache/
+# Configs: keep only example YAML in VCS
+/config/*.yaml
+!/config/*.example.yaml
 
-# Cache and temporary files
-__pycache__/
-*.pyc
-cache/
-tmp/
-imgui.ini
-screenshot.png
+# Reports (local/output)
+reports/
+performance_report.json
+redis_validation_report.json
 
-# Archives (unless specifically tracked)
-*.zip
-*.7z
-*.rar
-*.tar.Z
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
+# Env files (never commit real secrets)
 *.env
 *.env.*
 
-# Added by dedupe_and_purge.py
-# Build artifacts
-build*/
-out/
-dist/
-*.log
-
-# Editor artifacts
-*.DS_Store
-Thumbs.db
-*.user
-*.VC.db
-.idea/
-.vscode/.cache/
-
-# Cache and temporary files
-__pycache__/
-*.pyc
-cache/
-tmp/
-imgui.ini
-screenshot.png
-
-# Archives (unless specifically tracked)
-*.zip
-*.7z
-*.rar
-*.tar.Z
--e 
-# Environment files
-*.env
-*.env.*
+# Duplicated vcpkg configuration files (use vcpkg.json + CMakePresets.json)
+.vcpkg-configuration.json
+vcpkg-configuration.json
