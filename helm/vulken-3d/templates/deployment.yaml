@@ -1,28 +1,235 @@
-"apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: {{ include \"vulken-3d.fullname\"\
-  \ . }}\n  labels:\n    {{- include \"vulken-3d.labels\" . | nindent 4 }}\nspec:\n\
-  \  replicas: {{ .Values.replicaCount }}\n  selector:\n    matchLabels:\n      {{-\
-  \ include \"vulken-3d.selectorLabels\" . | nindent 6 }}\n  template:\n    metadata:\n\
-  \      labels:\n        {{- include \"vulken-3d.selectorLabels\" . | nindent 8 }}\n\
-  \    spec:\n      containers:\n      - name: {{ .Chart.Name }}\n        image: \"\
-  {{ .Values.image.repository }}:{{ .Values.image.tag }}\"\n        imagePullPolicy:\
-  \ {{ .Values.image.pullPolicy }}\n        ports:\n        - name: http\n       \
-  \   containerPort: {{ .Values.service.port }}\n          protocol: TCP\n       \
-  \ - name: health\n          containerPort: {{ .Values.service.healthPort }}\n  \
-  \        protocol: TCP\n        livenessProbe:\n          httpGet:\n           \
-  \ path: /healthz\n            port: health\n          initialDelaySeconds: 30\n\
-  \          periodSeconds: 10\n        readinessProbe:\n          httpGet:\n    \
-  \        path: /healthz\n            port: health\n          initialDelaySeconds:\
-  \ 5\n          periodSeconds: 5\n        resources:\n          {{- toYaml .Values.resources\
-  \ | nindent 10 }}\n        env:\n        - name: VULKEN_LOG_LEVEL\n          value:\
-  \ {{ .Values.config.logLevel }}\n        - name: VULKEN_HEADLESS\n          value:\
-  \ \"{{ .Values.config.headlessMode }}\"\n        - name: RENDER_DISTANCE\n     \
-  \     value: \"{{ .Values.config.renderDistance }}\"\n        volumeMounts:\n  \
-  \      - name: config\n          mountPath: /app/config\n        {{- if .Values.redis.enabled\
-  \ }}\n        - name: redis-config\n          mountPath: /app/config/redis.yaml\n\
-  \          subPath: redis.yaml\n        {{- end }}\n      volumes:\n      - name:\
-  \ config\n        configMap:\n          name: {{ include \"vulken-3d.fullname\"\
-  \ . }}-config\n      {{- if .Values.redis.enabled }}\n      - name: redis-config\n\
-  \        configMap:\n          name: {{ include \"vulken-3d.fullname\" . }}-redis\n\
-  \      {{- end }}\n      {{- with .Values.nodeSelector }}\n      nodeSelector:\n\
-  \        {{- toYaml . | nindent 8 }}\n      {{- end }}\n      {{- with .Values.tolerations\
-  \ }}\n      tolerations:\n        {{- toYaml . | nindent 8 }}\n      {{- end }}\n"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vulken-3d.fullname" . }}
+  labels:
+    {{- include "vulken-3d.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "vulken-3d.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "vulken-3d.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: health
+              containerPort: 8081
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: VULKEN_LOG_LEVEL
+              value: {{ .Values.config.logLevel | quote }}
+            - name: VULKEN_HEADLESS
+              value: {{ .Values.config.headlessMode | quote }}
+            - name: RENDER_DISTANCE
+              value: {{ .Values.config.renderDistance | quote }}
+            - name: TARGET_FPS
+              value: {{ .Values.config.targetFPS | quote }}
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_HOST
+              value: {{ include "vulken-3d.fullname" . }}-redis
+            - name: REDIS_PORT
+              value: "6379"
+            {{- end }}
+            {{- if .Values.postgres.enabled }}
+            - name: POSTGRES_HOST
+              value: {{ include "vulken-3d.fullname" . }}-postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.auth.database }}
+            - name: POSTGRES_USER
+              value: vulken3d
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vulken-3d.fullname" . }}-postgres
+                  key: postgres-password
+            {{- end }}
+            {{- range $key, $value := .Values.extraEnv }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            - name: cache
+              mountPath: /app/.cache
+            {{- if .Values.persistence.enabled }}
+            - name: reports
+              mountPath: /app/reports
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "vulken-3d.fullname" . }}-config
+        - name: cache
+          emptyDir:
+            sizeLimit: 1Gi
+        {{- if .Values.persistence.enabled }}
+        - name: reports
+          persistentVolumeClaim:
+            claimName: {{ include "vulken-3d.fullname" . }}-reports
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+{{- if .Values.redis.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vulken-3d.fullname" . }}-redis
+  labels:
+    {{- include "vulken-3d.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "vulken-3d.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: redis
+  template:
+    metadata:
+      labels:
+        {{- include "vulken-3d.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: 500m
+            requests:
+              memory: 256Mi
+              cpu: 100m
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          command:
+            - redis-server
+            - --appendonly
+            - "yes"
+            - --maxmemory
+            - 256mb
+            - --maxmemory-policy
+            - allkeys-lru
+      volumes:
+        - name: redis-data
+          emptyDir:
+            sizeLimit: 1Gi
+{{- end }}
+
+{{- if .Values.postgres.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vulken-3d.fullname" . }}-postgres
+  labels:
+    {{- include "vulken-3d.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "vulken-3d.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgres
+  template:
+    metadata:
+      labels:
+        {{- include "vulken-3d.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.auth.database }}
+            - name: POSTGRES_USER
+              value: vulken3d
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vulken-3d.fullname" . }}-postgres
+                  key: postgres-password
+          ports:
+            - containerPort: 5432
+          resources:
+            limits:
+              memory: 1Gi
+              cpu: 1000m
+            requests:
+              memory: 512Mi
+              cpu: 250m
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-data
+          emptyDir:
+            sizeLimit: 5Gi
+{{- end }}

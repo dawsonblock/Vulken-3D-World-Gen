@@ -1,14 +1,123 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  engine:
-    build: .
-    depends_on: [redis]
+  vulken3d:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_TYPE: RelWithDebInfo
+    container_name: vulken3d-engine
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - VULKEN_LOG_LEVEL=INFO
+      - VULKEN_HEADLESS=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./config:/app/config:ro
+      - ./reports:/app/reports
+      - vulken_cache:/app/.cache
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - vulken3d-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   redis:
     image: redis:7-alpine
-    ports: ["6379:6379"]
-    command: ["redis-server","--appendonly","yes"]
-    volumes: [ "redisdata:/data" ]
-volumes:
-  redisdata:
+    container_name: vulken3d-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - vulken3d-network
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  postgres:
+    image: postgres:15-alpine
+    container_name: vulken3d-postgres
+    environment:
+      POSTGRES_DB: vulken3d
+      POSTGRES_USER: vulken3d
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vulken3d_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql
+    networks:
+      - vulken3d-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vulken3d"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: Redis web UI for development
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: vulken3d-redis-ui
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8082:8081"
+    depends_on:
+      - redis
+    networks:
+      - vulken3d-network
+    profiles:
+      - dev
+
+  # Optional: Database admin UI for development
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: vulken3d-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@vulken3d.local
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8083:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - vulken3d-network
+    profiles:
+      - dev
+
+volumes:
+  vulken_cache:
+    driver: local
+  redis_data:
+    driver: local  
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  vulken3d-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
