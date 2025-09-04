@@ -80,8 +80,11 @@ class RedisAssetLoader:
             }
             
             # Store texture data and metadata
-            self.redis_client.set(asset_key, texture_data)
-            self.redis_client.set(meta_key, json.dumps(metadata))
+            if not self.offline_mode:
+                self.redis_client.set(asset_key, texture_data)
+                self.redis_client.set(meta_key, json.dumps(metadata))
+            else:
+                print(f"    [OFFLINE] Would store to Redis: {asset_key}")
             
             self.loaded_assets.append({"type": "texture", "name": asset_name, "size": len(texture_data)})
             print(f"  ✅ Loaded texture: {asset_name} ({len(texture_data)} bytes)")
