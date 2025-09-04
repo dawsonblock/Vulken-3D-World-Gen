@@ -1,0 +1,23 @@
+{
+  "name": "mesher_optimizer_v1",
+  "version": "1.0.0",
+  "type": "tensorrt_engine",
+  "input_shape": [
+    64,
+    64,
+    64,
+    1
+  ],
+  "output_shape": [
+    4
+  ],
+  "precision": "FP16",
+  "max_batch_size": 4,
+  "file_size": 5040,
+  "creation_date": "2025-01-01T00:00:00Z",
+  "performance": {
+    "inference_time_ms": 2.5,
+    "memory_usage_mb": 45,
+    "accuracy": 0.92
+  }
+}

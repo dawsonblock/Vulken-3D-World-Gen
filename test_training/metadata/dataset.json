@@ -1,0 +1,1019 @@
+{
+  "name": "vulken3d_mesher_training",
+  "version": "1.0",
+  "description": "Synthetic training data for voxel meshing optimization",
+  "num_examples": 50,
+  "chunk_size": 64,
+  "materials": {
+    "0": "air",
+    "1": "grass",
+    "2": "dirt",
+    "3": "stone",
+    "4": "water",
+    "5": "sand",
+    "6": "snow"
+  },
+  "output_format": "json",
+  "examples": [
+    {
+      "id": "training_000000",
+      "seed": 670487,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.5292892510906215,
+        "expected_fps_improvement": 1.0619838716543986
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000000.npy",
+      "mesh_file": "meshes/training_000000.json"
+    },
+    {
+      "id": "training_000001",
+      "seed": 951054,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.32992707396823084,
+        "expected_fps_improvement": 1.0747672431449566
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000001.npy",
+      "mesh_file": "meshes/training_000001.json"
+    },
+    {
+      "id": "training_000002",
+      "seed": 790063,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.24307212350706137,
+        "expected_fps_improvement": 1.208353913186996
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000002.npy",
+      "mesh_file": "meshes/training_000002.json"
+    },
+    {
+      "id": "training_000003",
+      "seed": 4255,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.2543768778113006,
+        "expected_fps_improvement": 1.0554349770924738
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000003.npy",
+      "mesh_file": "meshes/training_000003.json"
+    },
+    {
+      "id": "training_000004",
+      "seed": 742968,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.6784358480324328,
+        "expected_fps_improvement": 1.1260688698816024
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000004.npy",
+      "mesh_file": "meshes/training_000004.json"
+    },
+    {
+      "id": "training_000005",
+      "seed": 100322,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.17908977153776498,
+        "expected_fps_improvement": 1.181987112783638
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000005.npy",
+      "mesh_file": "meshes/training_000005.json"
+    },
+    {
+      "id": "training_000006",
+      "seed": 636717,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.3641526762707199,
+        "expected_fps_improvement": 1.1131645327377766
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000006.npy",
+      "mesh_file": "meshes/training_000006.json"
+    },
+    {
+      "id": "training_000007",
+      "seed": 906754,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.7995104864896224,
+        "expected_fps_improvement": 1.2116038434365974
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000007.npy",
+      "mesh_file": "meshes/training_000007.json"
+    },
+    {
+      "id": "training_000008",
+      "seed": 142243,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.6560019800978985,
+        "expected_fps_improvement": 1.0713943873551672
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000008.npy",
+      "mesh_file": "meshes/training_000008.json"
+    },
+    {
+      "id": "training_000009",
+      "seed": 651486,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.7184234493104319,
+        "expected_fps_improvement": 1.0891752968844672
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000009.npy",
+      "mesh_file": "meshes/training_000009.json"
+    },
+    {
+      "id": "training_000010",
+      "seed": 934236,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.7911103242862171,
+        "expected_fps_improvement": 1.163980856316408
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000010.npy",
+      "mesh_file": "meshes/training_000010.json"
+    },
+    {
+      "id": "training_000011",
+      "seed": 722702,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.6908081298594878,
+        "expected_fps_improvement": 1.2354356423131618
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000011.npy",
+      "mesh_file": "meshes/training_000011.json"
+    },
+    {
+      "id": "training_000012",
+      "seed": 100309,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.34048377576272937,
+        "expected_fps_improvement": 1.0549483720481136
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000012.npy",
+      "mesh_file": "meshes/training_000012.json"
+    },
+    {
+      "id": "training_000013",
+      "seed": 575161,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.6345906396725175,
+        "expected_fps_improvement": 1.053519770916784
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000013.npy",
+      "mesh_file": "meshes/training_000013.json"
+    },
+    {
+      "id": "training_000014",
+      "seed": 483250,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.6678644954977055,
+        "expected_fps_improvement": 1.1091750314601114
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000014.npy",
+      "mesh_file": "meshes/training_000014.json"
+    },
+    {
+      "id": "training_000015",
+      "seed": 555695,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.43320060020785944,
+        "expected_fps_improvement": 1.0890850995893686
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000015.npy",
+      "mesh_file": "meshes/training_000015.json"
+    },
+    {
+      "id": "training_000016",
+      "seed": 840916,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.2222461933972104,
+        "expected_fps_improvement": 1.1775770124211185
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000016.npy",
+      "mesh_file": "meshes/training_000016.json"
+    },
+    {
+      "id": "training_000017",
+      "seed": 355363,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.6965644127650111,
+        "expected_fps_improvement": 1.1045539870040815
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000017.npy",
+      "mesh_file": "meshes/training_000017.json"
+    },
+    {
+      "id": "training_000018",
+      "seed": 520924,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.4585123200224047,
+        "expected_fps_improvement": 1.2170372360100805
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000018.npy",
+      "mesh_file": "meshes/training_000018.json"
+    },
+    {
+      "id": "training_000019",
+      "seed": 450204,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.7943119880263277,
+        "expected_fps_improvement": 1.181727138735991
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000019.npy",
+      "mesh_file": "meshes/training_000019.json"
+    },
+    {
+      "id": "training_000020",
+      "seed": 445559,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.31938453725230026,
+        "expected_fps_improvement": 1.1772008484504384
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000020.npy",
+      "mesh_file": "meshes/training_000020.json"
+    },
+    {
+      "id": "training_000021",
+      "seed": 958151,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.3152498282576177,
+        "expected_fps_improvement": 1.1090855171642648
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000021.npy",
+      "mesh_file": "meshes/training_000021.json"
+    },
+    {
+      "id": "training_000022",
+      "seed": 478799,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.46323650583505116,
+        "expected_fps_improvement": 1.0732098797480272
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000022.npy",
+      "mesh_file": "meshes/training_000022.json"
+    },
+    {
+      "id": "training_000023",
+      "seed": 152600,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.4260625123212557,
+        "expected_fps_improvement": 1.227269980048298
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000023.npy",
+      "mesh_file": "meshes/training_000023.json"
+    },
+    {
+      "id": "training_000024",
+      "seed": 74165,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.16534553035479688,
+        "expected_fps_improvement": 1.0547924436350735
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000024.npy",
+      "mesh_file": "meshes/training_000024.json"
+    },
+    {
+      "id": "training_000025",
+      "seed": 782446,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.6689812616848997,
+        "expected_fps_improvement": 1.1738309422631734
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000025.npy",
+      "mesh_file": "meshes/training_000025.json"
+    },
+    {
+      "id": "training_000026",
+      "seed": 247493,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.4983213515617091,
+        "expected_fps_improvement": 1.1703756273763979
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000026.npy",
+      "mesh_file": "meshes/training_000026.json"
+    },
+    {
+      "id": "training_000027",
+      "seed": 785213,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.21395465523645874,
+        "expected_fps_improvement": 1.2046286926697745
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000027.npy",
+      "mesh_file": "meshes/training_000027.json"
+    },
+    {
+      "id": "training_000028",
+      "seed": 829667,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.6970310481205285,
+        "expected_fps_improvement": 1.1259630353175563
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000028.npy",
+      "mesh_file": "meshes/training_000028.json"
+    },
+    {
+      "id": "training_000029",
+      "seed": 170478,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.5583661686187685,
+        "expected_fps_improvement": 1.1396602846817994
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000029.npy",
+      "mesh_file": "meshes/training_000029.json"
+    },
+    {
+      "id": "training_000030",
+      "seed": 926883,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.6041169512564113,
+        "expected_fps_improvement": 1.1647594023981314
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000030.npy",
+      "mesh_file": "meshes/training_000030.json"
+    },
+    {
+      "id": "training_000031",
+      "seed": 339609,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.7716051468511891,
+        "expected_fps_improvement": 1.1099113220185646
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000031.npy",
+      "mesh_file": "meshes/training_000031.json"
+    },
+    {
+      "id": "training_000032",
+      "seed": 397753,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.21578073408764814,
+        "expected_fps_improvement": 1.1513706382791964
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000032.npy",
+      "mesh_file": "meshes/training_000032.json"
+    },
+    {
+      "id": "training_000033",
+      "seed": 37443,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.780595600161746,
+        "expected_fps_improvement": 1.0930917795838766
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000033.npy",
+      "mesh_file": "meshes/training_000033.json"
+    },
+    {
+      "id": "training_000034",
+      "seed": 609669,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.40480397350210184,
+        "expected_fps_improvement": 1.1521214712143466
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000034.npy",
+      "mesh_file": "meshes/training_000034.json"
+    },
+    {
+      "id": "training_000035",
+      "seed": 21753,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.4882323505641025,
+        "expected_fps_improvement": 1.1897829174817458
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000035.npy",
+      "mesh_file": "meshes/training_000035.json"
+    },
+    {
+      "id": "training_000036",
+      "seed": 927277,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.1356454466810976,
+        "expected_fps_improvement": 1.1392349173821186
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000036.npy",
+      "mesh_file": "meshes/training_000036.json"
+    },
+    {
+      "id": "training_000037",
+      "seed": 58673,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.35071396910481867,
+        "expected_fps_improvement": 1.1080448261783944
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000037.npy",
+      "mesh_file": "meshes/training_000037.json"
+    },
+    {
+      "id": "training_000038",
+      "seed": 178035,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.7186246838641903,
+        "expected_fps_improvement": 1.0797442669896657
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000038.npy",
+      "mesh_file": "meshes/training_000038.json"
+    },
+    {
+      "id": "training_000039",
+      "seed": 724945,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.18260736549747153,
+        "expected_fps_improvement": 1.0848502367555022
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000039.npy",
+      "mesh_file": "meshes/training_000039.json"
+    },
+    {
+      "id": "training_000040",
+      "seed": 74221,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.5661409380474176,
+        "expected_fps_improvement": 1.08854375837224
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000040.npy",
+      "mesh_file": "meshes/training_000040.json"
+    },
+    {
+      "id": "training_000041",
+      "seed": 31055,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.1339361554145769,
+        "expected_fps_improvement": 1.1676987445786415
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000041.npy",
+      "mesh_file": "meshes/training_000041.json"
+    },
+    {
+      "id": "training_000042",
+      "seed": 584511,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.38238656963061923,
+        "expected_fps_improvement": 1.198731942858784
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000042.npy",
+      "mesh_file": "meshes/training_000042.json"
+    },
+    {
+      "id": "training_000043",
+      "seed": 692644,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.6447995387409404,
+        "expected_fps_improvement": 1.095235764200156
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000043.npy",
+      "mesh_file": "meshes/training_000043.json"
+    },
+    {
+      "id": "training_000044",
+      "seed": 111114,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.5803409663464703,
+        "expected_fps_improvement": 1.0637046494524691
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000044.npy",
+      "mesh_file": "meshes/training_000044.json"
+    },
+    {
+      "id": "training_000045",
+      "seed": 3355,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.4704617690305207,
+        "expected_fps_improvement": 1.1130825924835333
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000045.npy",
+      "mesh_file": "meshes/training_000045.json"
+    },
+    {
+      "id": "training_000046",
+      "seed": 778329,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.22427133446795627,
+        "expected_fps_improvement": 1.2181242186792958
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000046.npy",
+      "mesh_file": "meshes/training_000046.json"
+    },
+    {
+      "id": "training_000047",
+      "seed": 977078,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.5535050941662276,
+        "expected_fps_improvement": 1.0654396292036663
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000047.npy",
+      "mesh_file": "meshes/training_000047.json"
+    },
+    {
+      "id": "training_000048",
+      "seed": 583644,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.5881925928161515,
+        "expected_fps_improvement": 1.2068071200258035
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000048.npy",
+      "mesh_file": "meshes/training_000048.json"
+    },
+    {
+      "id": "training_000049",
+      "seed": 861139,
+      "chunk_complexity": 0.2947684151785714,
+      "mesh_quality": 0.0,
+      "optimization_target": {
+        "target_vertex_reduction": 0.5,
+        "target_lod_bias": 3.0,
+        "greedy_merging_benefit": 0.3137070336049985,
+        "expected_fps_improvement": 1.1512964133750658
+      },
+      "biome_type": "mountain",
+      "generation_params": {
+        "chunk_size": 64,
+        "materials_used": 4,
+        "density": 0.2923583984375
+      },
+      "chunk_file": "chunks/training_000049.npy",
+      "mesh_file": "meshes/training_000049.json"
+    }
+  ]
+}
