@@ -1,0 +1,38 @@
+{
+  "validation_summary": {
+    "total_shaders": 5,
+    "shaders_with_mismatches": 0,
+    "total_mismatches": 0,
+    "validation_status": "PASS"
+  },
+  "validated_shaders": [
+    {
+      "file": "voxel_mesher.comp",
+      "stage": "compute",
+      "mismatches": 0
+    },
+    {
+      "file": "chunk_cull.comp",
+      "stage": "compute",
+      "mismatches": 0
+    },
+    {
+      "file": "greedy_mesh.comp",
+      "stage": "compute",
+      "mismatches": 0
+    },
+    {
+      "file": "taa.frag",
+      "stage": "fragment",
+      "mismatches": 0
+    },
+    {
+      "file": "bilateral_blur.frag",
+      "stage": "fragment",
+      "mismatches": 0
+    }
+  ],
+  "layout_mismatches": [],
+  "warnings": [],
+  "errors": []
+}
