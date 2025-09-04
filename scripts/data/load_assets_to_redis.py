@@ -324,6 +324,10 @@ f 8//6 5//6 1//6 4//6
     
     def validate_redis_storage(self) -> bool:
         """Validate that assets were stored correctly in Redis."""
+        if self.offline_mode:
+            print("\n🔍 Skipping Redis validation (offline mode)")
+            return True
+            
         print("\n🔍 Validating Redis storage...")
         
         # Get all vulken3d keys
