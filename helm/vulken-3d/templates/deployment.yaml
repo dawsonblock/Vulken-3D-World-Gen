@@ -1,0 +1,28 @@
+"apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: {{ include \"vulken-3d.fullname\"\
+  \ . }}\n  labels:\n    {{- include \"vulken-3d.labels\" . | nindent 4 }}\nspec:\n\
+  \  replicas: {{ .Values.replicaCount }}\n  selector:\n    matchLabels:\n      {{-\
+  \ include \"vulken-3d.selectorLabels\" . | nindent 6 }}\n  template:\n    metadata:\n\
+  \      labels:\n        {{- include \"vulken-3d.selectorLabels\" . | nindent 8 }}\n\
+  \    spec:\n      containers:\n      - name: {{ .Chart.Name }}\n        image: \"\
+  {{ .Values.image.repository }}:{{ .Values.image.tag }}\"\n        imagePullPolicy:\
+  \ {{ .Values.image.pullPolicy }}\n        ports:\n        - name: http\n       \
+  \   containerPort: {{ .Values.service.port }}\n          protocol: TCP\n       \
+  \ - name: health\n          containerPort: {{ .Values.service.healthPort }}\n  \
+  \        protocol: TCP\n        livenessProbe:\n          httpGet:\n           \
+  \ path: /healthz\n            port: health\n          initialDelaySeconds: 30\n\
+  \          periodSeconds: 10\n        readinessProbe:\n          httpGet:\n    \
+  \        path: /healthz\n            port: health\n          initialDelaySeconds:\
+  \ 5\n          periodSeconds: 5\n        resources:\n          {{- toYaml .Values.resources\
+  \ | nindent 10 }}\n        env:\n        - name: VULKEN_LOG_LEVEL\n          value:\
+  \ {{ .Values.config.logLevel }}\n        - name: VULKEN_HEADLESS\n          value:\
+  \ \"{{ .Values.config.headlessMode }}\"\n        - name: RENDER_DISTANCE\n     \
+  \     value: \"{{ .Values.config.renderDistance }}\"\n        volumeMounts:\n  \
+  \      - name: config\n          mountPath: /app/config\n        {{- if .Values.redis.enabled\
+  \ }}\n        - name: redis-config\n          mountPath: /app/config/redis.yaml\n\
+  \          subPath: redis.yaml\n        {{- end }}\n      volumes:\n      - name:\
+  \ config\n        configMap:\n          name: {{ include \"vulken-3d.fullname\"\
+  \ . }}-config\n      {{- if .Values.redis.enabled }}\n      - name: redis-config\n\
+  \        configMap:\n          name: {{ include \"vulken-3d.fullname\" . }}-redis\n\
+  \      {{- end }}\n      {{- with .Values.nodeSelector }}\n      nodeSelector:\n\
+  \        {{- toYaml . | nindent 8 }}\n      {{- end }}\n      {{- with .Values.tolerations\
+  \ }}\n      tolerations:\n        {{- toYaml . | nindent 8 }}\n      {{- end }}\n"
