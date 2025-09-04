@@ -1,0 +1,41 @@
+renderer:
+  backend: vulkan
+  resolution:
+    width: 1920
+    height: 1080
+  msaa_samples: 4
+  depth_format: D32_SFLOAT
+shaders:
+  validation: true
+  hot_reload: true
+  cache_spirv: true
+  optimization: performance
+post_processing:
+  taa:
+    enabled: true
+    feedback: 0.95
+  ssao:
+    enabled: true
+    radius: 0.5
+    samples: 16
+  ssr:
+    enabled: false
+    max_steps: 64
+  bloom:
+    enabled: true
+    threshold: 1.0
+shadows:
+  csm:
+    enabled: true
+    cascade_count: 4
+    resolution: 2048
+    lambda: 0.5
+  pcss:
+    enabled: true
+    sample_radius: 0.01
+lighting:
+  ibl:
+    enabled: true
+  clustered_forward:
+    enabled: true
+    tile_size: 16
