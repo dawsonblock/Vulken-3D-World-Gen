@@ -1,0 +1,39 @@
+storage:
+  mode: filesystem
+  cache_size_mb: 512
+  async_io: true
+filesystem:
+  assets_root: assets/
+  cache_dir: .cache/
+redis:
+  host: localhost
+  port: 6379
+  db: 0
+  key_prefix: 'vulken3d:'
+  compression: lz4
+s3:
+  bucket: vulken3d-assets
+  region: us-west-2
+  cache_locally: true
+assets:
+  textures:
+    formats:
+    - jpg
+    - png
+    - exr
+    max_size_mb: 256
+  meshes:
+    formats:
+    - obj
+    - gltf
+    - mvox
+    max_vertices: 100000
+  palettes:
+    formats:
+    - json
+    - yaml
+    biome_types:
+    - desert
+    - forest
+    - arctic
+    - volcanic
