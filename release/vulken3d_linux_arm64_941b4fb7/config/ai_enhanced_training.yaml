@@ -1,0 +1,342 @@
+# AI-Enhanced Training Configuration for VoxelRL_All
+# Extends the base training.yaml with AI content generation capabilities
+
+ai_training:
+  # Enable AI-generated content for training
+  enable_ai_generated_content: true
+  
+  # === AI CONTENT GENERATION SETTINGS ===
+  content_generation:
+    # TensorRT model paths
+    models:
+      structure_generator: "models/structure_generator.trt"
+      terrain_enhancer: "models/terrain_enhancer.trt"
+      texture_generator: "models/texture_generator.trt"
+      biome_generator: "models/biome_generator.trt"
+      settlement_generator: "models/settlement_generator.trt"
+    
+    # Generation quality settings
+    quality:
+      structure_complexity: 0.7          # 0.0 = simple, 1.0 = complex
+      texture_resolution: 256            # Generated texture resolution
+      detail_level: 0.6                  # Detail vs performance trade-off
+      enable_post_processing: true       # Apply post-processing filters
+    
+    # Performance settings
+    performance:
+      max_concurrent_generations: 4      # Parallel generation limit
+      memory_pool_size_gb: 2.0          # GPU memory pool for AI generation
+      use_fp16: true                    # Use half precision for performance
+      generation_timeout_seconds: 15.0  # Max time per generation
+      
+    # Caching settings
+    caching:
+      enable_generation_cache: true     # Cache generated content
+      cache_size_mb: 512               # Cache size limit
+      cache_expiration_hours: 24       # Cache expiration time
+  
+  # === AI-ENHANCED BIOME SYSTEM ===
+  biome_enhancement:
+    enabled: true
+    
+    # Extended biome types
+    biomes:
+      # Original biomes (unchanged)
+      plains: { surface_block: "grass", complexity: 0.3 }
+      desert: { surface_block: "sand", complexity: 0.2 }
+      forest: { surface_block: "grass", complexity: 0.5 }
+      mountains: { surface_block: "stone", complexity: 0.7 }
+      ocean: { surface_block: "water", complexity: 0.4 }
+      tundra: { surface_block: "snow", complexity: 0.3 }
+      
+      # AI-Enhanced biomes
+      ai_forest: 
+        surface_block: "grass"
+        complexity: 0.8
+        ai_structures: ["treehouse", "forest_shrine", "hunting_lodge"]
+        vegetation_density: 0.9
+        
+      ai_mesa:
+        surface_block: "stone"
+        complexity: 0.6
+        ai_structures: ["cliff_dwelling", "mesa_temple"]
+        unique_features: ["layered_stone", "natural_arches"]
+        
+      ai_jungle:
+        surface_block: "grass"
+        complexity: 0.9
+        ai_structures: ["jungle_temple", "canopy_bridge", "tribal_village"]
+        vegetation_density: 1.0
+        
+      ai_volcanic:
+        surface_block: "stone"
+        complexity: 0.8
+        ai_structures: ["lava_forge", "obsidian_spire"]
+        unique_features: ["lava_flows", "geysers", "hot_springs"]
+        
+      ai_floating:
+        surface_block: "stone"
+        complexity: 1.0
+        ai_structures: ["sky_temple", "floating_platform", "wind_tower"]
+        unique_features: ["gravity_crystals", "sky_bridges"]
+        
+      ai_crystal:
+        surface_block: "stone"
+        complexity: 0.9
+        ai_structures: ["crystal_chamber", "resonance_tower"]
+        unique_features: ["crystal_formations", "light_prisms"]
+    
+    # Biome generation parameters
+    generation:
+      structure_density: 0.15           # Structures per chunk
+      terrain_variation: 1.2            # Height variation multiplier
+      biome_transition_smoothness: 0.6  # Transition smoothness (0.0-1.0)
+      enable_dynamic_biomes: true       # Allow runtime biome generation
+      
+  # === AI STRUCTURE GENERATION ===
+  structure_generation:
+    enabled: true
+    
+    # Structure types and complexity
+    structure_types:
+      # Basic structures
+      houses:
+        complexity_range: [0.2, 0.6]
+        styles: ["medieval", "modern", "fantasy", "rustic"]
+        max_size: [16, 16, 12]
+        
+      towers:
+        complexity_range: [0.4, 0.8]
+        styles: ["watchtower", "wizard_tower", "bell_tower"]
+        max_size: [8, 8, 32]
+        
+      dungeons:
+        complexity_range: [0.6, 1.0]
+        styles: ["medieval", "ancient", "crystal", "shadow"]
+        max_size: [64, 64, 32]
+        max_floors: 5
+        
+      bridges:
+        complexity_range: [0.3, 0.7]
+        styles: ["stone", "wood", "rope", "crystal"]
+        max_span: 64
+        
+      settlements:
+        complexity_range: [0.7, 1.0]
+        types: ["village", "town", "city", "fortress"]
+        max_radius: 128
+        
+    # Generation parameters
+    generation:
+      max_structures_per_chunk: 3       # Limit for performance
+      structure_spacing_min: 32         # Minimum distance between structures
+      enable_connected_structures: true # Generate connected building complexes
+      
+  # === AI TEXTURE GENERATION ===
+  texture_generation:
+    enabled: true
+    
+    # Material types for AI generation
+    materials:
+      stone:
+        styles: ["smooth", "rough", "weathered", "mossy", "cracked"]
+        resolution: 256
+        generate_normal_maps: true
+        
+      wood:
+        styles: ["oak", "pine", "mahogany", "weathered", "ancient"]
+        resolution: 256
+        generate_normal_maps: true
+        
+      metal:
+        styles: ["iron", "copper", "gold", "rusted", "polished"]
+        resolution: 256
+        generate_roughness_maps: true
+        
+      fabric:
+        styles: ["cloth", "leather", "silk", "worn", "decorated"]
+        resolution: 256
+        generate_normal_maps: false
+        
+    # Generation parameters
+    generation:
+      material_variations_per_type: 4   # Number of variations to generate
+      seamless_textures: true          # Ensure textures tile seamlessly
+      enable_material_blending: true   # Blend materials at biome boundaries
+      
+  # === AI-ENHANCED CURRICULUM LEARNING ===
+  curriculum:
+    enabled: true
+    
+    # Learning paths with AI-generated content
+    learning_paths:
+      basic_survival:
+        description: "Learn basic survival with AI-generated challenges"
+        stages:
+          - name: "ai_shelter_building"
+            description: "Build shelter using AI-generated materials"
+            ai_structures: ["simple_house", "lean_to"]
+            ai_materials: ["wood", "stone"]
+            success_criteria: { build_shelter: true, survive_night: true }
+            
+          - name: "ai_resource_gathering"
+            description: "Gather resources in AI-enhanced biomes"
+            ai_biomes: ["ai_forest", "ai_mesa"]
+            success_criteria: { collect_wood: 64, collect_stone: 32 }
+            
+          - name: "ai_exploration"
+            description: "Explore AI-generated structures"
+            ai_structures: ["watchtower", "ancient_ruins"]
+            success_criteria: { explore_structures: 3, find_treasure: 1 }
+      
+      construction_mastery:
+        description: "Master construction with AI assistance"
+        stages:
+          - name: "ai_basic_building"
+            description: "Learn construction basics with AI guidance"
+            ai_structures: ["tutorial_house"]
+            success_criteria: { build_house: true, use_ai_materials: true }
+            
+          - name: "ai_advanced_building"
+            description: "Build complex structures with AI materials"
+            ai_structures: ["multi_story_house", "workshop"]
+            ai_materials: ["reinforced_wood", "carved_stone"]
+            success_criteria: { build_complex_structure: true }
+            
+          - name: "ai_city_planning"
+            description: "Plan and build settlements"
+            ai_structures: ["village_center", "roads", "walls"]
+            success_criteria: { build_settlement: true, connect_buildings: true }
+      
+      exploration_adventure:
+        description: "Adventure through AI-generated worlds"
+        stages:
+          - name: "ai_biome_exploration"
+            description: "Explore diverse AI-generated biomes"
+            ai_biomes: ["ai_jungle", "ai_crystal", "ai_floating"]
+            success_criteria: { visit_biomes: 5, document_features: 10 }
+            
+          - name: "ai_dungeon_delving"
+            description: "Explore AI-generated dungeons"
+            ai_structures: ["crystal_cavern", "shadow_dungeon", "sky_temple"]
+            success_criteria: { complete_dungeons: 3, collect_artifacts: 5 }
+            
+          - name: "ai_world_mastery"
+            description: "Master navigation of AI-enhanced worlds"
+            ai_biomes: ["all_ai_biomes"]
+            ai_structures: ["all_structure_types"]
+            success_criteria: { master_all_biomes: true, build_in_each: true }
+    
+    # Adaptive curriculum parameters
+    adaptation:
+      enable_dynamic_difficulty: true
+      success_rate_threshold: 0.75
+      difficulty_adjustment_rate: 0.15
+      min_episodes_per_stage: 75
+      max_retries_per_stage: 3
+      
+      # AI content adaptation
+      adapt_structure_complexity: true
+      adapt_biome_difficulty: true
+      adapt_material_complexity: true
+      
+  # === MULTI-AGENT AI TRAINING ===
+  multi_agent:
+    enabled: false  # Set to true for multi-agent training
+    
+    # Agent collaboration scenarios
+    collaboration:
+      enabled: false
+      scenarios:
+        - name: "collaborative_building"
+          description: "Agents work together to build structures"
+          num_agents: 4
+          ai_structures: ["large_castle", "city_district"]
+          success_criteria: { complete_structure: true, coordinate_actions: true }
+          
+        - name: "exploration_team"
+          description: "Agents explore dangerous areas together"
+          num_agents: 3
+          ai_biomes: ["ai_volcanic", "ai_crystal"]
+          ai_structures: ["dangerous_dungeon"]
+          success_criteria: { team_survival: true, complete_exploration: true }
+    
+    # Agent competition scenarios
+    competition:
+      enabled: false
+      scenarios:
+        - name: "building_contest"
+          description: "Agents compete to build the best structure"
+          num_agents: 2
+          ai_materials: ["premium_stone", "exotic_wood"]
+          success_criteria: { build_quality: "highest", resource_efficiency: true }
+          
+        - name: "treasure_hunt"
+          description: "Agents race to find treasures in AI dungeons"
+          num_agents: 4
+          ai_structures: ["treasure_dungeon"]
+          success_criteria: { collect_most_treasure: true }
+
+# === PERFORMANCE OPTIMIZATION ===
+performance:
+  # AI generation performance limits
+  ai_generation:
+    max_gpu_usage_percent: 30        # Reserve 70% GPU for training
+    max_concurrent_requests: 4       # Limit concurrent AI generations
+    generation_priority: "low"       # Give training higher priority
+    
+  # Memory management
+  memory:
+    ai_content_cache_mb: 512        # Cache size for generated content  
+    max_ai_memory_mb: 1024         # Max memory for AI operations
+    cleanup_interval_minutes: 30   # How often to clean up unused content
+    
+  # Quality vs speed trade-offs
+  quality_settings:
+    prefer_speed_over_quality: false  # Prefer quality for training diversity
+    ai_generation_timeout: 15.0      # Max seconds per AI generation
+    fallback_to_procedural: true     # Use procedural if AI fails
+    
+# === MONITORING AND ANALYTICS ===
+monitoring:
+  # Track AI content generation effectiveness
+  ai_content_analytics:
+    enabled: true
+    track_generation_success: true
+    track_training_improvement: true
+    track_diversity_metrics: true
+    
+    # Metrics to collect
+    metrics:
+      - generation_time_ms
+      - generation_success_rate
+      - content_diversity_score
+      - training_performance_impact
+      - agent_preference_scores
+      
+  # Export analytics data
+  analytics_export:
+    enabled: true
+    export_interval_minutes: 60
+    export_formats: ["json", "csv"]
+    export_directory: "output/ai_analytics"
+
+# === INTEGRATION SETTINGS ===
+integration:
+  # Integration with existing VoxelRL systems
+  world_manager:
+    enable_ai_chunk_generation: true
+    ai_chunk_generation_radius: 5    # Chunks around player
+    pregenerate_ai_content: true
+    
+  # Integration with training framework
+  training_framework:
+    inject_ai_scenarios: true
+    replace_procedural_content: 0.7  # 70% AI, 30% procedural
+    ai_scenario_frequency: 0.3       # 30% of episodes use AI scenarios
+    
+  # Backward compatibility
+  compatibility:
+    fallback_to_original: true       # Fallback if AI generation fails
+    preserve_original_biomes: true   # Keep original biomes available
+    legacy_mode: false               # Disable AI enhancements if needed

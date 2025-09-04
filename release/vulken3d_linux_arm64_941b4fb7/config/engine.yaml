@@ -1,0 +1,20 @@
+engine:
+  name: Vulken-3D-World-Gen
+  version: 0.9.0-prodp1
+  log_level: INFO
+  headless_fallback: true
+vulkan:
+  validation_layers: true
+  device_selection: auto
+  memory_budget_mb: 2048
+  pipeline_cache: true
+world:
+  chunk_size: 64
+  render_distance: 8
+  generation_threads: 4
+  async_loading: true
+performance:
+  target_fps: 60
+  vsync: true
+  dynamic_resolution: false
+  cpu_budget_ms: 16.6
