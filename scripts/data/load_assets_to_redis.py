@@ -173,8 +173,11 @@ class RedisAssetLoader:
             }
             
             # Store palette data and metadata
-            self.redis_client.set(asset_key, json.dumps(palette_data))
-            self.redis_client.set(meta_key, json.dumps(metadata))
+            if not self.offline_mode:
+                self.redis_client.set(asset_key, json.dumps(palette_data))
+                self.redis_client.set(meta_key, json.dumps(metadata))
+            else:
+                print(f"    [OFFLINE] Would store to Redis: {asset_key}")
             
             self.loaded_assets.append({"type": "palette", "name": asset_name, "biome": biome})
             print(f"  ✅ Loaded palette: {asset_name} (biome: {biome}, {len(colors)} colors)")
