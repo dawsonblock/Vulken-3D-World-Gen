@@ -127,8 +127,11 @@ class RedisAssetLoader:
             }
             
             # Store as string for text formats like OBJ
-            self.redis_client.set(asset_key, mesh_data.encode())
-            self.redis_client.set(meta_key, json.dumps(metadata))
+            if not self.offline_mode:
+                self.redis_client.set(asset_key, mesh_data.encode())
+                self.redis_client.set(meta_key, json.dumps(metadata))
+            else:
+                print(f"    [OFFLINE] Would store to Redis: {asset_key}")
             
             self.loaded_assets.append({"type": "mesh", "name": asset_name, "vertices": vertex_count})
             print(f"  ✅ Loaded mesh: {asset_name} ({vertex_count} vertices, {face_count} faces)")
