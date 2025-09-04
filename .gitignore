@@ -96,3 +96,32 @@ screenshot.png
 # Environment files
 *.env
 *.env.*
+
+# Added by dedupe_and_purge.py
+# Build artifacts
+build*/
+out/
+dist/
+*.log
+
+# Editor artifacts
+*.DS_Store
+Thumbs.db
+*.user
+*.VC.db
+.idea/
+.vscode/.cache/
+
+# Cache and temporary files
+__pycache__/
+*.pyc
+cache/
+tmp/
+imgui.ini
+screenshot.png
+
+# Archives (unless specifically tracked)
+*.zip
+*.7z
+*.rar
+*.tar.Z

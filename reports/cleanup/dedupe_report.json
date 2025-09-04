@@ -1,23 +1,2040 @@
 {
   "removed_files": [
-    "Unzipper-1.14.tar.Z",
-    "Unsure ply-1.1.tar.Z",
-    "voxel-models-main.zip",
-    "vulken-project.zip"
+    "release/vulken3d_linux_arm64_bc8deffa/docs/LICENSE",
+    "release/vulken3d_linux_arm64_bc8deffa/docs/README.md",
+    "release/vulken3d_linux_arm64_bc8deffa/docs/RUN.md",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/palettes/desert.json",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/palettes/arctic.json",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/palettes/forest.json",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/palettes/volcanic.json",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/config/materials.json",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/samples/test_voxel_chunk.json",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/samples/cube.obj",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/samples/simple_voxels.mvox",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/fonts/README.md",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/meshes_library/cube.obj",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/textures/default_albedo.png",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/textures/grass_albedo.png",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/textures/water_normal.png",
+    "release/vulken3d_linux_arm64_bc8deffa/assets/textures/stone_albedo.png",
+    "release/vulken3d_linux_arm64_bc8deffa/config/training.yaml",
+    "release/vulken3d_linux_arm64_bc8deffa/config/redis.yaml",
+    "release/vulken3d_linux_arm64_bc8deffa/config/engine.yaml",
+    "release/vulken3d_linux_arm64_bc8deffa/config/ai_enhanced_training.yaml",
+    "release/vulken3d_linux_arm64_bc8deffa/config/datasets.yaml",
+    "release/vulken3d_linux_arm64_bc8deffa/config/world.yaml",
+    "release/vulken3d_linux_arm64_bc8deffa/config/weather.yaml",
+    "release/vulken3d_linux_arm64_bc8deffa/config/renderer.yaml",
+    "release/vulken3d_linux_arm64_bc8deffa/scripts/data/load_assets_to_redis.py",
+    "release/vulken3d_linux_arm64_bc8deffa/scripts/bench/run_bench.py",
+    "release/vulken3d_linux_arm64_bc8deffa/scripts/bench/check_regression.py",
+    "release/vulken3d_linux_arm64_bc8deffa/scripts/shaders/bootstrap_toolchain.py",
+    "release/vulken3d_linux_arm64_bc8deffa/scripts/shaders/validate_layout.py",
+    "test_training/meshes/training_000003.json",
+    "test_training/meshes/training_000019.json",
+    "test_training/meshes/training_000018.json",
+    "test_training/meshes/training_000030.json",
+    "test_training/meshes/training_000041.json",
+    "test_training/meshes/training_000038.json",
+    "test_training/meshes/training_000008.json",
+    "test_training/meshes/training_000007.json",
+    "test_training/meshes/training_000024.json",
+    "test_training/meshes/training_000046.json",
+    "test_training/meshes/training_000005.json",
+    "test_training/meshes/training_000045.json",
+    "test_training/meshes/training_000004.json",
+    "test_training/meshes/training_000009.json",
+    "test_training/meshes/training_000049.json",
+    "test_training/meshes/training_000037.json",
+    "test_training/meshes/training_000023.json",
+    "test_training/meshes/training_000043.json",
+    "test_training/meshes/training_000031.json",
+    "test_training/meshes/training_000012.json",
+    "test_training/meshes/training_000013.json",
+    "test_training/meshes/training_000028.json",
+    "test_training/meshes/training_000002.json",
+    "test_training/meshes/training_000040.json",
+    "test_training/meshes/training_000025.json",
+    "test_training/meshes/training_000036.json",
+    "test_training/meshes/training_000021.json",
+    "test_training/meshes/training_000001.json",
+    "test_training/meshes/training_000026.json",
+    "test_training/meshes/training_000042.json",
+    "test_training/meshes/training_000034.json",
+    "test_training/meshes/training_000020.json",
+    "test_training/meshes/training_000010.json",
+    "test_training/meshes/training_000014.json",
+    "test_training/meshes/training_000011.json",
+    "test_training/meshes/training_000027.json",
+    "test_training/meshes/training_000039.json",
+    "test_training/meshes/training_000016.json",
+    "test_training/meshes/training_000048.json",
+    "test_training/meshes/training_000015.json",
+    "test_training/meshes/training_000047.json",
+    "test_training/meshes/training_000033.json",
+    "test_training/meshes/training_000032.json",
+    "test_training/meshes/training_000044.json",
+    "test_training/meshes/training_000022.json",
+    "test_training/meshes/training_000029.json",
+    "test_training/meshes/training_000035.json",
+    "test_training/meshes/training_000006.json",
+    "test_training/meshes/training_000017.json",
+    "training_data/meshes/training_000089.json",
+    "training_data/meshes/training_000092.json",
+    "training_data/meshes/training_000067.json",
+    "training_data/meshes/training_000003.json",
+    "training_data/meshes/training_000019.json",
+    "training_data/meshes/training_000018.json",
+    "training_data/meshes/training_000030.json",
+    "training_data/meshes/training_000041.json",
+    "training_data/meshes/training_000068.json",
+    "training_data/meshes/training_000078.json",
+    "training_data/meshes/training_000074.json",
+    "training_data/meshes/training_000038.json",
+    "training_data/meshes/training_000008.json",
+    "training_data/meshes/training_000007.json",
+    "training_data/meshes/training_000065.json",
+    "training_data/meshes/training_000097.json",
+    "training_data/meshes/training_000024.json",
+    "training_data/meshes/training_000046.json",
+    "training_data/meshes/training_000005.json",
+    "training_data/meshes/training_000086.json",
+    "training_data/meshes/training_000075.json",
+    "training_data/meshes/training_000045.json",
+    "training_data/meshes/training_000098.json",
+    "training_data/meshes/training_000004.json",
+    "training_data/meshes/training_000093.json",
+    "training_data/meshes/training_000009.json",
+    "training_data/meshes/training_000049.json",
+    "training_data/meshes/training_000037.json",
+    "training_data/meshes/training_000087.json",
+    "training_data/meshes/training_000082.json",
+    "training_data/meshes/training_000023.json",
+    "training_data/meshes/training_000058.json",
+    "training_data/meshes/training_000052.json",
+    "training_data/meshes/training_000043.json",
+    "training_data/meshes/training_000031.json",
+    "training_data/meshes/training_000012.json",
+    "training_data/meshes/training_000081.json",
+    "training_data/meshes/training_000050.json",
+    "training_data/meshes/training_000013.json",
+    "training_data/meshes/training_000061.json",
+    "training_data/meshes/training_000051.json",
+    "training_data/meshes/training_000028.json",
+    "training_data/meshes/training_000002.json",
+    "training_data/meshes/training_000040.json",
+    "training_data/meshes/training_000054.json",
+    "training_data/meshes/training_000095.json",
+    "training_data/meshes/training_000064.json",
+    "training_data/meshes/training_000025.json",
+    "training_data/meshes/training_000084.json",
+    "training_data/meshes/training_000071.json",
+    "training_data/meshes/training_000036.json",
+    "training_data/meshes/training_000083.json",
+    "training_data/meshes/training_000000.json",
+    "training_data/meshes/training_000021.json",
+    "training_data/meshes/training_000066.json",
+    "training_data/meshes/training_000094.json",
+    "training_data/meshes/training_000001.json",
+    "training_data/meshes/training_000055.json",
+    "training_data/meshes/training_000026.json",
+    "training_data/meshes/training_000090.json",
+    "training_data/meshes/training_000070.json",
+    "training_data/meshes/training_000042.json",
+    "training_data/meshes/training_000056.json",
+    "training_data/meshes/training_000079.json",
+    "training_data/meshes/training_000063.json",
+    "training_data/meshes/training_000085.json",
+    "training_data/meshes/training_000034.json",
+    "training_data/meshes/training_000073.json",
+    "training_data/meshes/training_000020.json",
+    "training_data/meshes/training_000010.json",
+    "training_data/meshes/training_000014.json",
+    "training_data/meshes/training_000059.json",
+    "training_data/meshes/training_000011.json",
+    "training_data/meshes/training_000027.json",
+    "training_data/meshes/training_000053.json",
+    "training_data/meshes/training_000057.json",
+    "training_data/meshes/training_000039.json",
+    "training_data/meshes/training_000016.json",
+    "training_data/meshes/training_000048.json",
+    "training_data/meshes/training_000077.json",
+    "training_data/meshes/training_000069.json",
+    "training_data/meshes/training_000099.json",
+    "training_data/meshes/training_000015.json",
+    "training_data/meshes/training_000047.json",
+    "training_data/meshes/training_000033.json",
+    "training_data/meshes/training_000091.json",
+    "training_data/meshes/training_000072.json",
+    "training_data/meshes/training_000032.json",
+    "training_data/meshes/training_000080.json",
+    "training_data/meshes/training_000088.json",
+    "training_data/meshes/training_000060.json",
+    "training_data/meshes/training_000044.json",
+    "training_data/meshes/training_000022.json",
+    "training_data/meshes/training_000096.json",
+    "training_data/meshes/training_000076.json",
+    "training_data/meshes/training_000029.json",
+    "training_data/meshes/training_000062.json",
+    "training_data/meshes/training_000035.json",
+    "training_data/meshes/training_000006.json",
+    "training_data/meshes/training_000017.json",
+    "training_data/models/mesher_optimizer_v1.trt",
+    "training_data/models/biome_classifier_v1.onnx",
+    "training_data/models/performance_predictor_v1.json",
+    "training_data/models/performance_predictor_v1.trt",
+    "training_data/models/lod_selector_v1.onnx",
+    "training_data/models/mesher_optimizer_v1.json",
+    "test_training/chunks/training_000004.npy",
+    "test_training/chunks/training_000036.npy",
+    "test_training/chunks/training_000024.npy",
+    "test_training/chunks/training_000010.npy",
+    "test_training/chunks/training_000034.npy",
+    "test_training/chunks/training_000038.npy",
+    "test_training/chunks/training_000023.npy",
+    "test_training/chunks/training_000007.npy",
+    "test_training/chunks/training_000022.npy",
+    "test_training/chunks/training_000005.npy",
+    "test_training/chunks/training_000009.npy",
+    "test_training/chunks/training_000047.npy",
+    "test_training/chunks/training_000041.npy",
+    "test_training/chunks/training_000044.npy",
+    "test_training/chunks/training_000001.npy",
+    "test_training/chunks/training_000003.npy",
+    "test_training/chunks/training_000046.npy",
+    "test_training/chunks/training_000030.npy",
+    "test_training/chunks/training_000006.npy",
+    "test_training/chunks/training_000014.npy",
+    "test_training/chunks/training_000016.npy",
+    "test_training/chunks/training_000015.npy",
+    "test_training/chunks/training_000029.npy",
+    "test_training/chunks/training_000037.npy",
+    "test_training/chunks/training_000020.npy",
+    "test_training/chunks/training_000028.npy",
+    "test_training/chunks/training_000019.npy",
+    "test_training/chunks/training_000043.npy",
+    "test_training/chunks/training_000021.npy",
+    "test_training/chunks/training_000031.npy",
+    "test_training/chunks/training_000042.npy",
+    "test_training/chunks/training_000025.npy",
+    "test_training/chunks/training_000040.npy",
+    "test_training/chunks/training_000008.npy",
+    "test_training/chunks/training_000011.npy",
+    "test_training/chunks/training_000045.npy",
+    "test_training/chunks/training_000039.npy",
+    "test_training/chunks/training_000032.npy",
+    "test_training/chunks/training_000049.npy",
+    "test_training/chunks/training_000017.npy",
+    "test_training/chunks/training_000027.npy",
+    "test_training/chunks/training_000002.npy",
+    "test_training/chunks/training_000048.npy",
+    "test_training/chunks/training_000033.npy",
+    "test_training/chunks/training_000012.npy",
+    "test_training/chunks/training_000035.npy",
+    "test_training/chunks/training_000026.npy",
+    "test_training/chunks/training_000018.npy",
+    "test_training/chunks/training_000013.npy",
+    "training_data/chunks/training_000004.npy",
+    "training_data/chunks/training_000086.npy",
+    "training_data/chunks/training_000036.npy",
+    "training_data/chunks/training_000024.npy",
+    "training_data/chunks/training_000082.npy",
+    "training_data/chunks/training_000010.npy",
+    "training_data/chunks/training_000034.npy",
+    "training_data/chunks/training_000038.npy",
+    "training_data/chunks/training_000099.npy",
+    "training_data/chunks/training_000070.npy",
+    "training_data/chunks/training_000023.npy",
+    "training_data/chunks/training_000007.npy",
+    "training_data/chunks/training_000091.npy",
+    "training_data/chunks/training_000058.npy",
+    "training_data/chunks/training_000022.npy",
+    "training_data/chunks/training_000071.npy",
+    "training_data/chunks/training_000005.npy",
+    "training_data/chunks/training_000009.npy",
+    "training_data/chunks/training_000076.npy",
+    "training_data/chunks/training_000054.npy",
+    "training_data/chunks/training_000047.npy",
+    "training_data/chunks/training_000088.npy",
+    "training_data/chunks/training_000095.npy",
+    "training_data/chunks/training_000041.npy",
+    "training_data/chunks/training_000044.npy",
+    "training_data/chunks/training_000077.npy",
+    "training_data/chunks/training_000068.npy",
+    "training_data/chunks/training_000001.npy",
+    "training_data/chunks/training_000003.npy",
+    "training_data/chunks/training_000046.npy",
+    "training_data/chunks/training_000030.npy",
+    "training_data/chunks/training_000006.npy",
+    "training_data/chunks/training_000096.npy",
+    "training_data/chunks/training_000079.npy",
+    "training_data/chunks/training_000014.npy",
+    "training_data/chunks/training_000016.npy",
+    "training_data/chunks/training_000061.npy",
+    "training_data/chunks/training_000015.npy",
+    "training_data/chunks/training_000029.npy",
+    "training_data/chunks/training_000037.npy",
+    "training_data/chunks/training_000020.npy",
+    "training_data/chunks/training_000064.npy",
+    "training_data/chunks/training_000059.npy",
+    "training_data/chunks/training_000066.npy",
+    "training_data/chunks/training_000078.npy",
+    "training_data/chunks/training_000028.npy",
+    "training_data/chunks/training_000097.npy",
+    "training_data/chunks/training_000057.npy",
+    "training_data/chunks/training_000067.npy",
+    "training_data/chunks/training_000000.npy",
+    "training_data/chunks/training_000019.npy",
+    "training_data/chunks/training_000043.npy",
+    "training_data/chunks/training_000021.npy",
+    "training_data/chunks/training_000031.npy",
+    "training_data/chunks/training_000042.npy",
+    "training_data/chunks/training_000025.npy",
+    "training_data/chunks/training_000069.npy",
+    "training_data/chunks/training_000040.npy",
+    "training_data/chunks/training_000008.npy",
+    "training_data/chunks/training_000085.npy",
+    "training_data/chunks/training_000011.npy",
+    "training_data/chunks/training_000092.npy",
+    "training_data/chunks/training_000060.npy",
+    "training_data/chunks/training_000045.npy",
+    "training_data/chunks/training_000072.npy",
+    "training_data/chunks/training_000063.npy",
+    "training_data/chunks/training_000075.npy",
+    "training_data/chunks/training_000081.npy",
+    "training_data/chunks/training_000094.npy",
+    "training_data/chunks/training_000039.npy",
+    "training_data/chunks/training_000090.npy",
+    "training_data/chunks/training_000032.npy",
+    "training_data/chunks/training_000074.npy",
+    "training_data/chunks/training_000055.npy",
+    "training_data/chunks/training_000049.npy",
+    "training_data/chunks/training_000017.npy",
+    "training_data/chunks/training_000027.npy",
+    "training_data/chunks/training_000089.npy",
+    "training_data/chunks/training_000002.npy",
+    "training_data/chunks/training_000048.npy",
+    "training_data/chunks/training_000050.npy",
+    "training_data/chunks/training_000073.npy",
+    "training_data/chunks/training_000084.npy",
+    "training_data/chunks/training_000093.npy",
+    "training_data/chunks/training_000051.npy",
+    "training_data/chunks/training_000080.npy",
+    "training_data/chunks/training_000098.npy",
+    "training_data/chunks/training_000087.npy",
+    "training_data/chunks/training_000065.npy",
+    "training_data/chunks/training_000083.npy",
+    "training_data/chunks/training_000056.npy",
+    "training_data/chunks/training_000033.npy",
+    "training_data/chunks/training_000052.npy",
+    "training_data/chunks/training_000012.npy",
+    "training_data/chunks/training_000053.npy",
+    "training_data/chunks/training_000035.npy",
+    "training_data/chunks/training_000026.npy",
+    "training_data/chunks/training_000018.npy",
+    "training_data/chunks/training_000062.npy",
+    "training_data/chunks/training_000013.npy",
+    "release/vulken3d_linux_arm64_bc8deffa/docs/OPERATOR_GUIDE.md",
+    "release/vulken3d_linux_arm64_bc8deffa/docs/ARCHITECTURE.md",
+    "release/vulken3d_linux_arm64_bc8deffa/docs/AI_PIPELINE.md",
+    "release/vulken3d_linux_arm64_bc8deffa.zip"
   ],
-  "removed_directories": [
-    "__MACOSX",
-    "Vulken-3D-World-Gen-main-2"
+  "removed_directories": [],
+  "duplicates_resolved": [
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/docs/LICENSE",
+      "canonical": "LICENSE",
+      "hash": "c71d239df91726fc"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/docs/README.md",
+      "canonical": "README.md",
+      "hash": "6b9f196cc1e3ba15"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/docs/RUN.md",
+      "canonical": "RUN.md",
+      "hash": "29827f65f4141bc9"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/palettes/desert.json",
+      "canonical": "assets/palettes/desert.json",
+      "hash": "aae6c52aec437721"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/palettes/arctic.json",
+      "canonical": "assets/palettes/arctic.json",
+      "hash": "4796e4afbc960c23"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/palettes/forest.json",
+      "canonical": "assets/palettes/forest.json",
+      "hash": "715c9277e719f015"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/palettes/volcanic.json",
+      "canonical": "assets/palettes/volcanic.json",
+      "hash": "d1ef97b42fbacde2"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/config/materials.json",
+      "canonical": "assets/config/materials.json",
+      "hash": "4f0bc7662105d691"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/samples/test_voxel_chunk.json",
+      "canonical": "assets/samples/test_voxel_chunk.json",
+      "hash": "59acfded99e42ee5"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/samples/cube.obj",
+      "canonical": "assets/samples/cube.obj",
+      "hash": "6e7f0080d5e1a10b"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/samples/simple_voxels.mvox",
+      "canonical": "assets/samples/simple_voxels.mvox",
+      "hash": "9df2cd03744d2e67"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/fonts/README.md",
+      "canonical": "assets/fonts/README.md",
+      "hash": "de0800dfa19f58d3"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/meshes_library/cube.obj",
+      "canonical": "assets/meshes_library/cube.obj",
+      "hash": "6196655c326069fb"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/textures/default_albedo.png",
+      "canonical": "assets/textures/default_albedo.png",
+      "hash": "12860a5594ff6776"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/textures/grass_albedo.png",
+      "canonical": "assets/textures/grass_albedo.png",
+      "hash": "a3219b677a35bf3a"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/textures/water_normal.png",
+      "canonical": "assets/textures/water_normal.png",
+      "hash": "dd4d71523e5d2645"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/assets/textures/stone_albedo.png",
+      "canonical": "assets/textures/stone_albedo.png",
+      "hash": "49b999c886280cd3"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/config/training.yaml",
+      "canonical": "config/training.yaml",
+      "hash": "cbc036f177c4b1e7"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/config/redis.yaml",
+      "canonical": "config/redis.yaml",
+      "hash": "916e01e3f6d59339"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/config/engine.yaml",
+      "canonical": "config/engine.yaml",
+      "hash": "d08beb2deedcdb67"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/config/ai_enhanced_training.yaml",
+      "canonical": "config/ai_enhanced_training.yaml",
+      "hash": "8c57aaba7017fb08"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/config/datasets.yaml",
+      "canonical": "config/datasets.yaml",
+      "hash": "846e83ee152453a2"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/config/world.yaml",
+      "canonical": "config/world.yaml",
+      "hash": "7d135ab5de6c3349"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/config/weather.yaml",
+      "canonical": "config/weather.yaml",
+      "hash": "290de9ba3b77e117"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/config/renderer.yaml",
+      "canonical": "config/renderer.yaml",
+      "hash": "bebc245fc7a2c4c1"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/scripts/data/load_assets_to_redis.py",
+      "canonical": "scripts/data/load_assets_to_redis.py",
+      "hash": "89f84afafce3cac6"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/scripts/bench/run_bench.py",
+      "canonical": "scripts/bench/run_bench.py",
+      "hash": "0dd68a150e93f144"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/scripts/bench/check_regression.py",
+      "canonical": "scripts/bench/check_regression.py",
+      "hash": "0648487ef933508a"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/scripts/shaders/bootstrap_toolchain.py",
+      "canonical": "scripts/shaders/bootstrap_toolchain.py",
+      "hash": "81b8278e33971c6c"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/scripts/shaders/validate_layout.py",
+      "canonical": "scripts/shaders/validate_layout.py",
+      "hash": "2b614bf3aff48ed6"
+    },
+    {
+      "removed": "test_training/meshes/training_000003.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000019.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000018.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000030.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000041.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000038.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000008.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000007.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000024.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000046.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000005.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000045.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000004.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000009.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000049.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000037.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000023.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000043.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000031.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000012.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000013.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000028.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000002.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000040.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000025.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000036.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000021.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000001.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000026.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000042.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000034.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000020.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000010.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000014.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000011.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000027.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000039.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000016.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000048.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000015.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000047.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000033.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000032.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000044.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000022.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000029.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000035.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000006.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "test_training/meshes/training_000017.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000089.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000092.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000067.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000003.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000019.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000018.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000030.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000041.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000068.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000078.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000074.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000038.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000008.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000007.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000065.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000097.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000024.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000046.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000005.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000086.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000075.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000045.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000098.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000004.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000093.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000009.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000049.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000037.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000087.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000082.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000023.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000058.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000052.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000043.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000031.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000012.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000081.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000050.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000013.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000061.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000051.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000028.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000002.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000040.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000054.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000095.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000064.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000025.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000084.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000071.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000036.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000083.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000000.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000021.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000066.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000094.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000001.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000055.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000026.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000090.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000070.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000042.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000056.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000079.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000063.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000085.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000034.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000073.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000020.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000010.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000014.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000059.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000011.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000027.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000053.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000057.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000039.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000016.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000048.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000077.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000069.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000099.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000015.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000047.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000033.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000091.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000072.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000032.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000080.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000088.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000060.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000044.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000022.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000096.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000076.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000029.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000062.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000035.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000006.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/meshes/training_000017.json",
+      "canonical": "test_training/meshes/training_000000.json",
+      "hash": "52586dd3275fc312"
+    },
+    {
+      "removed": "training_data/models/mesher_optimizer_v1.trt",
+      "canonical": "test_training/models/mesher_optimizer_v1.trt",
+      "hash": "20b1b49b9b57eb37"
+    },
+    {
+      "removed": "training_data/models/biome_classifier_v1.onnx",
+      "canonical": "test_training/models/biome_classifier_v1.onnx",
+      "hash": "d4347adf73857367"
+    },
+    {
+      "removed": "training_data/models/performance_predictor_v1.json",
+      "canonical": "test_training/models/performance_predictor_v1.json",
+      "hash": "053c0143cd1f98b5"
+    },
+    {
+      "removed": "training_data/models/performance_predictor_v1.trt",
+      "canonical": "test_training/models/performance_predictor_v1.trt",
+      "hash": "481beaf5d44a3206"
+    },
+    {
+      "removed": "training_data/models/lod_selector_v1.onnx",
+      "canonical": "test_training/models/lod_selector_v1.onnx",
+      "hash": "9c1faba03d47659e"
+    },
+    {
+      "removed": "training_data/models/mesher_optimizer_v1.json",
+      "canonical": "test_training/models/mesher_optimizer_v1.json",
+      "hash": "e52d0b30b0b7eeb5"
+    },
+    {
+      "removed": "test_training/chunks/training_000004.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000036.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000024.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000010.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000034.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000038.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000023.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000007.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000022.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000005.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000009.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000047.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000041.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000044.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000001.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000003.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000046.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000030.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000006.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000014.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000016.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000015.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000029.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000037.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000020.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000028.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000019.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000043.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000021.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000031.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000042.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000025.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000040.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000008.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000011.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000045.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000039.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000032.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000049.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000017.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000027.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000002.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000048.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000033.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000012.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000035.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000026.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000018.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "test_training/chunks/training_000013.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000004.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000086.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000036.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000024.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000082.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000010.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000034.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000038.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000099.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000070.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000023.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000007.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000091.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000058.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000022.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000071.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000005.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000009.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000076.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000054.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000047.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000088.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000095.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000041.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000044.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000077.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000068.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000001.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000003.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000046.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000030.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000006.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000096.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000079.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000014.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000016.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000061.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000015.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000029.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000037.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000020.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000064.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000059.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000066.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000078.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000028.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000097.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000057.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000067.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000000.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000019.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000043.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000021.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000031.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000042.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000025.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000069.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000040.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000008.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000085.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000011.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000092.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000060.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000045.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000072.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000063.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000075.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000081.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000094.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000039.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000090.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000032.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000074.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000055.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000049.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000017.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000027.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000089.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000002.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000048.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000050.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000073.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000084.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000093.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000051.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000080.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000098.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000087.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000065.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000083.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000056.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000033.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000052.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000012.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000053.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000035.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000026.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000018.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000062.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "training_data/chunks/training_000013.npy",
+      "canonical": "test_training/chunks/training_000000.npy",
+      "hash": "052263393489a8c4"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/docs/OPERATOR_GUIDE.md",
+      "canonical": "docs/OPERATOR_GUIDE.md",
+      "hash": "ae4c65de8eacd9a7"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/docs/ARCHITECTURE.md",
+      "canonical": "docs/ARCHITECTURE.md",
+      "hash": "54d98dd7b752bf40"
+    },
+    {
+      "removed": "release/vulken3d_linux_arm64_bc8deffa/docs/AI_PIPELINE.md",
+      "canonical": "docs/AI_PIPELINE.md",
+      "hash": "41bd313c26d85e77"
+    }
   ],
-  "duplicates_resolved": [],
-  "bytes_saved": 10010702,
+  "bytes_saved": 840441540,
   "protected_files": [],
   "scan_summary": {
-    "total_files_removed": 4,
-    "total_directories_removed": 2,
-    "duplicates_resolved": 0,
-    "bytes_saved": 10010702,
-    "bytes_saved_mb": 9.55,
+    "total_files_removed": 338,
+    "total_directories_removed": 0,
+    "duplicates_resolved": 337,
+    "bytes_saved": 840441540,
+    "bytes_saved_mb": 801.51,
     "protected_files_found": 0
   }
 }
