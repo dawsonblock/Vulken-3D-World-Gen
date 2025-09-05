@@ -1,0 +1,66 @@
+# VCS
+.git
+.gitignore
+.gitattributes
+.github
+
+# Build outputs
+build/
+build_*/
+build-release/
+build_release/
+build-debug/
+build_debug/
+build_headless/
+build-windows*/
+_out/
+out/
+dist/
+artifacts/
+
+# CMake and deps
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+install_manifest.txt
+vcpkg_installed/
+_deps/
+
+# Generated & shaders
+spv/
+generated/
+
+# Reports & releases
+reports/
+release/
+
+# Caches
+.cache/
+
+# IDE/editor
+.vscode/
+.vscode/.cache/
+.vs/
+.idea/
+
+# OS/filesystem
+.DS_Store
+Thumbs.db
+*~
+
+# Logs
+*.log
+*.nsys-rep
+*.qdrep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Media and heavy samples not needed in images
+screenshot.png
+imgui.ini
+training_data/
+test_training/

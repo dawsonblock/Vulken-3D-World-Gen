@@ -12,6 +12,7 @@ CMakeFiles/
 /cmake_install.cmake
 /CTestTestfile.cmake
 /install_manifest.txt
+ CMakeUserPresets.json
 
 # Generators and compiled assets
 /spv/
@@ -67,7 +68,6 @@ screenshot.png
 *.tgz
 
 # Docker
-.dockerignore
 
 # Configs: keep only example YAML in VCS
 /config/*.yaml
@@ -82,5 +82,17 @@ redis_validation_report.json
 *.env
 *.env.*
 
+
+
 # Keep only the standard vcpkg configuration
+
+# vcpkg configuration: use vcpkg.json + CMakePresets.json only
+.vcpkg-configuration.json
+        main
 vcpkg-configuration.json
+
+# Local caches
+.cache/
+
+# Release bundles
+release/
