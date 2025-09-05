@@ -35,12 +35,15 @@ class ShaderBuilder:
         tools = {}
         
         # Common tool locations
-        tool_paths = [
-            os.environ.get('VULKAN_SDK', ''),
+        tool_paths = []
+        vulkan_sdk = os.environ.get('VULKAN_SDK')
+        if vulkan_sdk:
+            tool_paths.append(vulkan_sdk)
+        tool_paths.extend([
             '/usr/bin',
             '/usr/local/bin',
             str(self.tools_dir) if self.tools_dir else '',
-        ]
+        ])
         
         # Add vcpkg paths
         vcpkg_paths = [
