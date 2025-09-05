@@ -726,7 +726,7 @@ jobs:
         uses: actions/deploy-pages@v4
 
   shader_validation:
-    name: Shader Validation
+    name: Shader Validation & Layout Check
     runs-on: ubuntu-latest
     needs: [build_and_test]
     steps:
@@ -739,10 +739,16 @@ jobs:
           vulkan-components: Vulkan-Headers, Vulkan-Loader, Glslang, Shaderc
           vulkan-use-cache: true
       
+      - name: Install spirv-cross
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y spirv-cross
+      
       - name: Verify shader tools
         run: |
           glslc --version
-          spirv-cross --version || echo "spirv-cross not available"
+          spirv-cross --version
+          glslangValidator --version
       
       - name: Setup CMake
         uses: lukka/get-cmake@latest
@@ -755,14 +761,44 @@ jobs:
       
       - name: Compile shaders
         run: |
-          cmake --build build --target compile_all_shaders || echo "Shader compilation skipped"
+          cmake --build build --target compile_all_shaders
+      
+      - name: Validate shaders with glslangValidator
+        run: |
+          echo "Validating shader compilation..."
+          SHADER_FAIL=0
+          find shaders shaders_vk -type f \( -name "*.vert" -o -name "*.frag" -o -name "*.comp" -o -name "*.glsl" \) | while read shader; do
+            echo "Validating $shader"
+            if ! glslangValidator -V "$shader" -o /tmp/test.spv; then
+              echo "ERROR: Shader validation failed for $shader"
+              SHADER_FAIL=1
+            fi
+          done
+          if [ $SHADER_FAIL -eq 1 ]; then
+            echo "FAIL: Shader validation errors detected"
+            exit 1
+          fi
+          echo "PASS: All shaders compiled successfully"
+      
+      - name: Check asset size budget
+        run: |
+          echo "Checking asset size budget..."
+          ASSET_SIZE=$(du -sb assets/ 2>/dev/null | cut -f1 || echo "0")
+          BUDGET_MB=100
+          BUDGET_BYTES=$((BUDGET_MB * 1024 * 1024))
+          echo "Asset size: $ASSET_SIZE bytes (Budget: $BUDGET_BYTES bytes)"
+          if [ $ASSET_SIZE -gt $BUDGET_BYTES ]; then
+            echo "ERROR: Assets exceed size budget of ${BUDGET_MB}MB"
+            exit 1
+          fi
+          echo "PASS: Assets within budget"
       
       - name: Validate shader layouts
         run: |
           python3 scripts/shaders/validate_layout.py \
             --shader-dirs build/shaders_cache shaders shaders_vk \
             --cpp-dirs src include \
-            --report reports/shaders/layout_check.json || echo "Layout validation failed"
+            --report reports/shaders/layout_check.json
       
       - name: Check shader validation results
         run: |
@@ -777,10 +813,12 @@ with open('reports/shaders/layout_check.json') as f:
     print(f'Shader validation status: {status}')
     print(f'Layout mismatches: {mismatches}')
     if status == 'FAIL' and mismatches > 0:
+        print('FAIL: Shader layout validation failed')
         exit(1)
+    print('PASS: Shader layout validation successful')
 "
           else
-            echo "No shader validation report generated"
+            echo "ERROR: No shader validation report generated"
             exit 1
           fi
       
