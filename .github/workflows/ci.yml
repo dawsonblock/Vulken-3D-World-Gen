@@ -513,10 +513,9 @@ jobs:
         run: |
           echo "Windows tests using vcpkg toolchain"
       - name: Setup vcpkg
-        uses: microsoft/vcpkg-action@v1
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: 1b5a7a7e1aee5b287f2e7a9e0f9a8f9510b5c3f8
-          appendedCacheKey: ${{ matrix.os }}
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
       - name: Bootstrap local vcpkg (toolchain under repo)
         shell: bash
         run: |
