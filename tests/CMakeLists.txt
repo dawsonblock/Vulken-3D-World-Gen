@@ -10,7 +10,7 @@ find_package(yaml-cpp CONFIG QUIET)
 find_package(glm CONFIG QUIET)
 
 # Individual test executables for better isolation
-add_executable(test_smoke_init tests/test_smoke_init.cpp)
+add_executable(test_smoke_init test_smoke_init.cpp)
 target_link_libraries(test_smoke_init PRIVATE GTest::gtest_main)
 gtest_discover_tests(test_smoke_init)
 
