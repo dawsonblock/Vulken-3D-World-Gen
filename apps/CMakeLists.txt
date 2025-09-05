@@ -1,18 +1,6 @@
-find_package(Vulkan REQUIRED)
-
-# --- Build tagging injection ---
-set(VOXELVK_BRANCH_SOURCES "project_fixed + VoxelVK_Elite_ALL_release_ready + voxel_upgrades_patch + project_compute_graphics_chain + project_dynamic_pbr + project_next_tier_all")
-include(${CMAKE_SOURCE_DIR}/cmake/GenBuildInfo.cmake)
-include_directories(${CMAKE_BINARY_DIR}/generated)
-
-
-add_executable(smoke_headless smoke_headless.cpp)
-set_target_properties(smoke_headless PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES)
-target_link_libraries(smoke_headless PRIVATE Vulkan::Vulkan)
-
-add_executable(smoke_graphics_headless smoke_graphics_headless.cpp)
-set_target_properties(smoke_graphics_headless PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES)
-target_link_libraries(smoke_graphics_headless PRIVATE Vulkan::Vulkan)
+# Apps subdirectory - additional app definitions
+# Note: Core apps (smoke_headless, smoke_graphics_headless, gui_fullscreen_demo, vulkan_fullscreen_demo, rl_nav_demo)
+# are defined in root CMakeLists.txt. This file only handles additional/legacy app configurations.
 
 # Operator console - gated behind BUILD_EXTRAS
 if(BUILD_EXTRAS)
