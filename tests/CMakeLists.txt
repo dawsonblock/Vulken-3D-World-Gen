@@ -14,6 +14,11 @@ add_executable(test_smoke_init test_smoke_init.cpp)
 target_link_libraries(test_smoke_init PRIVATE GTest::gtest_main Vulkan::Vulkan)
 gtest_discover_tests(test_smoke_init)
 
+# Enhanced headless swapchain test
+add_executable(test_headless_swapchain test_headless_swapchain.cpp)
+target_link_libraries(test_headless_swapchain PRIVATE GTest::gtest_main Vulkan::Vulkan)
+gtest_discover_tests(test_headless_swapchain)
+
 add_executable(test_math_util test_math_util.cpp)
 target_compile_features(test_math_util PRIVATE cxx_std_20)
 target_include_directories(test_math_util PRIVATE ${CMAKE_SOURCE_DIR}/src)
