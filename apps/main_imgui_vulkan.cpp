@@ -979,6 +979,9 @@ int main(int argc, char** argv) {
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            // Panel visibility state (declare early)
+            static bool showAiPanel = true, showOverview = true, showCamera = true, showSystems = true, showPerf = true;
+            
             // Dockspace & main menu (only when docking is available)
             #ifdef IMGUI_HAS_DOCKING
             ImGuiViewport* vp = ImGui::GetMainViewport();
