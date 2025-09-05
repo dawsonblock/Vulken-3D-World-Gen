@@ -831,16 +831,14 @@ int main(int argc, char** argv) {
     init_info.DescriptorPool = g_ImGuiDescriptorPool;
     init_info.MinImageCount = (uint32_t)g_SwapchainImages.size();
     init_info.ImageCount = (uint32_t)g_SwapchainImages.size();
-    init_info.UseDynamicRendering = false;
+    // Note: UseDynamicRendering not available in ImGui 1.86
     // Some backends provide PipelineCache in init info; ignore if not present in this version.
 #ifdef IMGUI_IMPL_VULKAN_HAS_PIPELINE_CACHE
     init_info.PipelineCache = g_PipelineCache;
 #endif
     
-    // Initialize ImGui Vulkan backend with our render pass
-    // In current backend headers, RenderPass is part of init_info
-    init_info.RenderPass = g_RenderPass;
-    ImGui_ImplVulkan_Init(&init_info);
+    // Initialize ImGui Vulkan backend - render pass passed separately in older versions
+    ImGui_ImplVulkan_Init(&init_info, g_RenderPass);
 
     // Upload ImGui fonts
     {
