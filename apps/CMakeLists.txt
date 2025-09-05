@@ -14,6 +14,14 @@ add_executable(smoke_graphics_headless smoke_graphics_headless.cpp)
 set_target_properties(smoke_graphics_headless PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES)
 target_link_libraries(smoke_graphics_headless PRIVATE Vulkan::Vulkan)
 
+# Operator console - gated behind BUILD_EXTRAS
+if(BUILD_EXTRAS)
+  add_executable(operator_console operator_console.cpp)
+  set_target_properties(operator_console PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES)
+  target_link_libraries(operator_console PRIVATE Vulkan::Vulkan)
+  target_include_directories(operator_console PRIVATE ${CMAKE_SOURCE_DIR}/src)
+endif()
+
 # --- Build tagging sources ---
 if(TARGET VoxelVK_Elite_ALL)
   target_sources(VoxelVK_Elite_ALL PRIVATE

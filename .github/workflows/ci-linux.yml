@@ -64,22 +64,22 @@ jobs:
 
       - name: Configure (CMake Preset)
         run: |
-          cmake --preset default -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+          cmake --preset ci-linux -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build
         run: |
-          cmake --build --preset default -j 3
+          cmake --build build/ci-linux -j 3
 
       - name: Run tests
         run: |
-          ctest --test-dir build --output-on-failure -j 2
+          ctest --test-dir build/ci-linux --output-on-failure -j 2
 
-      - name: Upload test reports (optional)
-        if: always()
+      - name: Operator console smoke test
+        run: |
+          ./build/ci-linux/apps/operator_console --config configs/operator_console.yaml --timeout 2000 --headless || true
+
+      - name: Archive artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-outputs
-          path: |
-            build/compile_commands.json
-            build/*.log
-            performance_report.json
+          name: linux-binaries
+          path: build/ci-linux

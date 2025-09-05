@@ -42,6 +42,8 @@
 
 ## 🚀 Quick Start
 
+> **📖 For detailed development instructions, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)**
+
 ### Prerequisites
 - **Vulkan SDK 1.3+**
 - **CMake 3.24+** and **Ninja**

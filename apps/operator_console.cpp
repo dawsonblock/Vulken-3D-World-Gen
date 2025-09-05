@@ -628,6 +628,42 @@ public:
 int main(int argc, char* argv[]) {
     std::cout << "🖥️  Starting Vulken-3D Operator Console..." << std::endl;
     
+    // Parse CLI arguments
+    std::string configPath = "configs/operator_console.yaml";
+    bool headless = false;
+    int timeoutMs = 0;
+    
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg == "--config" && i + 1 < argc) {
+            configPath = argv[++i];
+        } else if (arg == "--headless") {
+            headless = true;
+        } else if (arg == "--timeout" && i + 1 < argc) {
+            try {
+                timeoutMs = std::stoi(argv[++i]);
+            } catch (const std::invalid_argument&) {
+                std::cerr << "Error: Invalid value for --timeout. Must be an integer." << std::endl;
+                return -1;
+            } catch (const std::out_of_range&) {
+                std::cerr << "Error: Timeout value out of range." << std::endl;
+                return -1;
+            }
+        } else if (arg == "--help") {
+            std::cout << "Usage: " << argv[0] << " [options]\n";
+            std::cout << "Options:\n";
+            std::cout << "  --config <path>    Configuration file path (default: configs/operator_console.yaml)\n";
+            std::cout << "  --headless         Run in headless mode\n";
+            std::cout << "  --timeout <ms>     Exit after specified milliseconds (0 = no timeout)\n";
+            std::cout << "  --help             Show this help message\n";
+            return 0;
+        }
+    }
+    
+    std::cout << "Config: " << configPath << std::endl;
+    if (headless) std::cout << "Mode: headless" << std::endl;
+    if (timeoutMs > 0) std::cout << "Timeout: " << timeoutMs << "ms" << std::endl;
+    
     VulkanImGuiApp app;
     
     if (!app.initialize()) {
@@ -637,7 +673,20 @@ int main(int argc, char* argv[]) {
     
     std::cout << "✅ Operator Console ready - Use the interface to monitor and control the engine" << std::endl;
     
-    app.run();
+    if (headless) {
+        // In headless mode, just run for the timeout period
+        if (timeoutMs > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(timeoutMs));
+        } else {
+            // Run indefinitely in headless mode
+            while (true) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+        }
+    } else {
+        app.run();
+    }
+    
     app.cleanup();
     
     return 0;
