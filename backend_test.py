@@ -9,7 +9,7 @@ import subprocess
 import sys
 import os
 from pathlib import Path
-import yaml
+# import yaml  # Not needed for this validation
 import re
 
 
