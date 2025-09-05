@@ -905,6 +905,12 @@ int main(int argc, char** argv) {
             frameCount = 0;
             fpsAccum = 0.0;
             
+            // Update performance history for graphs
+            frameTimeHistory_.erase(frameTimeHistory_.begin());
+            frameTimeHistory_.push_back(static_cast<float>(1000.0 / fps));
+            fpsHistory_.erase(fpsHistory_.begin());
+            fpsHistory_.push_back(static_cast<float>(fps));
+            
             std::string title = "VoxelVK Production App - " + std::to_string(static_cast<int>(fps)) + " FPS";
             glfwSetWindowTitle(window, title.c_str());
         }
