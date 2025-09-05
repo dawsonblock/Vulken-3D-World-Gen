@@ -965,11 +965,12 @@ int main(int argc, char** argv) {
             #endif
         if (ImGui::BeginMainMenuBar()) {
                 if (ImGui::BeginMenu("View")) {
-                    static bool showOverview = true, showCamera = true, showSystems = true, showPerf = true;
                     ImGui::MenuItem("Overview", nullptr, &showOverview);
                     ImGui::MenuItem("Camera", nullptr, &showCamera);
                     ImGui::MenuItem("Systems", nullptr, &showSystems);
                     ImGui::MenuItem("Performance", nullptr, &showPerf);
+                    ImGui::Separator();
+                    ImGui::MenuItem("AI Configuration", nullptr, &showAiPanel);
                     ImGui::Separator();
                     ImGui::Text("UI Scale"); ImGui::SameLine();
                     static float uiScaleRuntime = io.FontGlobalScale; if (ImGui::SliderFloat("##uiscale", &uiScaleRuntime, 0.75f, 1.75f, "%.2fx")) io.FontGlobalScale = uiScaleRuntime;
