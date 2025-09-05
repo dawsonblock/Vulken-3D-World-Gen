@@ -36,7 +36,7 @@ class AssetCleanup:
             if file_path.is_file():
                 try:
                     with open(file_path, 'rb') as f:
-                        file_hash = hashlib.md5(f.read()).hexdigest()
+                        file_hash = hashlib.sha256(f.read()).hexdigest()
                     
                     if file_hash in file_hashes:
                         file_hashes[file_hash].append(str(file_path))
