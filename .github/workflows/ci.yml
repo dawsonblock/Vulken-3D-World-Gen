@@ -57,10 +57,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vcpkg-
       
-      - name: Setup vcpkg
-        uses: microsoft/setup-vcpkg@v1
+      - name: Setup vcpkg  
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkg-version: '2024.12.12'
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
       
       - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
