@@ -999,7 +999,7 @@ int main(int argc, char** argv) {
 
             // Command Palette (Ctrl+K)
             static bool paletteOpen = false; static char paletteQuery[128] = "";
-            if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_K, false)) paletteOpen = true;
+            if (io.KeyCtrl && ImGui::IsKeyPressed(75, false)) paletteOpen = true; // 75 = 'K' key
             struct Cmd { const char* name; std::function<void()> fn; };
             std::vector<Cmd> cmds = {
                 {"Toggle Fullscreen", [&](){ g_isFullscreen = !g_isFullscreen; voxelvk::RequestFullscreen(g_isFullscreen); }},
