@@ -1087,12 +1087,52 @@ int main(int argc, char** argv) {
             }
             ImGui::End();
 
-            if (ImGui::Begin("Systems")) {
+            // Enhanced Systems panel
+            if (showSystems && ImGui::Begin("Systems", &showSystems)) {
+                ImGui::Text("Engine Systems Status");
+                ImGui::Separator();
+                
+                // Weather System Status
+                ImGui::BulletText("Weather System:");
+                ImGui::SameLine(); ImGui::TextColored(ImVec4(0.3f, 0.9f, 0.3f, 1.0f), "Running");
+                
+                // AI Systems Status
+                ImGui::BulletText("AI Generation:");
+                ImGui::SameLine(); 
+                bool aiActive = last_rag_enabled || paletteRuntime.cfg.ai_generation.enable_ai_structures;
+                ImGui::TextColored(aiActive ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                                 aiActive ? "Active" : "Inactive");
+                
+                ImGui::Spacing();
+                
+                // Quick RAG Controls
+                ImGui::Text("Quick Controls:");
                 static bool rag_enabled = last_rag_enabled; static int rag_top_k = last_rag_top_k;
-                if (ImGui::Checkbox("Enable RAG", &rag_enabled)) { voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); last_rag_enabled = rag_enabled; }
-                if (ImGui::SliderInt("RAG Top-K", &rag_top_k, 1, 16)) { voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); last_rag_top_k = rag_top_k; }
+                if (ImGui::Checkbox("Enable RAG", &rag_enabled)) { 
+                    voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); 
+                    last_rag_enabled = rag_enabled; 
+                }
+                if (ImGui::SliderInt("RAG Top-K", &rag_top_k, 1, 16)) { 
+                    voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); 
+                    last_rag_top_k = rag_top_k; 
+                }
+                
+                ImGui::Spacing();
+                if (ImGui::Button("Open AI Configuration", ImVec2(180, 30))) {
+                    showAiPanel = true;
+                }
             }
             ImGui::End();
+            
+            // AI Palette Panel (modernized)
+            if (showAiPanel) {
+                bool aiPanelOpen = showAiPanel;
+                if (ImGui::Begin("AI Configuration", &aiPanelOpen, ImGuiWindowFlags_MenuBar)) {
+                    voxelvk::ai::DrawAIPalettePanel(paletteRuntime);
+                }
+                ImGui::End();
+                showAiPanel = aiPanelOpen;
+            }
 
             if (ImGui::Begin("Performance")) {
                 auto& pm = voxelvk::PerformanceMonitor::instance();
