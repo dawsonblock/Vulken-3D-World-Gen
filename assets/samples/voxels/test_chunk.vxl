@@ -1,0 +1,6 @@
+VXL_CHUNK_V1
+32 32 32
+# Simple test voxel chunk
+# Bottom half solid (type 1)
+# Top half hollow with walls (type 2)
+# This is a mock file - real implementation would be binary

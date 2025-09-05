@@ -1,5 +1,7 @@
-# Vulken-3D Quick Start Guide
-=============================
+# VoxelVK Runtime Guide
+=======================
+
+This guide covers how to build, run, and configure VoxelVK for different scenarios.
 
 ## Prerequisites
 
@@ -14,7 +16,69 @@
 - **CMake 3.27+**: https://cmake.org/download/
 - **Python 3.8+**: For build scripts and tools
 
-## Quick Start (5 minutes)
+## Quick Start
+
+### Build with CMake Presets
+
+```bash
+# Configure and build (default configuration)
+cmake --preset default
+cmake --build build -j
+
+# Run tests
+ctest --test-dir build -j
+
+# Run demo
+./build/apps/main_imgui_vulkan
+```
+
+### Alternative Build Presets
+
+```bash
+# CI Release build (warnings as errors, deterministic)
+cmake --preset ci-release
+cmake --build build_ci -j
+
+# Debug build with all validation
+cmake --preset debug
+cmake --build build_debug -j
+
+# Headless build (no graphics/GUI)
+cmake --preset headless
+cmake --build build_headless -j
+
+# Windows CI build
+cmake --preset ci-windows
+cmake --build build_ci_win --config RelWithDebInfo
+```
+
+### Docker Build
+
+```bash
+# Build Docker image
+docker build -t voxelvk:latest .
+
+# Run headless container
+docker run --rm voxelvk:latest smoke_headless
+
+# Run with GPU access (Linux + NVIDIA)
+docker run --rm --gpus all voxelvk:latest
+```
+
+### Package Generation
+
+```bash
+# Generate platform packages
+cmake --preset ci-release
+cmake --build build_ci -j
+cd build_ci
+cpack
+
+# This creates:
+# - Linux: .deb, .rpm, .tar.gz
+# - Windows: .msi, .zip
+# - macOS: .dmg, .tar.gz
+```
 
 ### Option A: Pre-built Release Bundle
 ```bash
@@ -314,6 +378,59 @@ kubectl get pods -l app.kubernetes.io/name=vulken-3d
 kubectl logs deployment/vulken3d -f
 ```
 
+## Environment Variables
+
+### Core Configuration
+```bash
+# Asset management
+export ASSET_PATH="/path/to/assets"          # Override default asset location
+
+# Logging configuration  
+export LOG_LEVEL="debug"                     # trace, debug, info, warn, error, critical
+
+# Performance tuning
+export VULKEN_THREAD_COUNT="8"              # Override auto-detected thread count
+export VULKEN_MEMORY_BUDGET="4096"          # GPU memory budget in MB
+
+# Development flags
+export VULKEN_HOT_RELOAD="1"                # Enable hot reloading
+export VULKEN_VALIDATION="1"                # Force validation layers
+export VULKEN_HEADLESS="1"                  # Force headless mode
+```
+
+### Vulkan Configuration
+```bash
+# Vulkan debugging
+export VK_INSTANCE_LAYERS="VK_LAYER_KHRONOS_validation"
+export VK_LOADER_DEBUG="all"
+export VK_LAYER_PATH="/usr/share/vulkan/explicit_layer.d"
+
+# GPU selection (multi-GPU systems)
+export VK_DEVICE_SELECT="0"                 # Select GPU by index
+```
+
+## Common Troubleshooting
+
+### Build Issues
+- **CMake can't find Vulkan**: Set `VULKAN_SDK` environment variable
+- **vcpkg packages missing**: Run `./vcpkg/bootstrap-vcpkg.sh`
+- **Compiler warnings as errors**: Add `-DENABLE_WARN_AS_ERRORS=OFF`
+
+### Runtime Issues
+- **No Vulkan devices**: Install graphics drivers and `vulkan-tools`
+- **Validation errors**: Disable with `export VK_INSTANCE_LAYERS=""`
+- **Low performance**: Check `nvidia-smi` or equivalent GPU monitoring
+
+### Debug Information
+```bash
+# Generate system report for bug reports
+./scripts/collect_system_info.py > system_info.txt
+
+# Enable maximum logging
+export LOG_LEVEL="trace"
+export VK_LOADER_DEBUG="all"
+```
+
 ---
 
-**Next Steps**: See `docs/ARCHITECTURE.md` for detailed engine information and `docs/OPERATOR_GUIDE.md` for advanced usage.
+**Next Steps**: See `docs/architecture.md` for detailed engine information.

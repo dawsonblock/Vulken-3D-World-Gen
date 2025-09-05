@@ -1,0 +1,12 @@
+#!/bin/bash
+# VoxelVK Debian pre-removal script
+
+set -e
+
+# Clean up logs if they exist and are empty
+if [ -d "/var/log/voxelvk" ]; then
+    find /var/log/voxelvk -type f -empty -delete 2>/dev/null || true
+    rmdir /var/log/voxelvk 2>/dev/null || true
+fi
+
+exit 0

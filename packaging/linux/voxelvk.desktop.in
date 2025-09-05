@@ -1,0 +1,17 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=VoxelVK
+Comment=High-performance voxel rendering engine
+Exec=@CMAKE_INSTALL_PREFIX@/bin/main_imgui_vulkan
+Icon=voxelvk
+Terminal=false
+StartupNotify=true
+Categories=Graphics;3DGraphics;Development;
+Keywords=voxel;rendering;vulkan;3d;graphics;
+MimeType=application/x-voxel;
+
+[Desktop Action Headless]
+Name=Run Headless Test
+Exec=@CMAKE_INSTALL_PREFIX@/bin/smoke_headless
+Icon=voxelvk

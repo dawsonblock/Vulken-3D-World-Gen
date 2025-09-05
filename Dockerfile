@@ -45,14 +45,19 @@ WORKDIR /build
 # Copy source code
 COPY --chown=builder:builder . /build/
 
-# Configure and build
+# Configure and build using CI preset
 ARG BUILD_TYPE
-RUN cmake --preset linux-default \
+RUN cmake --preset ci-release \
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-    -DHEADLESS_ONLY=ON \
-    -DBUILD_SHARED_LIBS=OFF
+    -DVOXELVK_HEADLESS_ONLY=ON \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DENABLE_METRICS=ON \
+    -DENABLE_CRASH_HANDLER=ON
 
-RUN cmake --build build --config ${BUILD_TYPE} -j$(nproc)
+RUN cmake --build build_ci --config ${BUILD_TYPE} -j$(nproc)
+
+# Run tests to ensure build quality
+RUN cd build_ci && ctest --output-on-failure -j$(nproc)
 
 # Runtime stage
 FROM ubuntu:22.04 AS runtime
@@ -78,13 +83,17 @@ USER vulken3d
 WORKDIR /app
 
 # Copy built binaries and assets
-COPY --from=builder --chown=vulken3d:vulken3d /build/build/apps/ /app/bin/
+COPY --from=builder --chown=vulken3d:vulken3d /build/build_ci/apps/ /app/bin/
 COPY --from=builder --chown=vulken3d:vulken3d /build/config/ /app/config/
-COPY --from=builder --chown=vulken3d:vulken3d /build/assets/ /app/assets/
-COPY --from=builder --chown=vulken3d:vulken3d /build/scripts/ /app/scripts/
+COPY --from=builder --chown=vulken3d:vulken3d /build/assets/samples/ /app/assets/
+COPY --from=builder --chown=vulken3d:vulken3d /build/scripts/fetch_assets.py /app/scripts/
 
 # Copy shader cache if it exists
-COPY --from=builder --chown=vulken3d:vulken3d /build/build/shaders_cache/ /app/shaders_cache/ 2>/dev/null || true
+COPY --from=builder --chown=vulken3d:vulken3d /build/build_ci/spv/ /app/shaders/ 2>/dev/null || true
+
+# Copy license and documentation
+COPY --from=builder --chown=vulken3d:vulken3d /build/LICENSE /app/
+COPY --from=builder --chown=vulken3d:vulken3d /build/README.md /app/
 
 # Set up PATH
 ENV PATH="/app/bin:$PATH"

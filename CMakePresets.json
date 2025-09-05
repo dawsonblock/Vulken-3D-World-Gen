@@ -86,8 +86,33 @@
         "VCPKG_HOST_TRIPLET": "x64-linux",
         "VCPKG_VERBOSE": true
       }
-    }
-    ,
+    },
+    {
+      "name": "ci-release",
+      "displayName": "CI Release Build",
+      "description": "Deterministic release build for CI with warnings as errors",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_ci",
+      "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": true,
+        "ENABLE_IMGUI_OVERLAY": false,
+        "ENABLE_VALIDATION_LAYERS": false,
+        "ENABLE_VK_DEBUG_MARKERS": false,
+        "ENABLE_TESTS": true,
+        "ENABLE_METRICS": true,
+        "ENABLE_CRASH_HANDLER": true,
+        "ENABLE_WARN_AS_ERRORS": true,
+        "VOXELVK_DEMO_WERROR": false,
+        "VOXELVK_ENABLE_CUDA": false,
+        "VOXELVK_ENABLE_TENSORRT": false,
+        "VOXELVK_ENABLE_REDIS": false,
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
+      }
+    },
     {
       "name": "werror-demos-rl",
       "displayName": "Default + Werror for demos+RL",
@@ -150,24 +175,54 @@
         "VCPKG_HOST_TRIPLET": "x64-windows",
         "VCPKG_VERBOSE": true
       }
+    },
+    {
+      "name": "ci-windows",
+      "displayName": "CI Windows Release",
+      "description": "Deterministic Windows release build for CI",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build_ci_win",
+      "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": true,
+        "ENABLE_IMGUI_OVERLAY": false,
+        "ENABLE_VALIDATION_LAYERS": false,
+        "ENABLE_VK_DEBUG_MARKERS": false,
+        "ENABLE_TESTS": true,
+        "ENABLE_METRICS": true,
+        "ENABLE_CRASH_HANDLER": true,
+        "ENABLE_WARN_AS_ERRORS": true,
+        "VOXELVK_DEMO_WERROR": false,
+        "VOXELVK_ENABLE_CUDA": false,
+        "VOXELVK_ENABLE_TENSORRT": false,
+        "VOXELVK_ENABLE_REDIS": false,
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "VCPKG_HOST_TRIPLET": "x64-windows",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
+      }
     }
   ],
   "buildPresets": [
     { "name": "default", "configurePreset": "default" },
-  { "name": "werror-demos-rl", "configurePreset": "werror-demos-rl" },
+    { "name": "werror-demos-rl", "configurePreset": "werror-demos-rl" },
     { "name": "debug",   "configurePreset": "debug"   },
     { "name": "release", "configurePreset": "release" },
     { "name": "headless", "configurePreset": "headless" },
+    { "name": "ci-release", "configurePreset": "ci-release" },
     { "name": "windows-default", "configurePreset": "windows-default" },
-    { "name": "windows-debug", "configurePreset": "windows-debug" }
+    { "name": "windows-debug", "configurePreset": "windows-debug" },
+    { "name": "ci-windows", "configurePreset": "ci-windows" }
   ],
   "testPresets": [
     { "name": "default", "configurePreset": "default", "output": {"outputOnFailure": true} },
-  { "name": "werror-demos-rl", "configurePreset": "werror-demos-rl", "output": {"outputOnFailure": true} },
+    { "name": "werror-demos-rl", "configurePreset": "werror-demos-rl", "output": {"outputOnFailure": true} },
     { "name": "debug",   "configurePreset": "debug",   "output": {"outputOnFailure": true} },
     { "name": "release", "configurePreset": "release", "output": {"outputOnFailure": true} },
     { "name": "headless", "configurePreset": "headless", "output": {"outputOnFailure": true} },
+    { "name": "ci-release", "configurePreset": "ci-release", "output": {"outputOnFailure": true} },
     { "name": "windows-default", "configurePreset": "windows-default", "output": {"outputOnFailure": true} },
-    { "name": "windows-debug", "configurePreset": "windows-debug", "output": {"outputOnFailure": true} }
+    { "name": "windows-debug", "configurePreset": "windows-debug", "output": {"outputOnFailure": true} },
+    { "name": "ci-windows", "configurePreset": "ci-windows", "output": {"outputOnFailure": true} }
   ]
 }

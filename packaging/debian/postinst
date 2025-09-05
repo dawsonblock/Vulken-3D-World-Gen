@@ -1,0 +1,38 @@
+#!/bin/bash
+# VoxelVK Debian post-installation script
+
+set -e
+
+# Update desktop database
+if command -v update-desktop-database > /dev/null 2>&1; then
+    update-desktop-database -q /usr/share/applications
+fi
+
+# Update icon cache
+if command -v gtk-update-icon-cache > /dev/null 2>&1; then
+    gtk-update-icon-cache -q /usr/share/pixmaps
+fi
+
+# Create logs directory
+mkdir -p /var/log/voxelvk
+chmod 755 /var/log/voxelvk
+
+# Check Vulkan drivers
+echo "VoxelVK installed successfully!"
+echo ""
+
+if command -v vulkaninfo > /dev/null 2>&1; then
+    echo "Vulkan runtime detected:"
+    vulkaninfo --summary 2>/dev/null | head -5 || echo "  Unable to query Vulkan info"
+else
+    echo "Warning: Vulkan runtime not found."
+    echo "Install vulkan-tools and appropriate drivers:"
+    echo "  sudo apt install vulkan-tools mesa-vulkan-drivers"
+fi
+
+echo ""
+echo "To run VoxelVK GUI demo: voxelvk-gui"
+echo "To run headless test: voxelvk-headless"
+echo ""
+
+exit 0

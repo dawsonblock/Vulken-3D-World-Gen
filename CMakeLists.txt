@@ -67,6 +67,9 @@ option(ENABLE_VALIDATION_LAYERS "Enable Vulkan validation layers" ON)
 option(ENABLE_VK_DEBUG_MARKERS  "Enable VK_EXT_debug_utils markers" ON)
 option(ENABLE_IMGUI_OVERLAY     "Enable ImGui debug HUD overlay" ON)
 option(ENABLE_TESTS             "Enable CTest targets" ON)
+option(ENABLE_METRICS           "Enable Prometheus metrics exporter" ON)
+option(ENABLE_CRASH_HANDLER     "Enable crash handling and stack traces" ON)
+option(ENABLE_WARN_AS_ERRORS    "Treat warnings as errors in CI builds" OFF)
 option(VOXELVK_ENABLE_CUDA      "Enable CUDA acceleration" OFF)
 option(VOXELVK_ENABLE_TENSORRT  "Enable TensorRT (requires CUDA)" OFF)
 option(VOXELVK_HEADLESS_ONLY    "Build minimal headless utilities without Vulkan/GLFW" OFF)
@@ -77,7 +80,18 @@ option(VOXELVK_ENABLE_REDIS     "Build Redis-backed asset loader and link demos 
 # Propagate debug markers flag to all targets when enabled
 add_compile_definitions(
   $<$<BOOL:${ENABLE_VK_DEBUG_MARKERS}>:ENABLE_VK_DEBUG_MARKERS=1>
+  $<$<BOOL:${ENABLE_METRICS}>:ENABLE_METRICS=1>
+  $<$<BOOL:${ENABLE_CRASH_HANDLER}>:ENABLE_CRASH_HANDLER=1>
 )
+
+# Warnings as errors for CI builds
+if(ENABLE_WARN_AS_ERRORS)
+  if(MSVC)
+    add_compile_options(/W4 /WX)
+  else()
+    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+  endif()
+endif()
 
 # Include shader compilation system
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -105,6 +119,15 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 
 find_package(Threads REQUIRED)
 find_package(nlohmann_json QUIET)
+
+# Find spdlog for logging
+find_package(spdlog QUIET)
+if(spdlog_FOUND)
+  set(SPDLOG_LIB spdlog::spdlog)
+  message(STATUS "Found spdlog for structured logging")
+else()
+  message(WARNING "spdlog not found - logging features will be disabled")
+endif()
 if(nlohmann_json_FOUND)
   set(JSON_LIB nlohmann_json::nlohmann_json)
   message(STATUS "Found nlohmann_json for JSON support")
@@ -222,6 +245,9 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   
   if(GLM_LIB)
     target_link_libraries(main_imgui_vulkan PRIVATE ${GLM_LIB})
+  endif()
+  if(SPDLOG_LIB)
+    target_link_libraries(main_imgui_vulkan PRIVATE ${SPDLOG_LIB})
   endif()
   
   target_compile_definitions(main_imgui_vulkan PRIVATE
@@ -449,7 +475,10 @@ if(NOT VOXELVK_HEADLESS_ONLY)
     src/core/build_info_print.cpp
     src/core/runtime_debug.cpp
     src/core/gpu_compat.cpp
-    src/core/vma_impl.cpp)
+    src/core/vma_impl.cpp
+    src/core/structured_logger.cpp
+    src/core/metrics.cpp
+    src/core/crash_handler.cpp)
 
   # --- CSM+PCSS integration sources ---
   list(APPEND VOXELVK_ELITE_SOURCES src/render/csm_pass.cpp)
@@ -478,6 +507,9 @@ if(NOT VOXELVK_HEADLESS_ONLY)
     endif()
     if(GLM_LIB)
       target_link_libraries(VoxelVK_Elite_ALL PRIVATE ${GLM_LIB})
+    endif()
+    if(SPDLOG_LIB)
+      target_link_libraries(VoxelVK_Elite_ALL PRIVATE ${SPDLOG_LIB})
     endif()
     target_compile_definitions(VoxelVK_Elite_ALL PRIVATE
       $<$<BOOL:${ENABLE_VALIDATION_LAYERS}>:ENABLE_VALIDATION_LAYERS=1>
@@ -605,6 +637,9 @@ if(ENABLE_TESTS)
   include(CTest)
   enable_testing()
   
+  # Add tests subdirectory first for new GoogleTest-based tests
+  add_subdirectory(tests)
+  
   # Core functionality tests
   add_executable(test_shaders_compile tests/test_shaders_compile.cpp)
   add_dependencies(test_shaders_compile ShaderSPV)
@@ -673,8 +708,6 @@ if(ENABLE_TESTS)
     set_tests_properties(test_integration PROPERTIES TIMEOUT 60)
   endif()
 
-  # Also include tests/ subdirectory once
-  add_subdirectory(tests)
 endif()
 
 message(STATUS "=== Build Summary ===")
@@ -688,6 +721,9 @@ message(STATUS "=====================")
 
 # Tools
 add_subdirectory(tools)
+
+# Packaging
+include(packaging/CPackConfig.cmake)
 
 # Redis dependencies (optional)
 if(VOXELVK_ENABLE_REDIS)

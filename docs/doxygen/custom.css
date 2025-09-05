@@ -1,0 +1,229 @@
+/* VoxelVK Documentation Custom Styles */
+
+:root {
+  --voxel-primary: #667eea;
+  --voxel-secondary: #764ba2;
+  --voxel-accent: #4299e1;
+  --voxel-dark: #1a202c;
+  --voxel-light: #f7fafc;
+  --voxel-gray: #718096;
+  --voxel-border: #e2e8f0;
+}
+
+/* Typography */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  color: #2d3748;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--voxel-dark);
+  font-weight: 600;
+}
+
+/* Code styling */
+code, .fragment {
+  font-family: 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.fragment {
+  background: var(--voxel-dark) !important;
+  color: #e2e8f0 !important;
+  border: none !important;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  overflow-x: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Syntax highlighting */
+.fragment .keyword { color: #9f7aea; }
+.fragment .keywordtype { color: #68d391; }
+.fragment .keywordflow { color: #f687b3; }
+.fragment .comment { color: #a0aec0; font-style: italic; }
+.fragment .preprocessor { color: #fbb6ce; }
+.fragment .stringliteral { color: #90cdf4; }
+.fragment .charliteral { color: #90cdf4; }
+
+/* Navigation */
+.tablist {
+  background: linear-gradient(135deg, var(--voxel-primary) 0%, var(--voxel-secondary) 100%);
+  border: none;
+  border-radius: 8px 8px 0 0;
+}
+
+.tablist li {
+  background: transparent;
+}
+
+.tablist li.current a {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 6px;
+  margin: 4px;
+}
+
+.tablist a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  padding: 12px 16px;
+  font-weight: 500;
+}
+
+.tablist a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin: 4px;
+}
+
+/* Content area */
+.contents {
+  background: white;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  margin-bottom: 20px;
+}
+
+/* Tables */
+table.doxtable {
+  border-collapse: collapse;
+  margin: 20px 0;
+  width: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+table.doxtable th {
+  background: var(--voxel-primary);
+  color: white;
+  padding: 12px 16px;
+  font-weight: 600;
+  text-align: left;
+}
+
+table.doxtable td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--voxel-border);
+}
+
+table.doxtable tr:nth-child(even) {
+  background: var(--voxel-light);
+}
+
+/* Class/function documentation */
+.memitem {
+  background: white;
+  border: 1px solid var(--voxel-border);
+  border-radius: 8px;
+  margin: 20px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.memproto {
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  border-bottom: 1px solid var(--voxel-border);
+  border-radius: 8px 8px 0 0;
+  padding: 16px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
+}
+
+.memdoc {
+  padding: 20px;
+}
+
+.memname {
+  color: var(--voxel-primary);
+  font-weight: 600;
+}
+
+/* Parameters */
+.paramname {
+  color: var(--voxel-secondary);
+  font-style: italic;
+}
+
+/* Return values */
+.retval {
+  font-weight: 600;
+  color: var(--voxel-accent);
+}
+
+/* Inheritance graphs */
+.inheritancegraph {
+  text-align: center;
+  margin: 20px 0;
+}
+
+/* Search */
+#MSearchBox {
+  background: white;
+  border: 1px solid var(--voxel-border);
+  border-radius: 20px;
+  padding: 8px 16px;
+}
+
+#MSearchField {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--voxel-dark);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .contents {
+    padding: 20px 15px;
+    margin: 10px;
+    border-radius: 6px;
+  }
+  
+  .tablist {
+    border-radius: 6px 6px 0 0;
+  }
+  
+  .tablist a {
+    padding: 10px 12px;
+    font-size: 0.9em;
+  }
+  
+  .memproto {
+    font-size: 0.8em;
+    padding: 12px;
+  }
+  
+  table.doxtable {
+    font-size: 0.9em;
+  }
+  
+  table.doxtable th,
+  table.doxtable td {
+    padding: 8px 12px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .header,
+  .tablist,
+  .footer {
+    display: none;
+  }
+  
+  .contents {
+    box-shadow: none;
+    border: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .fragment {
+    background: #f5f5f5 !important;
+    color: black !important;
+    border: 1px solid #ddd !important;
+  }
+}

@@ -82,6 +82,23 @@ redis_validation_report.json
 *.env
 *.env.*
 
+# Generated runtime/config
+*.log
+*.cache
+imgui.ini
+.cache/
+build/
+out/
+dist/
+.vscode/
+.vs/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+_shadercache/
+assets_cache/
+reports/*.json
+
 # Duplicated vcpkg configuration files (use vcpkg.json + CMakePresets.json)
 .vcpkg-configuration.json
 vcpkg-configuration.json

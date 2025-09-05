@@ -1,4 +1,4 @@
-name: Shader Validation
+name: Shader Validation & Regression Testing
 
 on:
   push:
@@ -18,13 +18,22 @@ on:
       - 'src/**/*.h'
       - 'include/**'
 
+env:
+  VULKAN_SDK_VERSION: "1.3.268"
+
 jobs:
-  validate-shaders:
+  validate-and-test-shaders:
     runs-on: ubuntu-22.04
+    
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -128,6 +137,89 @@ ${summary.validation_status === 'PASS' ? '✅ All shader layouts validated succe
               repo: context.repo.repo,
               body: comment
             });
+
+  shader-regression-test:
+    runs-on: ubuntu-22.04
+    needs: validate-and-test-shaders
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          vulkan-tools mesa-vulkan-drivers \
+          libvulkan-dev build-essential cmake ninja-build
+          
+    - name: Setup vcpkg
+      run: |
+        ./vcpkg/bootstrap-vcpkg.sh
+        
+    - name: Build shader regression test
+      run: |
+        cmake --preset ci-release
+        cmake --build build_ci --target voxelvk_tests -j
+        
+    - name: Run shader regression tests
+      run: |
+        cd build_ci
+        mkdir -p reports/shader_diffs
+        ctest -R shader_regression --output-on-failure
+        
+    - name: Upload shader diff artifacts
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: shader-regression-diffs
+        path: build_ci/reports/shader_diffs/
+        
+    - name: Comment PR with regression results
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          let comment = '## 🎨 Shader Regression Test Results\n\n';
+          
+          try {
+            // Check if any diffs were generated
+            const diffDir = 'build_ci/reports/shader_diffs';
+            if (fs.existsSync(diffDir)) {
+              const diffFiles = fs.readdirSync(diffDir);
+              if (diffFiles.length > 0) {
+                comment += '⚠️ **Shader regressions detected!**\n\n';
+                comment += `Found ${diffFiles.length} shader(s) with visual differences:\n`;
+                for (const file of diffFiles.slice(0, 10)) {
+                  comment += `- ${file}\n`;
+                }
+                if (diffFiles.length > 10) {
+                  comment += `- ... and ${diffFiles.length - 10} more\n`;
+                }
+                comment += '\n📎 Check the uploaded artifacts for detailed diff images.\n';
+              } else {
+                comment += '✅ **No shader regressions detected!**\n\n';
+                comment += 'All shader outputs match the golden images.\n';
+              }
+            } else {
+              comment += '✅ **No shader regressions detected!**\n\n';
+              comment += 'All shader outputs match the golden images.\n';
+            }
+          } catch (error) {
+            comment += '❓ **Unable to determine regression status**\n\n';
+            comment += `Error: ${error.message}\n`;
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
           } catch (error) {
             console.log('Could not read shader validation report:', error.message);
           }

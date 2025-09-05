@@ -1,0 +1,401 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v0.6.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  packages: write
+  attestations: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build matrix for all platforms
+  build-release-artifacts:
+    name: Build Release (${{ matrix.config.name }})
+    runs-on: ${{ matrix.config.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Linux x64"
+            os: ubuntu-latest
+            preset: "ci-release"
+            artifact_name: "linux-x64"
+            package_formats: "DEB;RPM;TGZ"
+          - name: "Windows x64"
+            os: windows-latest
+            preset: "ci-windows"
+            artifact_name: "windows-x64"
+            package_formats: "NSIS;ZIP"
+          # - name: "macOS x64"
+          #   os: macos-latest
+          #   preset: "ci-macos"
+          #   artifact_name: "macos-x64"
+          #   package_formats: "DragNDrop;TGZ"
+            
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          
+      - name: Get version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Setup build environment (Linux)
+        if: matrix.config.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake ninja-build ccache \
+            libvulkan-dev vulkan-validationlayers-dev \
+            libglfw3-dev libx11-dev libxrandr-dev \
+            glslang-tools shaderc \
+            libspdlog-dev \
+            python3-pip \
+            rpm
+          pip3 install pyyaml
+          
+      - name: Setup build environment (Windows)
+        if: matrix.config.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+        
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            vcpkg_installed/
+            build_*/vcpkg_installed/
+          key: vcpkg-${{ matrix.config.os }}-${{ hashFiles('vcpkg.json', '.vcpkg-configuration.json') }}
+          
+      - name: Setup vcpkg
+        shell: bash
+        run: |
+          if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then
+            ./vcpkg/bootstrap-vcpkg.bat
+          else
+            ./vcpkg/bootstrap-vcpkg.sh
+          fi
+          
+      - name: Configure CMake
+        run: cmake --preset ${{ matrix.config.preset }}
+        
+      - name: Build
+        shell: bash
+        run: |
+          if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then
+            cmake --build build_* --config RelWithDebInfo -j
+          else
+            cmake --build build_* -j
+          fi
+          
+      - name: Run tests
+        shell: bash
+        run: |
+          cd build_*
+          if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then
+            ctest --build-config RelWithDebInfo --output-on-failure -j
+          else
+            ctest --output-on-failure -j
+          fi
+          
+      - name: Package artifacts
+        shell: bash
+        run: |
+          cd build_*
+          if [[ "${{ matrix.config.os }}" == "windows-latest" ]]; then
+            cpack -G "${{ matrix.config.package_formats }}" -C RelWithDebInfo
+          else
+            cpack -G "${{ matrix.config.package_formats }}"
+          fi
+          
+      - name: Generate checksums
+        shell: bash
+        run: |
+          cd build_*
+          for file in VoxelVK-*.*; do
+            if [[ -f "$file" ]]; then
+              if command -v sha256sum >/dev/null; then
+                sha256sum "$file" > "$file.sha256"
+              else
+                shasum -a 256 "$file" > "$file.sha256"
+              fi
+            fi
+          done
+          
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.config.artifact_name }}
+          path: |
+            build_*/VoxelVK-*.*
+          retention-days: 30
+
+  # Build and push Docker images
+  build-docker-release:
+    name: Build Docker Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Get version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Generate attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  # Generate SBOM and security artifacts
+  generate-sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Generate SBOM
+        run: |
+          python3 scripts/generate_sbom.py --output voxelvk-sbom.spdx.json
+          
+      - name: License compliance check
+        run: |
+          python3 scripts/scan_licenses.py --output license-report.txt
+          
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-and-compliance
+          path: |
+            voxelvk-sbom.spdx.json
+            license-report.txt
+
+  # Create GitHub release
+  create-github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: 
+      - build-release-artifacts
+      - build-docker-release
+      - generate-sbom
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Get version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "prerelease=${{ github.event.inputs.prerelease }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            if [[ "${GITHUB_REF#refs/tags/}" =~ -[a-zA-Z] ]]; then
+              echo "prerelease=true" >> $GITHUB_OUTPUT
+            else
+              echo "prerelease=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+          
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          
+      - name: Organize release assets
+        run: |
+          mkdir -p release-assets
+          
+          # Copy all package files
+          find artifacts/ -name "VoxelVK-*.*" -type f -exec cp {} release-assets/ \;
+          
+          # Copy SBOM and compliance files
+          cp artifacts/sbom-and-compliance/* release-assets/ || true
+          
+          # List what we have
+          echo "Release assets:"
+          ls -la release-assets/
+          
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [[ -f "CHANGELOG.md" ]]; then
+            # Extract changelog for this version
+            awk '/^## \[?'${GITHUB_REF#refs/tags/v}'\]?/{flag=1; next} /^## /{flag=0} flag' CHANGELOG.md > current_changelog.md
+            if [[ -s current_changelog.md ]]; then
+              echo "Found changelog entry"
+              cat current_changelog.md
+            else
+              echo "No changelog entry found, using default"
+              echo "Release ${{ steps.version.outputs.version }}" > current_changelog.md
+            fi
+          else
+            echo "No CHANGELOG.md found, using default"
+            echo "Release ${{ steps.version.outputs.version }}" > current_changelog.md
+          fi
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: VoxelVK ${{ steps.version.outputs.version }}
+          body_path: current_changelog.md
+          draft: false
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          files: |
+            release-assets/*
+          generate_release_notes: true
+          
+      - name: Update release description
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          append_body: true
+          body: |
+            
+            ## 📦 Installation
+            
+            ### Linux
+            ```bash
+            # Ubuntu/Debian
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/VoxelVK-${{ steps.version.outputs.version }}-Linux-x86_64.deb
+            sudo dpkg -i VoxelVK-*.deb
+            
+            # RHEL/CentOS/Fedora  
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/VoxelVK-${{ steps.version.outputs.version }}-Linux-x86_64.rpm
+            sudo rpm -i VoxelVK-*.rpm
+            
+            # Tarball
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/VoxelVK-${{ steps.version.outputs.version }}-Linux-x86_64.tar.gz
+            tar -xzf VoxelVK-*.tar.gz
+            ```
+            
+            ### Windows
+            ```powershell
+            # Download and run installer
+            Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/VoxelVK-${{ steps.version.outputs.version }}-win64.exe" -OutFile "VoxelVK-installer.exe"
+            .\VoxelVK-installer.exe
+            ```
+            
+            ### Docker
+            ```bash
+            docker pull ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+            docker run --rm ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }} smoke_headless
+            ```
+            
+            ## 🔐 Security
+            
+            - All packages include SHA256 checksums for verification
+            - SBOM (Software Bill of Materials) included for supply chain security
+            - Docker images are signed and include attestations
+            - License compliance report included
+            
+            ## 📋 System Requirements
+            
+            - **OS**: Windows 10+, Ubuntu 20.04+, or equivalent
+            - **GPU**: Vulkan 1.1+ compatible graphics card
+            - **RAM**: 4GB minimum, 8GB recommended
+            - **Storage**: 500MB for installation
+            
+            ## 🐛 Known Issues
+            
+            See the [issue tracker](https://github.com/${{ github.repository }}/issues) for known issues and workarounds.
+
+  # Notify on release completion
+  notify-release:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: create-github-release
+    if: always()
+    
+    steps:
+      - name: Release notification
+        run: |
+          echo "🚀 VoxelVK release ${{ needs.create-github-release.outputs.version || github.ref_name }} completed!"
+          echo "Status: ${{ needs.create-github-release.result }}"
+          
+          if [[ "${{ needs.create-github-release.result }}" == "success" ]]; then
+            echo "✅ Release created successfully"
+          else
+            echo "❌ Release creation failed"
+            exit 1
+          fi

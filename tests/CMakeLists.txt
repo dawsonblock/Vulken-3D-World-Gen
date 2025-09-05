@@ -15,6 +15,16 @@ add_executable(voxelvk_tests
   test_ray_aabb.cpp
   test_cpp_physics.cpp
   test_dda.cpp
+  # New unit tests
+  unit/test_file_io.cpp
+  unit/test_config_loader.cpp
+  unit/test_voxel_chunk_ops.cpp
+  unit/test_noise_generators.cpp
+  # Integration tests
+  integration/test_vulkan_headless.cpp
+  integration/test_voxel_pipeline.cpp
+  # Shader regression tests
+  shaders/test_shader_regression.cpp
 )
 
 target_compile_features(voxelvk_tests PRIVATE cxx_std_20)
@@ -35,6 +45,13 @@ target_sources(voxelvk_tests PRIVATE
 )
 
 target_link_libraries(voxelvk_tests PRIVATE GTest::gtest_main)
+
+# Link Vulkan for integration tests
+find_package(Vulkan QUIET)
+if(Vulkan_FOUND)
+  target_link_libraries(voxelvk_tests PRIVATE Vulkan::Vulkan)
+  target_compile_definitions(voxelvk_tests PRIVATE VULKAN_AVAILABLE=1)
+endif()
 if (TARGET yaml-cpp::yaml-cpp)
   target_compile_definitions(voxelvk_tests PRIVATE HAS_YAML_CPP=1)
   target_link_libraries(voxelvk_tests PRIVATE yaml-cpp::yaml-cpp)
