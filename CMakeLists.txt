@@ -43,8 +43,10 @@ endif()
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   if(NOT MSVC)
-    add_compile_options(-fsanitize=address,undefined)
-    add_link_options(-fsanitize=address,undefined)
+    # Do NOT apply sanitizer flags globally.
+    # Instead, add sanitizer flags per-target after target definitions, e.g.:
+    # target_compile_options(<target> PRIVATE -fsanitize=address,undefined)
+    # target_link_options(<target> PRIVATE -fsanitize=address,undefined)
   endif()
 endif()
 
