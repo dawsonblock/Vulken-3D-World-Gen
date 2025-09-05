@@ -879,6 +879,10 @@ int main(int argc, char** argv) {
 
     FlyCamera cam; // track camera state
     bool autoScreenshotPending = false;
+    
+    // Performance history for graphs
+    std::vector<float> frameTimeHistory_(120, 16.67f);
+    std::vector<float> fpsHistory_(120, 60.0f);
     if (hasArg(argc, argv, "--autoscreenshot") || std::getenv("VOXELVK_AUTOSCREENSHOT")) {
         autoScreenshotPending = true;
     }
