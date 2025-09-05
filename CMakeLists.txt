@@ -62,6 +62,7 @@ if(VOXELVK_ENABLE_AI)
     src/ai/ai_palette_config_io.cpp
     src/ai/ai_biome_palette.hpp
     src/ai/ai_imgui_palette_panel.cpp
+    src/ai/ai_pipeline_gui.cpp
   )
 endif()
 
