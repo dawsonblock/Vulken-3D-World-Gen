@@ -130,7 +130,7 @@ for file in yaml_files:
 
     - name: Upload lint report
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: lint-report
         path: reports/lint/
