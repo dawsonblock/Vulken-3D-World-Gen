@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "engine/core/VoxelTypes.h"
+#include "../core/VoxelTypes.h"
 
 namespace vulken::render {
 

@@ -1,6 +1,6 @@
 #pragma once
 #include <optional>
-#include "engine/core/VoxelTypes.h"
+#include "../core/VoxelTypes.h"
 
 namespace vulken::meshing {
 
