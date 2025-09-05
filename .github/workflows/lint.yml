@@ -57,7 +57,7 @@ jobs:
 
     - name: Configure for clang-tidy
       run: |
-        cmake --preset linux-default -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_CLANG_TIDY=OFF
+        cmake --preset default -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_CLANG_TIDY=OFF
 
     - name: Run clang-tidy (informational)
       run: |
