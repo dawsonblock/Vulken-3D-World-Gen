@@ -21,6 +21,7 @@
 #include "../src/core/fullscreen_toggle.hpp"
 #include "../src/core/performance_monitor.hpp"
 #include "../src/ai/ai_palette_config_io.hpp"
+#include "../src/ai/ai_imgui_palette_panel.hpp"
 #include "../src/ai/rag_runtime_bridge.hpp"
 #include "../src/core/logger.hpp"
 #include "../src/env/weather/weather_system.hpp"
@@ -830,23 +831,34 @@ int main(int argc, char** argv) {
     init_info.DescriptorPool = g_ImGuiDescriptorPool;
     init_info.MinImageCount = (uint32_t)g_SwapchainImages.size();
     init_info.ImageCount = (uint32_t)g_SwapchainImages.size();
-    init_info.UseDynamicRendering = false;
+    // Note: UseDynamicRendering not available in ImGui 1.86
     // Some backends provide PipelineCache in init info; ignore if not present in this version.
 #ifdef IMGUI_IMPL_VULKAN_HAS_PIPELINE_CACHE
     init_info.PipelineCache = g_PipelineCache;
 #endif
     
-    // Initialize ImGui Vulkan backend with our render pass
-    // In current backend headers, RenderPass is part of init_info
-    init_info.RenderPass = g_RenderPass;
-    ImGui_ImplVulkan_Init(&init_info);
+    // Initialize ImGui Vulkan backend - render pass passed separately in older versions
+    ImGui_ImplVulkan_Init(&init_info, g_RenderPass);
 
-    // Upload ImGui fonts
+    // Upload ImGui fonts - older API requires command buffer
     {
-    // Newer backend API creates fonts texture without explicit command buffer
-    ImGui_ImplVulkan_CreateFontsTexture();
-    vkQueueWaitIdle(g_GraphicsQueue);
-    ImGui_ImplVulkan_DestroyFontsTexture();
+        VkCommandBuffer cmd = g_CommandBuffers[0]; // Use first command buffer
+        VkCommandBufferBeginInfo begin_info{};
+        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(cmd, &begin_info);
+        
+        ImGui_ImplVulkan_CreateFontsTexture(cmd);
+        
+        vkEndCommandBuffer(cmd);
+        VkSubmitInfo submit_info{};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &cmd;
+        vkQueueSubmit(g_GraphicsQueue, 1, &submit_info, VK_NULL_HANDLE);
+        vkQueueWaitIdle(g_GraphicsQueue);
+        
+        ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
 
     g_logger.Info("ImGui Vulkan backend initialized");
@@ -878,6 +890,10 @@ int main(int argc, char** argv) {
 
     FlyCamera cam; // track camera state
     bool autoScreenshotPending = false;
+    
+    // Performance history for graphs
+    std::vector<float> frameTimeHistory_(120, 16.67f);
+    std::vector<float> fpsHistory_(120, 60.0f);
     if (hasArg(argc, argv, "--autoscreenshot") || std::getenv("VOXELVK_AUTOSCREENSHOT")) {
         autoScreenshotPending = true;
     }
@@ -899,6 +915,12 @@ int main(int argc, char** argv) {
             fps = frameCount / fpsAccum;
             frameCount = 0;
             fpsAccum = 0.0;
+            
+            // Update performance history for graphs
+            frameTimeHistory_.erase(frameTimeHistory_.begin());
+            frameTimeHistory_.push_back(static_cast<float>(1000.0 / fps));
+            fpsHistory_.erase(fpsHistory_.begin());
+            fpsHistory_.push_back(static_cast<float>(fps));
             
             std::string title = "VoxelVK Production App - " + std::to_string(static_cast<int>(fps)) + " FPS";
             glfwSetWindowTitle(window, title.c_str());
@@ -957,6 +979,9 @@ int main(int argc, char** argv) {
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            // Panel visibility state (declare early)
+            static bool showAiPanel = true, showOverview = true, showCamera = true, showSystems = true, showPerf = true;
+            
             // Dockspace & main menu (only when docking is available)
             #ifdef IMGUI_HAS_DOCKING
             ImGuiViewport* vp = ImGui::GetMainViewport();
@@ -964,11 +989,12 @@ int main(int argc, char** argv) {
             #endif
         if (ImGui::BeginMainMenuBar()) {
                 if (ImGui::BeginMenu("View")) {
-                    static bool showOverview = true, showCamera = true, showSystems = true, showPerf = true;
                     ImGui::MenuItem("Overview", nullptr, &showOverview);
                     ImGui::MenuItem("Camera", nullptr, &showCamera);
                     ImGui::MenuItem("Systems", nullptr, &showSystems);
                     ImGui::MenuItem("Performance", nullptr, &showPerf);
+                    ImGui::Separator();
+                    ImGui::MenuItem("AI Configuration", nullptr, &showAiPanel);
                     ImGui::Separator();
                     ImGui::Text("UI Scale"); ImGui::SameLine();
                     static float uiScaleRuntime = io.FontGlobalScale; if (ImGui::SliderFloat("##uiscale", &uiScaleRuntime, 0.75f, 1.75f, "%.2fx")) io.FontGlobalScale = uiScaleRuntime;
@@ -987,16 +1013,26 @@ int main(int argc, char** argv) {
 
             // Command Palette (Ctrl+K)
             static bool paletteOpen = false; static char paletteQuery[128] = "";
-            if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_K, false)) paletteOpen = true;
+            if (io.KeyCtrl && ImGui::IsKeyPressed(75, false)) paletteOpen = true; // 75 = 'K' key
             struct Cmd { const char* name; std::function<void()> fn; };
             std::vector<Cmd> cmds = {
                 {"Toggle Fullscreen", [&](){ g_isFullscreen = !g_isFullscreen; voxelvk::RequestFullscreen(g_isFullscreen); }},
+                {"Open AI Configuration", [&](){ showAiPanel = true; }},
+                {"Toggle RAG", [&](){ 
+                    bool newState = !last_rag_enabled; 
+                    voxelvk::ai::UpdateRagConfig(newState, last_rag_top_k); 
+                    last_rag_enabled = newState; 
+                }},
                 {"Save Screenshot", [&](){
 #if defined(__linux__)
                     SaveWindowScreenshot(window, "screenshot.png");
 #endif
                 }},
                 {"Export Perf JSON", [&](){ voxelvk::PerformanceMonitor::instance().exportPerformanceData("."); }},
+                {"Hot Reload Config", [&](){ 
+                    paletteRuntime.load_from_file(paletteRuntime.path);
+                    try { weatherSystem.loadFromYaml("config/weather.yaml"); } catch(...) {}
+                }},
                 #ifdef IMGUI_HAS_VIEWPORT
                 {"Toggle Viewports", [&](){ io.ConfigFlags ^= ImGuiConfigFlags_ViewportsEnable; }},
                 #endif
@@ -1019,11 +1055,38 @@ int main(int argc, char** argv) {
                 ImGui::End();
             }
 
-            // Panels
-            if (ImGui::Begin("Overview")) {
-                ImGui::Text("FPS: %.1f", fps);
-                ImGui::Text("Frame time: %.2f ms", 1000.0 * (fps > 0.0 ? 1.0 / fps : 0.0));
-                ImGui::Text("Window: %dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
+            // Modern Overview panel with enhanced metrics
+            if (showOverview && ImGui::Begin("Overview", &showOverview)) {
+                // Header with status indicators
+                ImGui::TextColored(ImVec4(0.3f, 0.9f, 0.3f, 1.0f), "ACTIVE");
+                ImGui::SameLine(); ImGui::Text("VoxelVK Production Engine");
+                ImGui::Separator();
+                
+                // Performance metrics in a table
+                if (ImGui::BeginTable("PerformanceTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                    ImGui::TableSetupColumn("Metric", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableHeadersRow();
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("FPS");
+                    ImGui::TableNextColumn(); 
+                    ImVec4 fpsColor = fps > 55.0f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                                     fps > 30.0f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
+                    ImGui::TextColored(fpsColor, "%.1f", fps);
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("Frame Time");
+                    ImGui::TableNextColumn(); ImGui::Text("%.2f ms", 1000.0 * (fps > 0.0 ? 1.0 / fps : 0.0));
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("Resolution");
+                    ImGui::TableNextColumn(); ImGui::Text("%dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
+                    
+                    ImGui::EndTable();
+                }
+                
+                ImGui::Spacing();
                 ImGui::TextDisabled("Controls: WASD/QE move, hold RMB to look, Shift to sprint, F11 toggle fullscreen");
 #if defined(__linux__)
                 static bool screenshot_ok = false; static double screenshot_msg_t = 0.0;
@@ -1056,21 +1119,119 @@ int main(int argc, char** argv) {
             }
             ImGui::End();
 
-            if (ImGui::Begin("Systems")) {
+            // Enhanced Systems panel
+            if (showSystems && ImGui::Begin("Systems", &showSystems)) {
+                ImGui::Text("Engine Systems Status");
+                ImGui::Separator();
+                
+                // Weather System Status
+                ImGui::BulletText("Weather System:");
+                ImGui::SameLine(); ImGui::TextColored(ImVec4(0.3f, 0.9f, 0.3f, 1.0f), "Running");
+                
+                // AI Systems Status
+                ImGui::BulletText("AI Generation:");
+                ImGui::SameLine(); 
+                bool aiActive = last_rag_enabled || paletteRuntime.cfg.ai_generation.enable_ai_structures;
+                ImGui::TextColored(aiActive ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                                 aiActive ? "Active" : "Inactive");
+                
+                ImGui::Spacing();
+                
+                // Quick RAG Controls
+                ImGui::Text("Quick Controls:");
                 static bool rag_enabled = last_rag_enabled; static int rag_top_k = last_rag_top_k;
-                if (ImGui::Checkbox("Enable RAG", &rag_enabled)) { voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); last_rag_enabled = rag_enabled; }
-                if (ImGui::SliderInt("RAG Top-K", &rag_top_k, 1, 16)) { voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); last_rag_top_k = rag_top_k; }
+                if (ImGui::Checkbox("Enable RAG", &rag_enabled)) { 
+                    voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); 
+                    last_rag_enabled = rag_enabled; 
+                }
+                if (ImGui::SliderInt("RAG Top-K", &rag_top_k, 1, 16)) { 
+                    voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); 
+                    last_rag_top_k = rag_top_k; 
+                }
+                
+                ImGui::Spacing();
+                if (ImGui::Button("Open AI Configuration", ImVec2(180, 30))) {
+                    showAiPanel = true;
+                }
             }
             ImGui::End();
+            
+            // AI Palette Panel (modernized)
+            if (showAiPanel) {
+                bool aiPanelOpen = showAiPanel;
+                if (ImGui::Begin("AI Configuration", &aiPanelOpen, ImGuiWindowFlags_MenuBar)) {
+                    voxelvk::ai::DrawAIPalettePanel(paletteRuntime);
+                }
+                ImGui::End();
+                showAiPanel = aiPanelOpen;
+            }
 
-            if (ImGui::Begin("Performance")) {
+            // Enhanced Performance panel with graphs
+            if (showPerf && ImGui::Begin("Performance", &showPerf)) {
                 auto& pm = voxelvk::PerformanceMonitor::instance();
                 auto& tracker = pm.getBudgetTracker();
-                ImGui::Text("Avg frame: %.2f ms", tracker.getAverageTime(voxelvk::PerformanceBudget::FRAME_TOTAL));
-                ImGui::Text("P95 frame: %.2f ms", tracker.getP95Time(voxelvk::PerformanceBudget::FRAME_TOTAL));
+                
+                // Performance Summary Table
+                if (ImGui::BeginTable("PerfSummary", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                    ImGui::TableSetupColumn("Metric", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+                    ImGui::TableSetupColumn("Current", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                    ImGui::TableSetupColumn("Target", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                    ImGui::TableHeadersRow();
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("Frame Time");
+                    ImGui::TableNextColumn(); 
+                    float frameTime = tracker.getAverageTime(voxelvk::PerformanceBudget::FRAME_TOTAL);
+                    ImVec4 frameColor = frameTime < 16.67f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                                       frameTime < 33.33f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
+                    ImGui::TextColored(frameColor, "%.2f ms", frameTime);
+                    ImGui::TableNextColumn(); ImGui::Text("16.67 ms");
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("P95 Frame");
+                    ImGui::TableNextColumn(); ImGui::Text("%.2f ms", tracker.getP95Time(voxelvk::PerformanceBudget::FRAME_TOTAL));
+                    ImGui::TableNextColumn(); ImGui::Text("20.0 ms");
+                    
+                    ImGui::EndTable();
+                }
+                
+                ImGui::Spacing();
+                
+                // Frame time history graph
+                if (!fpsHistory_.empty()) {
+                    ImGui::Text("FPS History (2 min)");
+                    ImGui::PlotLines("##FPSGraph", fpsHistory_.data(), (int)fpsHistory_.size(), 0, nullptr, 0.0f, 120.0f, ImVec2(0, 80));
+                    
+                    ImGui::Text("Frame Time History");
+                    ImGui::PlotLines("##FrameTimeGraph", frameTimeHistory_.data(), (int)frameTimeHistory_.size(), 0, nullptr, 0.0f, 50.0f, ImVec2(0, 80));
+                }
+                
+                // GPU Timings
                 const auto& timings = pm.getGPUTimer().getAllTimings();
-                if (!timings.empty()) { ImGui::Separator(); ImGui::Text("GPU timings:"); for (const auto& kv : timings) { ImGui::BulletText("%s: %.3f ms", kv.first.c_str(), kv.second); } }
-                else { ImGui::TextDisabled("GPU timings not available"); }
+                if (!timings.empty()) {
+                    ImGui::Separator();
+                    ImGui::Text("GPU Pipeline Timings:");
+                    for (const auto& kv : timings) {
+                        ImGui::BulletText("%s: %.3f ms", kv.first.c_str(), kv.second);
+                        
+                        // Add a small progress bar for visual representation
+                        float normalized = std::min(static_cast<float>(kv.second / 16.67f), 1.0f); // Normalize to 60 FPS budget
+                        ImVec4 barColor = normalized < 0.5f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                                         normalized < 0.8f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
+                        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, barColor);
+                        ImGui::ProgressBar(normalized, ImVec2(150, 0), "");
+                        ImGui::PopStyleColor();
+                    }
+                } else {
+                    ImGui::TextDisabled("GPU timings not available");
+                }
+                
+                // Performance actions
+                ImGui::Spacing();
+                ImGui::Separator();
+                if (ImGui::Button("Export Performance Data", ImVec2(180, 30))) {
+                    pm.exportPerformanceData(".");
+                }
             }
             ImGui::End();
             // Status bar

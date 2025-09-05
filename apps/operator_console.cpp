@@ -382,25 +382,90 @@ namespace OperatorConsole {
                 ImGui::Text("Real-time Performance Metrics");
                 ImGui::Separator();
                 
-                ImGui::Text("Frame Time: %.2f ms (%.1f FPS)", perf_.frameTime, perf_.fps);
-                ImGui::PlotLines("Frame Time", frameTimeHistory_.data(), HISTORY_SIZE, 0, nullptr, 0.0f, 50.0f, ImVec2(0, 80));
+                // Performance indicators with color coding
+                ImGui::BeginChild("PerfMetrics", ImVec2(0, 120), true);
+                
+                if (ImGui::BeginTable("PerfTable", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                    ImGui::TableSetupColumn("Metric", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                    ImGui::TableSetupColumn("Current", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+                    ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+                    ImGui::TableSetupColumn("Graph", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableHeadersRow();
+                    
+                    // FPS Row
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("FPS");
+                    ImGui::TableNextColumn(); ImGui::Text("%.1f", perf_.fps);
+                    ImGui::TableNextColumn();
+                    ImVec4 fpsColor = perf_.fps > 55.0f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                                     perf_.fps > 30.0f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
+                    ImGui::TextColored(fpsColor, perf_.fps > 55.0f ? "Good" : perf_.fps > 30.0f ? "OK" : "Poor");
+                    ImGui::TableNextColumn();
+                    ImGui::PlotLines("##FPS", fpsHistory_.data(), HISTORY_SIZE, 0, nullptr, 0.0f, 120.0f, ImVec2(0, 20));
+                    
+                    // CPU Row
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("CPU");
+                    ImGui::TableNextColumn(); ImGui::Text("%.1f%%", perf_.cpuUsage);
+                    ImGui::TableNextColumn();
+                    ImVec4 cpuColor = perf_.cpuUsage < 70.0f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                                     perf_.cpuUsage < 85.0f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
+                    ImGui::TextColored(cpuColor, perf_.cpuUsage < 70.0f ? "Good" : perf_.cpuUsage < 85.0f ? "High" : "Critical");
+                    ImGui::TableNextColumn();
+                    ImGui::PlotLines("##CPU", cpuHistory_.data(), HISTORY_SIZE, 0, nullptr, 0.0f, 100.0f, ImVec2(0, 20));
+                    
+                    // GPU Row
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("GPU");
+                    ImGui::TableNextColumn(); ImGui::Text("%.1f%%", perf_.gpuUsage);
+                    ImGui::TableNextColumn();
+                    ImVec4 gpuColor = perf_.gpuUsage < 80.0f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                                     perf_.gpuUsage < 95.0f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
+                    ImGui::TextColored(gpuColor, perf_.gpuUsage < 80.0f ? "Good" : perf_.gpuUsage < 95.0f ? "High" : "Critical");
+                    ImGui::TableNextColumn();
+                    ImGui::PlotLines("##GPU", gpuHistory_.data(), HISTORY_SIZE, 0, nullptr, 0.0f, 100.0f, ImVec2(0, 20));
+                    
+                    // Memory Row
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("Memory");
+                    ImGui::TableNextColumn(); ImGui::Text("%.0f MB", perf_.memoryUsage);
+                    ImGui::TableNextColumn();
+                    ImVec4 memColor = perf_.memoryUsage < 2048.0f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                                     perf_.memoryUsage < 4096.0f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
+                    ImGui::TextColored(memColor, perf_.memoryUsage < 2048.0f ? "Good" : perf_.memoryUsage < 4096.0f ? "High" : "Critical");
+                    ImGui::TableNextColumn();
+                    // Memory doesn't need a graph, show progress bar instead
+                    float memProgress = perf_.memoryUsage / 8192.0f; // Assume 8GB max
+                    ImGui::ProgressBar(memProgress, ImVec2(-1, 20), "");
+                    
+                    ImGui::EndTable();
+                }
+                
+                ImGui::EndChild();
                 
                 ImGui::Spacing();
-                ImGui::Text("CPU Usage: %.1f%%", perf_.cpuUsage);
-                ImGui::PlotLines("CPU", cpuHistory_.data(), HISTORY_SIZE, 0, nullptr, 0.0f, 100.0f, ImVec2(0, 80));
+                ImGui::Text("Render Statistics:");
+                ImGui::Indent();
+                ImGui::BulletText("Active Chunks: %d", perf_.activeChunks);
+                ImGui::BulletText("Visible Chunks: %d", perf_.visibleChunks);
+                ImGui::BulletText("Draw Calls: %d", perf_.drawCalls);
+                ImGui::BulletText("Vertices: %d", perf_.vertices);
+                ImGui::Unindent();
                 
                 ImGui::Spacing();
-                ImGui::Text("GPU Usage: %.1f%%", perf_.gpuUsage);
-                ImGui::PlotLines("GPU", gpuHistory_.data(), HISTORY_SIZE, 0, nullptr, 0.0f, 100.0f, ImVec2(0, 80));
-                
-                ImGui::Spacing();
-                ImGui::Text("Memory: %.1f MB", perf_.memoryUsage);
-                
-                ImGui::Spacing();
-                if (ImGui::Button("Save Performance Report")) {
+                ImGui::Separator();
+                if (ImGui::Button("Save Performance Report", ImVec2(180, 30))) {
                     auto now = std::chrono::system_clock::now().time_since_epoch().count();
                     std::string filename = "reports/perf_report_" + std::to_string(now) + ".json";
                     std::cout << "Saving performance report to: " << filename << std::endl;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Reset Counters", ImVec2(120, 30))) {
+                    // Reset performance counters
+                    std::fill(frameTimeHistory_.begin(), frameTimeHistory_.end(), 16.67f);
+                    std::fill(fpsHistory_.begin(), fpsHistory_.end(), 60.0f);
+                    std::fill(cpuHistory_.begin(), cpuHistory_.end(), 15.0f);
+                    std::fill(gpuHistory_.begin(), gpuHistory_.end(), 45.0f);
                 }
             }
             ImGui::End();
