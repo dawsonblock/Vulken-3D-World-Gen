@@ -112,6 +112,17 @@ jobs:
         run: |
           cd build
           ctest --output-on-failure --parallel 4 --timeout 300
+          
+      - name: Run operator console smoke test (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          if [ -f build/apps/operator_console ]; then
+            echo "Running operator console headless smoke test for 2 seconds..."
+            timeout 2s ./build/apps/operator_console --headless || true
+            echo "Operator console smoke test completed"
+          else
+            echo "operator_console not built (requires BUILD_EXTRAS=ON)"
+          fi
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
