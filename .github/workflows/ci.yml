@@ -735,7 +735,7 @@ jobs:
           HTML
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v3.0.1
         with:
           path: pages
       - name: Deploy to GitHub Pages
