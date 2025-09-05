@@ -94,7 +94,7 @@ jobs:
 
     - name: Upload build artifacts (Ubuntu Release only)
       if: matrix.os == 'ubuntu-22.04' && matrix.build_type == 'RelWithDebInfo'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: vulken3d-linux-x64
         path: |
