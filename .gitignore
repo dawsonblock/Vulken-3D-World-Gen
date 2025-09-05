@@ -82,6 +82,5 @@ redis_validation_report.json
 *.env
 *.env.*
 
-# Duplicated vcpkg configuration files (use vcpkg.json + CMakePresets.json)
-.vcpkg-configuration.json
+# Keep only the standard vcpkg configuration
 vcpkg-configuration.json
