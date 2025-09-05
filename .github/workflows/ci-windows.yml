@@ -59,22 +59,47 @@ jobs:
             ${{ github.workspace }}\build-windows\vcpkg_installed
             ${{ github.workspace }}\vcpkg\downloads
             ${{ github.workspace }}\vcpkg\buildtrees
-          key: vcpkg-win-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          key: vcpkg-win-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json','CMakePresets.json') }}
 
       - name: Configure (CMake Preset)
         shell: bash
         run: |
-          cmake --preset ci-windows -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+          cmake --preset ci-windows -DBUILD_EXTRAS=ON -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
 
       - name: Build
         shell: bash
         run: |
           cmake --build build/ci-windows -j 3
+          echo "msvc hardening flags should be present via CMake (/guard:cf /DYNAMICBASE /NXCOMPAT /CETCOMPAT)"
 
       - name: Run tests
         shell: bash
         run: |
           ctest --test-dir build/ci-windows --output-on-failure -j 2
+
+      - name: Run pre-commit
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install pre-commit
+          pre-commit run --all-files --show-diff-on-failure
+
+      - name: Validate shaders (glslangValidator)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $shaderFiles = git ls-files "shaders/**/*.vert" "shaders/**/*.frag" "shaders/**/*.comp" "shaders_vk/**/*.vert" "shaders_vk/**/*.frag" "shaders_vk/**/*.comp"
+          foreach ($f in $shaderFiles) {
+            Write-Host "Validating $f"
+            glslangValidator -V $f
+          }
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-binaries
+          path: build/ci-windows
+          if-no-files-found: warn
 
       - name: Archive artifacts
         uses: actions/upload-artifact@v4

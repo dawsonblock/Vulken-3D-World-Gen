@@ -72,10 +72,23 @@ jobs:
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
             -DVOXELVK_DEMO_WERROR=ON \
             -DENABLE_TESTS=ON
+            
+      - name: Shader validation (glslangValidator)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y glslang-tools
+          find shaders shaders_vk -type f \( -name "*.vert" -o -name "*.frag" -o -name "*.comp" -o -name "*.glsl" \) -print0 | xargs -0 -n1 -I{} glslangValidator -V {}
+            
+      - name: Run pre-commit
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install pre-commit
+          pre-commit run --all-files --show-diff-on-failure
       
       - name: Build
         run: |
           cmake --build build --config RelWithDebInfo -j
+          if command -v clang-tidy >/dev/null 2>&1; then echo "clang-tidy available"; fi
       
       - name: Run unit tests
         run: |
@@ -91,6 +104,21 @@ jobs:
             build/tests/
             build/Testing/
           retention-days: 7
+
+      - name: Generate coverage (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get install -y gcovr || true
+          cmake -S . -B build_coverage -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=--coverage -DCMAKE_EXE_LINKER_FLAGS=--coverage
+          cmake --build build_coverage -j 2
+          ctest --test-dir build_coverage --output-on-failure -j 2 || true
+          gcovr -r . --xml-pretty -o coverage.xml || true
+      - name: Upload coverage artifact (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-linux
+          path: coverage.xml
 
   tidy:
     name: Clang-Tidy (Linux)

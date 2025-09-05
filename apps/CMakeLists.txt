@@ -30,17 +30,11 @@ if(TARGET VoxelVK_Elite_ALL)
     src/core/gpu_compat.cpp)
 endif()
 
-# --- CSM+PCSS integration sources ---
+# --- CSM sources (deduplicated) ---
 if(TARGET VoxelVK_Elite_ALL)
-  target_sources(VoxelVK_Elite_ALL PRIVATE src/render/csm_pass.cpp)
-endif()
-
-# --- CSM wiring helpers ---
-if(TARGET VoxelVK_Elite_ALL)
-  target_sources(VoxelVK_Elite_ALL PRIVATE src/render/csm_cpu.cpp src/render/csm_pass.cpp)
-endif()
-
-# --- CSM descriptor layout helper ---
-if(TARGET VoxelVK_Elite_ALL)
-  target_sources(VoxelVK_Elite_ALL PRIVATE src/render/csm_layout.cpp)
+  target_sources(VoxelVK_Elite_ALL PRIVATE
+    src/render/csm_cpu.cpp
+    src/render/csm_pass.cpp
+    src/render/csm_layout.cpp
+  )
 endif()
