@@ -82,8 +82,13 @@ redis_validation_report.json
 *.env
 *.env.*
 
+
+
+# Keep only the standard vcpkg configuration
+
 # vcpkg configuration: use vcpkg.json + CMakePresets.json only
 .vcpkg-configuration.json
+        main
 vcpkg-configuration.json
 
 # Local caches
