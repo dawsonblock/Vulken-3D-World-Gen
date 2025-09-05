@@ -1,6 +1,13 @@
 # Image Regression Testing
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(STB REQUIRED stb)
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+  pkg_check_modules(STB QUIET stb)
+endif()
+
+if(NOT STB_FOUND)
+  message(WARNING "stb not found - image regression tests will be disabled")
+  return()
+endif()
 
 # Minimal renderer for generating test images
 add_executable(minimal_renderer minimal_renderer.cpp)

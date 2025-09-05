@@ -119,7 +119,7 @@ include(CompileShaders)
 
 # Enhanced shader build pipeline
 option(VOXELVK_USE_PYTHON_SHADER_BUILD "Use Python shader build pipeline" ON)
-if(VOXELVK_USE_PYTHON_SHADER_BUILD)
+if(VOXELVK_USE_PYTHON_SHADER_BUILD AND SHADER_COMPILATION_AVAILABLE)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   
   set(SHADER_SOURCE_DIRS "shaders" "shaders_vk")
@@ -137,6 +137,8 @@ if(VOXELVK_USE_PYTHON_SHADER_BUILD)
   
   # Make shader compilation a dependency of the main build
   add_dependencies(ShaderSPV compile_all_shaders)
+else()
+  message(STATUS "Python shader build pipeline disabled - no shader tools available")
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -184,7 +186,14 @@ endif()
 
 # Only configure graphics stack when not headless-only
 if(NOT VOXELVK_HEADLESS_ONLY)
-  find_package(Vulkan REQUIRED)
+  find_package(Vulkan QUIET)
+  if(NOT Vulkan_FOUND)
+    message(WARNING "Vulkan not found - enabling headless-only mode")
+    set(VOXELVK_HEADLESS_ONLY ON CACHE BOOL "Build minimal headless utilities without Vulkan/GLFW" FORCE)
+  endif()
+endif()
+
+if(NOT VOXELVK_HEADLESS_ONLY AND Vulkan_FOUND)
 
   # VMA (Vulkan Memory Allocator) integration
   find_package(VulkanMemoryAllocator QUIET)
@@ -211,8 +220,13 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   if(glfw3_FOUND)
     set(GLFW_LIB glfw)
   else()
-    find_package(GLFW REQUIRED)
-    set(GLFW_LIB GLFW::GLFW)
+    find_package(GLFW QUIET)
+    if(GLFW_FOUND)
+      set(GLFW_LIB GLFW::GLFW)
+    else()
+      message(WARNING "GLFW not found - disabling GUI applications")
+      set(VOXELVK_HEADLESS_ONLY ON CACHE BOOL "Build minimal headless utilities without Vulkan/GLFW" FORCE)
+    endif()
   endif()
 endif()
 
@@ -666,7 +680,7 @@ if(ENABLE_TESTS)
   set_tests_properties(test_smoke_headless PROPERTIES TIMEOUT 10)
   
   # Weather system tests
-  if(VOXELVK_ENABLE_WEATHER)
+  if(VOXELVK_ENABLE_WEATHER AND (GLM_FOUND OR glm_FOUND))
     add_executable(test_weather_system tests/test_weather_system.cpp ${WEATHER_SRC} src/core/logger.cpp)
     target_include_directories(test_weather_system PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(test_weather_system PRIVATE Threads::Threads)
@@ -674,8 +688,13 @@ if(ENABLE_TESTS)
       target_link_libraries(test_weather_system PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(test_weather_system PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
+    if(GLM_FOUND OR glm_FOUND)
+      target_link_libraries(test_weather_system PRIVATE ${GLM_LIB})
+    endif()
     add_test(NAME test_weather_system COMMAND test_weather_system)
     set_tests_properties(test_weather_system PROPERTIES TIMEOUT 30)
+  else()
+    message(STATUS "Weather system tests disabled - GLM not available")
   endif()
   
   # RL backend tests
@@ -746,8 +765,12 @@ if(VOXELVK_ENABLE_REDIS)
   find_library(REDISPLUSPLUS_LIBRARY NAMES redis++ redisplusplus)
   find_library(HIREDIS_LIBRARY NAMES hiredis)
   if(NOT REDISPLUSPLUS_INCLUDE_DIR OR NOT REDISPLUSPLUS_LIBRARY OR NOT HIREDIS_LIBRARY)
-    message(FATAL_ERROR "redis-plus-plus / hiredis not found. Install via vcpkg or disable with -DVOXELVK_ENABLE_REDIS=OFF.")
+    message(WARNING "redis-plus-plus / hiredis not found. Disabling Redis support.")
+    set(VOXELVK_ENABLE_REDIS OFF CACHE BOOL "Build Redis-backed asset loader and link demos against it" FORCE)
   endif()
+endif()
+
+if(VOXELVK_ENABLE_REDIS AND REDISPLUSPLUS_INCLUDE_DIR AND REDISPLUSPLUS_LIBRARY AND HIREDIS_LIBRARY)
 
   add_library(redis_assets src/redis_asset_store.cpp)
   target_include_directories(redis_assets PUBLIC ${REDISPLUSPLUS_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)

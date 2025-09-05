@@ -1,6 +1,13 @@
 # Performance Budget Tests
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(JSONCPP REQUIRED jsoncpp)
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+  pkg_check_modules(JSONCPP QUIET jsoncpp)
+endif()
+
+if(NOT JSONCPP_FOUND)
+  message(WARNING "jsoncpp not found - performance tests will be disabled")
+  return()
+endif()
 
 # Performance harness executable
 add_executable(performance_harness performance_harness.cpp)
