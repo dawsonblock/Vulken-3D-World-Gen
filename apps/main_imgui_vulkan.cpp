@@ -21,6 +21,7 @@
 #include "../src/core/fullscreen_toggle.hpp"
 #include "../src/core/performance_monitor.hpp"
 #include "../src/ai/ai_palette_config_io.hpp"
+#include "../src/ai/ai_imgui_palette_panel.hpp"
 #include "../src/ai/rag_runtime_bridge.hpp"
 #include "../src/core/logger.hpp"
 #include "../src/env/weather/weather_system.hpp"
