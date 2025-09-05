@@ -49,7 +49,7 @@ jobs:
         path: |
           ${{ env.VCPKG_ROOT }}/installed
           ${{ env.VCPKG_ROOT }}/packages
-        key: vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json', '.vcpkg-configuration.json') }}
+        key: vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json') }}
         restore-keys: |
           vcpkg-${{ matrix.os }}-
 

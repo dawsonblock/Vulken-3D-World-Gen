@@ -45,14 +45,11 @@ WORKDIR /build
 # Copy source code
 COPY --chown=builder:builder . /build/
 
-# Configure and build
+# Configure and build (headless production)
 ARG BUILD_TYPE
-RUN cmake --preset linux-default \
-    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-    -DHEADLESS_ONLY=ON \
-    -DBUILD_SHARED_LIBS=OFF
-
-RUN cmake --build build --config ${BUILD_TYPE} -j$(nproc)
+ENV VCPKG_ROOT=/opt/vcpkg
+RUN cmake --preset headless-prod -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+RUN cmake --build --preset headless-prod -j$(nproc)
 
 # Runtime stage
 FROM ubuntu:22.04 AS runtime
@@ -78,7 +75,7 @@ USER vulken3d
 WORKDIR /app
 
 # Copy built binaries and assets
-COPY --from=builder --chown=vulken3d:vulken3d /build/build/apps/ /app/bin/
+COPY --from=builder --chown=vulken3d:vulken3d /build/build_headless/apps/ /app/bin/
 COPY --from=builder --chown=vulken3d:vulken3d /build/config/ /app/config/
 COPY --from=builder --chown=vulken3d:vulken3d /build/assets/ /app/assets/
 COPY --from=builder --chown=vulken3d:vulken3d /build/scripts/ /app/scripts/
