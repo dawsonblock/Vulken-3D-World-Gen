@@ -1055,9 +1055,6 @@ int main(int argc, char** argv) {
                 ImGui::End();
             }
 
-            // Panel visibility state
-            static bool showAiPanel = true, showOverview = true, showCamera = true, showSystems = true, showPerf = true;
-            
             // Modern Overview panel with enhanced metrics
             if (showOverview && ImGui::Begin("Overview", &showOverview)) {
                 // Header with status indicators
