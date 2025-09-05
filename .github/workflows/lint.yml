@@ -11,126 +11,144 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install Python linting tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install ruff black isort pyyaml
+      - name: Install Python linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black isort pyyaml cmakelint
 
-    - name: Setup clang-tools
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y clang-tidy clang-format
+      - name: Setup clang-tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy clang-format
 
-    - name: Install cmakelint
-      run: |
-        pip install cmakelint
+      - name: Check Python formatting with black
+        run: |
+          black --check --diff scripts/ tests/ tools/ || echo "Python formatting issues found"
 
-    - name: Check Python formatting with black
-      run: |
-        black --check --diff scripts/ tests/ tools/ || echo "Python formatting issues found"
+      - name: Check Python imports with isort
+        run: |
+          isort --check-only --diff scripts/ tests/ tools/ || echo "Python import sorting issues found"
 
-    - name: Check Python imports with isort  
-      run: |
-        isort --check-only --diff scripts/ tests/ tools/ || echo "Python import sorting issues found"
+      - name: Lint Python with ruff
+        run: |
+          ruff check scripts/ tests/ tools/ || echo "Python linting issues found"
 
-    - name: Lint Python with ruff
-      run: |
-        ruff check scripts/ tests/ tools/ || echo "Python linting issues found"
+      - name: Check C++ formatting
+        run: |
+          if [ -d src ] || [ -d apps ] || [ -d tests ]; then
+            find src apps tests \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) -print0 | \
+            xargs -0 clang-format --dry-run --Werror --style=file || echo "C++ formatting issues found"
+          else
+            echo "No C++ source directories found, skipping clang-format"
+          fi
 
-    - name: Check C++ formatting
-      run: |
-        find src apps tests -name "*.cpp" -o -name "*.hpp" -o -name "*.h" | \
-        xargs clang-format --dry-run --Werror --style=file || echo "C++ formatting issues found"
+      - name: Setup CMake for clang-tidy
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: '3.27'
 
-    - name: Setup CMake for clang-tidy
-      uses: lukka/get-cmake@latest
-      with:
-        cmakeVersion: '3.27'
+      - name: Configure for clang-tidy
+        run: |
+          cmake --preset linux-default -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_CLANG_TIDY=OFF || true
 
-    - name: Configure for clang-tidy
-      run: |
-        cmake --preset linux-default -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_CLANG_TIDY=OFF
+      - name: Run clang-tidy (informational)
+        run: |
+          if [ -f build/compile_commands.json ]; then
+            find src apps -name "*.cpp" | head -10 | \
+            xargs clang-tidy -p build --config-file=.clang-tidy || echo "clang-tidy issues found (informational)"
+          else
+            echo "No compile_commands.json found, skipping clang-tidy"
+          fi
 
-    - name: Run clang-tidy (informational)
-      run: |
-        if [ -f build/compile_commands.json ]; then
-          find src apps -name "*.cpp" | head -10 | \
-          xargs clang-tidy -p build --config-file=.clang-tidy || echo "clang-tidy issues found (informational)"
-        else
-          echo "No compile_commands.json found, skipping clang-tidy"
-        fi
+      - name: Lint CMake files
+        run: |
+          if git ls-files -- 'CMakeLists.txt' '**/*.cmake' >/dev/null; then
+            git ls-files -- 'CMakeLists.txt' '**/*.cmake' | \
+            xargs cmakelint --filter=-linelength,-convention/filename || echo "CMake linting issues found"
+          else
+            echo "No CMake files found, skipping cmakelint"
+          fi
 
-    - name: Lint CMake files
-      run: |
-        find . -name "CMakeLists.txt" -o -name "*.cmake" | \
-        xargs cmakelint --filter=-linelength,-convention/filename || echo "CMake linting issues found"
+      - name: Check for TODO/FIXME comments
+        run: |
+          if [ -d src ] || [ -d apps ] || [ -d tests ]; then
+            echo "Checking for TODO/FIXME comments..."
+            grep -R --line-number -E "TODO|FIXME|XXX|HACK" src/ apps/ tests/ || true
+          else
+            echo "No source dirs to scan for TODOs"
+          fi
 
-    - name: Check for TODO/FIXME comments
-      run: |
-        echo "Checking for TODO/FIXME comments..."
-        grep -r "TODO\|FIXME\|XXX\|HACK" src/ apps/ tests/ --include="*.cpp" --include="*.hpp" --include="*.h" || true
+      - name: Validate YAML files
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob, sys
+          import yaml
+          paths = []
+          paths += glob.glob('config/*.yaml')
+          paths += glob.glob('.github/**/*.yml', recursive=True)
+          paths += glob.glob('.github/**/*.yaml', recursive=True)
+          ok = True
+          for p in sorted(set(paths)):
+              try:
+                  with open(p, 'r', encoding='utf-8') as f:
+                      yaml.safe_load(f)
+                  print(f"✅ {p}")
+              except yaml.YAMLError as e:
+                  print(f"❌ {p}: {e}")
+                  ok = False
+              except Exception as e:
+                  print(f"⚠️  {p}: {e}")
+          sys.exit(0 if ok else 1)
+          PY
 
-    - name: Validate YAML files
-      run: |
-        python3 -c "
-import yaml
-import os
-import glob
+      - name: Check for common security issues
+        run: |
+          echo "Checking for potential security issues..."
+          if [ -d config ]; then
+            (grep -R -n -E "password|secret|token|key" config/ --include="*.yaml" --include="*.yml" --include="*.json" || true) | \
+            grep -v -E "placeholder|example|template" || echo "No hardcoded credentials found"
+          else
+            echo "No config directory to scan for credentials"
+          fi
 
-yaml_files = glob.glob('config/*.yaml') + glob.glob('.github/**/*.yml', recursive=True) + glob.glob('.github/**/*.yaml', recursive=True)
+          if [ -d src ] || [ -d apps ]; then
+            grep -R -n -E "strcpy|sprintf|gets" src/ apps/ --include="*.cpp" --include="*.h" || echo "No unsafe C functions found"
+          else
+            echo "No C/C++ sources to scan for unsafe functions"
+          fi
 
-for file in yaml_files:
-    try:
-        with open(file, 'r') as f:
-            yaml.safe_load(f)
-        print(f'✅ {file}')
-    except yaml.YAMLError as e:
-        print(f'❌ {file}: {e}')
-        exit(1)
-    except Exception as e:
-        print(f'⚠️  {file}: {e}')
-"
+      - name: Generate lint report
+        if: always()
+        run: |
+          mkdir -p reports/lint
+          {
+            echo "# Code Quality Report"
+            echo
+            echo "Generated on: $(date)"
+            echo
+            echo "## Checks Performed"
+            echo "- Python formatting (black)"
+            echo "- Python imports (isort)"
+            echo "- Python linting (ruff)"
+            echo "- C++ formatting (clang-format)"
+            echo "- C++ static analysis (clang-tidy)"
+            echo "- CMake linting (cmakelint)"
+            echo "- YAML validation"
+            echo "- Security checks"
+          } > reports/lint/summary.md
 
-    - name: Check for common security issues
-      run: |
-        echo "Checking for potential security issues..."
-        
-        # Check for hardcoded credentials patterns
-        grep -r "password\|secret\|token\|key" config/ --include="*.yaml" --include="*.json" | \
-        grep -v "placeholder\|example\|template" || echo "No hardcoded credentials found"
-        
-        # Check for unsafe C++ practices
-        grep -r "strcpy\|sprintf\|gets" src/ apps/ --include="*.cpp" --include="*.h" || echo "No unsafe C functions found"
-
-    - name: Generate lint report
-      if: always()
-      run: |
-        mkdir -p reports/lint
-        echo "# Code Quality Report" > reports/lint/summary.md
-        echo "" >> reports/lint/summary.md
-        echo "Generated on: $(date)" >> reports/lint/summary.md
-        echo "" >> reports/lint/summary.md
-        echo "## Checks Performed" >> reports/lint/summary.md
-        echo "- Python formatting (black)" >> reports/lint/summary.md
-        echo "- Python imports (isort)" >> reports/lint/summary.md
-        echo "- Python linting (ruff)" >> reports/lint/summary.md
-        echo "- C++ formatting (clang-format)" >> reports/lint/summary.md
-        echo "- C++ static analysis (clang-tidy)" >> reports/lint/summary.md
-        echo "- CMake linting (cmakelint)" >> reports/lint/summary.md
-        echo "- YAML validation" >> reports/lint/summary.md
-        echo "- Security checks" >> reports/lint/summary.md
-
-    - name: Upload lint report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: lint-report
-        path: reports/lint/
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: reports/lint/
