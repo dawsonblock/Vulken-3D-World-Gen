@@ -47,6 +47,16 @@ jobs:
         with:
           submodules: recursive
       
+      - name: Setup vcpkg cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/vcpkg
+            ${{ runner.temp }}/vcpkg_bin_cache
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+      
       - name: Setup vcpkg
         uses: microsoft/setup-vcpkg@v1
         with:
