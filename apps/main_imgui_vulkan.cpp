@@ -1021,10 +1021,40 @@ int main(int argc, char** argv) {
             }
 
             // Panels
-            if (ImGui::Begin("Overview")) {
-                ImGui::Text("FPS: %.1f", fps);
-                ImGui::Text("Frame time: %.2f ms", 1000.0 * (fps > 0.0 ? 1.0 / fps : 0.0));
-                ImGui::Text("Window: %dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
+            static bool showAiPanel = true, showOverview = true, showCamera = true, showSystems = true, showPerf = true;
+            
+            // Modern Overview panel with enhanced metrics
+            if (showOverview && ImGui::Begin("Overview", &showOverview)) {
+                // Header with status indicators
+                ImGui::TextColored(ImVec4(0.3f, 0.9f, 0.3f, 1.0f), "ACTIVE");
+                ImGui::SameLine(); ImGui::Text("VoxelVK Production Engine");
+                ImGui::Separator();
+                
+                // Performance metrics in a table
+                if (ImGui::BeginTable("PerformanceTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                    ImGui::TableSetupColumn("Metric", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableHeadersRow();
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("FPS");
+                    ImGui::TableNextColumn(); 
+                    ImVec4 fpsColor = fps > 55.0f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                                     fps > 30.0f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
+                    ImGui::TextColored(fpsColor, "%.1f", fps);
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("Frame Time");
+                    ImGui::TableNextColumn(); ImGui::Text("%.2f ms", 1000.0 * (fps > 0.0 ? 1.0 / fps : 0.0));
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("Resolution");
+                    ImGui::TableNextColumn(); ImGui::Text("%dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
+                    
+                    ImGui::EndTable();
+                }
+                
+                ImGui::Spacing();
                 ImGui::TextDisabled("Controls: WASD/QE move, hold RMB to look, Shift to sprint, F11 toggle fullscreen");
 #if defined(__linux__)
                 static bool screenshot_ok = false; static double screenshot_msg_t = 0.0;
