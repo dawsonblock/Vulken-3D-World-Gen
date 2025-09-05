@@ -64,23 +64,20 @@ jobs:
       - name: Configure (CMake Preset)
         shell: bash
         run: |
-          cmake --preset windows-default -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+          cmake --preset ci-windows -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
 
       - name: Build
         shell: bash
         run: |
-          cmake --build --preset windows-default -j 3
+          cmake --build build/ci-windows -j 3
 
       - name: Run tests
         shell: bash
         run: |
-          ctest --test-dir build-windows --output-on-failure -j 2
+          ctest --test-dir build/ci-windows --output-on-failure -j 2
 
-      - name: Upload test reports (optional)
-        if: always()
+      - name: Archive artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-windows-outputs
-          path: |
-            build-windows/compile_commands.json
-            build-windows/*.log
+          name: windows-binaries
+          path: build/ci-windows

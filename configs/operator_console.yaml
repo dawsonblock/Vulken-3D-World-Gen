@@ -1,0 +1,11 @@
+window:
+  width: 1600
+  height: 900
+  fullscreen: false
+runtime:
+  log_level: info
+  assets_dir: assets/
+  cache_dir: .cache/
+engine:
+  enable_validation: true
+  vsync: false

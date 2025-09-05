@@ -11,13 +11,41 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Hardening and warnings options
+option(VULKEN_ENABLE_WARNINGS_AS_ERRORS "Treat warnings as errors" ON)
+option(VULKEN_ENABLE_HARDENING "Enable hardening flags" ON)
+
+# Demo build options
+option(BUILD_EXTRAS "Build extended demos and experimental apps" OFF)
+
 # Global warning flags
 if(MSVC)
   add_compile_options(/W4 /permissive- /Zc:__cplusplus)
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+  if(VULKEN_ENABLE_WARNINGS_AS_ERRORS)
+    add_compile_options(/WX)
+  endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter)
   add_link_options(-Wl,--no-undefined)
+  if(VULKEN_ENABLE_WARNINGS_AS_ERRORS)
+    add_compile_options(-Werror)
+  endif()
+endif()
+
+# Hardening flags
+if(VULKEN_ENABLE_HARDENING AND NOT MSVC)
+  add_compile_options(-fstack-protector-strong -D_FORTIFY_SOURCE=2)
+  add_link_options(-Wl,-z,relro,-z,now)
+endif()
+
+# Optimize/instrument by config
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  if(NOT MSVC)
+    add_compile_options(-fsanitize=address,undefined)
+    add_link_options(-fsanitize=address,undefined)
+  endif()
 endif()
 
 # Toolchain selection is driven by CMakePresets and CI; avoid overriding here
@@ -328,8 +356,8 @@ if(VOXELVK_ENABLE_P2_PERFORMANCE)
     endif()
   endforeach()
   
-  # P2 concepts demo (simplified)
-  if(NOT VOXELVK_HEADLESS_ONLY)
+  # P2 concepts demo (simplified) - gated behind BUILD_EXTRAS
+  if(NOT VOXELVK_HEADLESS_ONLY AND BUILD_EXTRAS)
     add_executable(p2_concepts_validator apps/p2_concepts_validator.cpp ${WEATHER_SRC} src/core/logger.cpp)
     target_include_directories(p2_concepts_validator PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(p2_concepts_validator PRIVATE Threads::Threads)
@@ -395,8 +423,8 @@ if(VOXELVK_ENABLE_P1_MEMORY)
     
     list(APPEND VOXELVK_ELITE_SOURCES ${P1_MEMORY_SRC})
     
-    # P1 concepts demo (simplified)
-    if(NOT VOXELVK_HEADLESS_ONLY)
+    # P1 concepts demo (simplified) - gated behind BUILD_EXTRAS
+    if(NOT VOXELVK_HEADLESS_ONLY AND BUILD_EXTRAS)
       add_executable(p1_concepts_simple apps/p1_concepts_simple.cpp ${WEATHER_SRC} src/core/logger.cpp)
       target_include_directories(p1_concepts_simple PRIVATE ${CMAKE_SOURCE_DIR}/src)
       target_link_libraries(p1_concepts_simple PRIVATE Threads::Threads)
@@ -427,8 +455,8 @@ if(VOXELVK_ENABLE_P0_RELIABILITY)
   
   list(APPEND VOXELVK_ELITE_SOURCES ${P0_RELIABILITY_SRC})
   
-  # P0 demo application (simplified)
-  if(NOT VOXELVK_HEADLESS_ONLY)
+  # P0 demo application (simplified) - gated behind BUILD_EXTRAS
+  if(NOT VOXELVK_HEADLESS_ONLY AND BUILD_EXTRAS)
     add_executable(p0_reliability_test apps/p0_reliability_test.cpp ${WEATHER_SRC} src/core/logger.cpp)
     target_include_directories(p0_reliability_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(p0_reliability_test PRIVATE Threads::Threads)

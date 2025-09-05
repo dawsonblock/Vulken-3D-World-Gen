@@ -5,6 +5,9 @@
 /out/
 /dist/
 /artifacts/
+/bin/
+/lib/
+/obj/
 
 # CMake
 CMakeCache.txt
@@ -25,6 +28,7 @@ CMakeFiles/
 .vscode/.cache/
 .vs/
 .idea/
+/.clangd/
 *.VC.db
 *.user
 *.sln
