@@ -840,12 +840,25 @@ int main(int argc, char** argv) {
     // Initialize ImGui Vulkan backend - render pass passed separately in older versions
     ImGui_ImplVulkan_Init(&init_info, g_RenderPass);
 
-    // Upload ImGui fonts
+    // Upload ImGui fonts - older API requires command buffer
     {
-    // Newer backend API creates fonts texture without explicit command buffer
-    ImGui_ImplVulkan_CreateFontsTexture();
-    vkQueueWaitIdle(g_GraphicsQueue);
-    ImGui_ImplVulkan_DestroyFontsTexture();
+        VkCommandBuffer cmd = g_CommandBuffers[0]; // Use first command buffer
+        VkCommandBufferBeginInfo begin_info{};
+        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(cmd, &begin_info);
+        
+        ImGui_ImplVulkan_CreateFontsTexture(cmd);
+        
+        vkEndCommandBuffer(cmd);
+        VkSubmitInfo submit_info{};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &cmd;
+        vkQueueSubmit(g_GraphicsQueue, 1, &submit_info, VK_NULL_HANDLE);
+        vkQueueWaitIdle(g_GraphicsQueue);
+        
+        ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
 
     g_logger.Info("ImGui Vulkan backend initialized");
