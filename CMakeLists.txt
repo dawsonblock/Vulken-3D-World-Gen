@@ -3,8 +3,8 @@ project(VoxelVK_Elite_ALL LANGUAGES CXX)
 
 # Set policies for modern CMake
 cmake_policy(SET CMP0077 NEW)  # option() honors normal variables
-cmake_policy(SET CMP0144 NEW)  # FindPython3 uses FindPython
-cmake_policy(SET CMP0155 NEW)  # CMAKE_FIND_PACKAGE_PREFER_CONFIG
+# cmake_policy(SET CMP0144 NEW)  # FindPython3 uses FindPython - requires CMake 3.27+
+# cmake_policy(SET CMP0155 NEW)  # CMAKE_FIND_PACKAGE_PREFER_CONFIG - requires CMake 3.27+
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
