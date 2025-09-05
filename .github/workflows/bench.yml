@@ -46,7 +46,7 @@ jobs:
 
     - name: Configure CMake (Release for performance)
       run: |
-        cmake --preset linux-default -DCMAKE_BUILD_TYPE=Release -DBUILD_BENCHMARKS=ON
+        cmake --preset default -DCMAKE_BUILD_TYPE=Release -DBUILD_BENCHMARKS=ON
 
     - name: Build
       run: |
