@@ -26,9 +26,9 @@ jobs:
           submodules: recursive
       
       - name: Setup vcpkg
-        uses: microsoft/setup-vcpkg@v1
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkg-version: '2024.12.12'
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
       
       - name: Install dependencies
         run: |
@@ -99,9 +99,9 @@ jobs:
           submodules: recursive
       
       - name: Setup vcpkg
-        uses: microsoft/setup-vcpkg@v1
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkg-version: '2024.12.12'
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
       
       - name: Install Vulkan SDK
         run: |
@@ -223,7 +223,7 @@ jobs:
           EOF
       
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2.2.1
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: VoxelVK ${{ steps.version.outputs.version }}
@@ -254,6 +254,6 @@ jobs:
           output: 'trivy-results.sarif'
       
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'

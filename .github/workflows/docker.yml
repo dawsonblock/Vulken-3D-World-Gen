@@ -25,11 +25,11 @@ jobs:
         submodules: recursive
 
     - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      uses: docker/setup-buildx-action@v3.6.1
 
     - name: Log in to Container Registry
       if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
+      uses: docker/login-action@v3.3.0
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
@@ -37,7 +37,7 @@ jobs:
 
     - name: Extract metadata
       id: meta
-      uses: docker/metadata-action@v5
+      uses: docker/metadata-action@v5.5.1
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
@@ -47,7 +47,7 @@ jobs:
           type=raw,value=latest,enable={{is_default_branch}}
 
     - name: Build Docker image
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6.7.0
       with:
         context: .
         push: false
@@ -93,7 +93,7 @@ jobs:
 
     - name: Upload SARIF to GitHub Security
       if: always()
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: vulnerability-report.sarif
         category: container-scan
@@ -114,7 +114,7 @@ jobs:
 
     - name: Push Docker image
       if: github.event_name != 'pull_request' && env.VULN_FOUND != 'true'
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6.7.0
       with:
         context: .
         push: true
@@ -136,7 +136,7 @@ jobs:
 
     - name: Comment PR with security results
       if: github.event_name == 'pull_request'
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           const fs = require('fs');

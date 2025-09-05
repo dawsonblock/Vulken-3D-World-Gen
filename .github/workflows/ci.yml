@@ -57,10 +57,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vcpkg-
       
-      - name: Setup vcpkg
-        uses: microsoft/setup-vcpkg@v1
+      - name: Setup vcpkg  
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkg-version: '2024.12.12'
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
       
       - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
@@ -83,11 +83,19 @@ jobs:
             -DVOXELVK_DEMO_WERROR=ON \
             -DENABLE_TESTS=ON
             
-      - name: Shader validation (glslangValidator)
+      - name: Shader validation (glslangValidator) - Ubuntu
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y glslang-tools
           find shaders shaders_vk -type f \( -name "*.vert" -o -name "*.frag" -o -name "*.comp" -o -name "*.glsl" \) -print0 | xargs -0 -n1 -I{} glslangValidator -V {}
+          
+      - name: Shader validation (glslangValidator) - Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          # glslangValidator should be available via Vulkan SDK installation
+          Get-ChildItem -Recurse -Filter "*.vert", "*.frag", "*.comp", "*.glsl" -Path "shaders", "shaders_vk" | ForEach-Object { glslangValidator -V $_.FullName }
+        shell: powershell
             
       - name: Run pre-commit (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
@@ -168,10 +176,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vcpkg-
       
-      - name: Setup vcpkg
-        uses: microsoft/setup-vcpkg@v1
+      - name: Setup vcpkg  
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkg-version: '2024.12.12'
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
           
       - name: Install dependencies
         run: |
@@ -331,10 +339,9 @@ jobs:
           echo "VULKAN_SDK=$Env:VULKAN_SDK" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Setup vcpkg
-        uses: microsoft/vcpkg-action@v1
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: 1b5a7a7e1aee5b287f2e7a9e0f9a8f9510b5c3f8
-          appendedCacheKey: ${{ matrix.os }}
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
 
       - name: Bootstrap local vcpkg (toolchain under repo)
         shell: bash
@@ -514,10 +521,9 @@ jobs:
         run: |
           echo "Windows tests using vcpkg toolchain"
       - name: Setup vcpkg
-        uses: microsoft/vcpkg-action@v1
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: 1b5a7a7e1aee5b287f2e7a9e0f9a8f9510b5c3f8
-          appendedCacheKey: ${{ matrix.os }}
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
       - name: Bootstrap local vcpkg (toolchain under repo)
         shell: bash
         run: |
@@ -625,7 +631,7 @@ jobs:
           cat perf/perf_compare_report.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       - name: Post sticky comment
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v2.9.0
         with:
           message: |
             **Perf Report**
@@ -737,7 +743,7 @@ jobs:
           HTML
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v3.0.1
         with:
           path: pages
       - name: Deploy to GitHub Pages
@@ -770,9 +776,9 @@ jobs:
           glslangValidator --version
       
       - name: Setup CMake
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@v3.30.5
         with:
-          cmakeVersion: '3.27'
+          cmakeVersion: '3.30.5'
       
       - name: Configure CMake
         run: |
@@ -866,10 +872,10 @@ with open('reports/shaders/layout_check.json') as f:
             libxinerama-dev libxcursor-dev libxi-dev libxrandr-dev \
             xvfb x11vnc websockify fluxbox novnc imagemagick
       
-      - name: Setup vcpkg
-        uses: microsoft/setup-vcpkg@v1
+      - name: Setup vcpkg  
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkg-version: '2024.12.12'
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
       
       - name: Build
         run: |
@@ -957,10 +963,10 @@ with open('reports/shaders/layout_check.json') as f:
           restore-keys: |
             ${{ runner.os }}-vcpkg-
       
-      - name: Setup vcpkg
-        uses: microsoft/setup-vcpkg@v1
+      - name: Setup vcpkg  
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkg-version: '2024.12.12'
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
           
       - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
