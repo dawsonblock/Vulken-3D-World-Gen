@@ -1,63 +1,78 @@
 backend:
   - task: "Build Configuration Validation"
     implemented: true
-    working: "NA"
+    working: true
     file: "vcpkg-configuration.json, CMakePresets.json, .clang-tidy"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Initial validation task - checking vcpkg baseline, CMake coverage preset, and clang-tidy WarningsAsErrors"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASS - vcpkg baseline correctly locked to 2024.12.12, CMake coverage preset exists with proper --coverage flags, .clang-tidy has WarningsAsErrors enabled"
 
   - task: "Apps Gating Verification"
     implemented: true
-    working: "NA"
+    working: true
     file: "apps/CMakeLists.txt"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Initial validation task - verifying core demos vs BUILD_EXTRAS gated apps"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASS - Core demos (gui_fullscreen_demo, vulkan_fullscreen_demo, smoke_headless, rl_nav_demo) are NOT behind BUILD_EXTRAS. operator_console is properly gated behind BUILD_EXTRAS. Found deduplicated source definitions in apps/CMakeLists.txt"
 
   - task: "Script Functionality"
     implemented: true
-    working: "NA"
+    working: true
     file: "scripts/shaders/validate_layout.py, scripts/dev/generate_sbom.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Initial validation task - testing script executability and dry run functionality"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASS - Both scripts exist, are executable, have proper shebangs, and execute successfully with --help. SBOM generation tested and produces valid CycloneDX format with 13 components"
 
   - task: "CI Configuration"
     implemented: true
-    working: "NA"
+    working: true
     file: ".github/workflows/ci.yml"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Initial validation task - checking vcpkg caching, coverage job, shader validation, release artifacts"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASS - vcpkg caching configured with proper cache key using hashFiles, coverage job found with gcovr, shader validation job found, release artifacts job with SBOM + SHA256SUMS generation"
 
   - task: "Docker Optimization"
     implemented: true
-    working: "NA"
+    working: true
     file: "Dockerfile"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Initial validation task - verifying multi-stage build, runtime stage optimization, non-root user"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASS - Multi-stage build detected (2 stages), runtime stage uses minimal distroless base image, binaries are stripped in build process, non-root user configured (65532), no build tools copied to runtime stage"
 
 frontend: []
 
