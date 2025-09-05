@@ -85,9 +85,14 @@ jobs:
           pre-commit run --all-files --show-diff-on-failure
 
       - name: Validate shaders (glslangValidator)
-        shell: bash
+        shell: pwsh
         run: |
-          git-bash -lc "for f in $(git ls-files 'shaders/**/*.vert' 'shaders/**/*.frag' 'shaders/**/*.comp' 'shaders_vk/**/*.vert' 'shaders_vk/**/*.frag' 'shaders_vk/**/*.comp'); do glslangValidator -V \"$f\" || exit 1; done"
+          $ErrorActionPreference = "Stop"
+          $shaderFiles = git ls-files "shaders/**/*.vert" "shaders/**/*.frag" "shaders/**/*.comp" "shaders_vk/**/*.vert" "shaders_vk/**/*.frag" "shaders_vk/**/*.comp"
+          foreach ($f in $shaderFiles) {
+            Write-Host "Validating $f"
+            glslangValidator -V $f
+          }
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
