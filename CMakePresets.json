@@ -7,7 +7,7 @@
       "description": "Default configuration with CUDA and GUI support",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
-  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+  "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_IMGUI_OVERLAY": true,
@@ -28,7 +28,7 @@
       "description": "Debug configuration with all checks enabled",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build_debug",
-  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+  "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "ENABLE_IMGUI_OVERLAY": true,
@@ -49,7 +49,7 @@
       "description": "Optimized release build with LTO",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build_release",
-  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+  "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_INTERPROCEDURAL_OPTIMIZATION": true,
@@ -71,7 +71,7 @@
       "description": "Server/headless build without Vulkan preview",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build_headless",
-  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+  "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_IMGUI_OVERLAY": false,
@@ -89,12 +89,36 @@
     }
     ,
     {
+      "name": "headless-prod",
+      "displayName": "Headless Production",
+      "description": "Minimal headless build for production images",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_headless",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": true,
+        "ENABLE_IMGUI_OVERLAY": false,
+        "ENABLE_VALIDATION_LAYERS": false,
+        "ENABLE_VK_DEBUG_MARKERS": false,
+        "ENABLE_TESTS": false,
+        "VOXELVK_DEMO_WERROR": false,
+        "VOXELVK_ENABLE_CUDA": false,
+        "VOXELVK_ENABLE_TENSORRT": false,
+        "VOXELVK_HEADLESS_ONLY": true,
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux",
+        "VCPKG_VERBOSE": true
+      }
+    }
+    ,
+    {
       "name": "werror-demos-rl",
       "displayName": "Default + Werror for demos+RL",
       "description": "Default config with -Werror applied to demos and rl_nav_demo via VOXELVK_WERROR_TARGETS",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
-      "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_IMGUI_OVERLAY": true,
@@ -117,7 +141,7 @@
       "description": "Default configuration on Windows",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-windows",
-  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+  "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_IMGUI_OVERLAY": true,
@@ -137,7 +161,7 @@
       "description": "Debug configuration on Windows",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-windows-debug",
-  "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+  "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "ENABLE_IMGUI_OVERLAY": true,
@@ -158,6 +182,7 @@
     { "name": "debug",   "configurePreset": "debug"   },
     { "name": "release", "configurePreset": "release" },
     { "name": "headless", "configurePreset": "headless" },
+    { "name": "headless-prod", "configurePreset": "headless-prod" },
     { "name": "windows-default", "configurePreset": "windows-default" },
     { "name": "windows-debug", "configurePreset": "windows-debug" }
   ],

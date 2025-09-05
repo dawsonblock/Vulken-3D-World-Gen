@@ -35,7 +35,7 @@ jobs:
             ${{ github.workspace }}/build/vcpkg_installed
             ${{ github.workspace }}/vcpkg/downloads
             ${{ github.workspace }}/vcpkg/buildtrees
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
 
       - name: Bootstrap vcpkg (manifest mode)
         run: |
