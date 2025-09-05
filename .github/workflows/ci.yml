@@ -877,3 +877,87 @@ with open('reports/shaders/layout_check.json') as f:
           path: |
             nsys_report.qdrep
             nsys_report.sqlite
+
+  release_artifacts:
+    name: Release Artifacts & Integrity
+    runs-on: ${{ matrix.os }}
+    needs: [build_and_test]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          
+      - name: Setup vcpkg cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/vcpkg
+            ${{ runner.temp }}/vcpkg_bin_cache
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+      
+      - name: Setup vcpkg
+        uses: microsoft/setup-vcpkg@v1
+        with:
+          vcpkg-version: '2024.12.12'
+          
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build \
+            libvulkan-dev vulkan-validationlayers-dev
+            
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install vulkan-sdk -y
+          
+      - name: Configure with hardening
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            cmake --preset ci-linux \
+              -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+          else
+            cmake --preset ci-windows \
+              -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+          fi
+        shell: bash
+        
+      - name: Build
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            cmake --build build/ci-linux --config RelWithDebInfo -j
+          else
+            cmake --build build/ci-windows --config RelWithDebInfo -j
+          fi
+        shell: bash
+        
+      - name: Generate SBOM
+        run: |
+          python3 scripts/dev/generate_sbom.py --output sbom-${{ matrix.os }}.json
+        shell: bash
+        
+      - name: Generate SHA256SUMS
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            cd build/ci-linux/apps
+            find . -type f -executable -exec sha256sum {} \; > ../../../SHA256SUMS-linux.txt
+          else
+            cd build/ci-windows/apps
+            certutil -hashfile *.exe SHA256 > ../../../SHA256SUMS-windows.txt
+          fi
+        shell: bash
+        
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.os }}
+          path: |
+            sbom-${{ matrix.os }}.json
+            SHA256SUMS-${{ matrix.os }}.txt
+            build/*/apps/
