@@ -23,6 +23,25 @@
       }
     },
     {
+      "name": "coverage",
+      "displayName": "Linux Coverage",
+      "description": "Debug with GCOV coverage flags",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_coverage",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_TESTS": true,
+        "VOXELVK_ENABLE_CUDA": false,
+        "VOXELVK_ENABLE_TENSORRT": false,
+        "CMAKE_CXX_FLAGS": "--coverage",
+        "CMAKE_EXE_LINKER_FLAGS": "--coverage",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux",
+        "VCPKG_VERBOSE": true
+      }
+    },
+    {
       "name": "debug",
       "displayName": "Debug Build",
       "description": "Debug configuration with all checks enabled",

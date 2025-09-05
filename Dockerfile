@@ -30,8 +30,12 @@ FROM gcr.io/distroless/cc-debian12
 USER 65532:65532
 WORKDIR /app
 
-# Copy built binaries
-COPY --from=build /app/build/ci-linux/apps/* /app/
+ENV STRIP=/usr/bin/strip
+
+# Copy and strip built binaries (only executables)
+COPY --from=build /usr/bin/strip /usr/bin/strip
+COPY --from=build /app/build/ci-linux/apps /tmp/apps
+RUN find /tmp/apps -maxdepth 1 -type f -executable -print -exec /usr/bin/strip --strip-unneeded {} \; -exec mv {} /app/ \; && rm -rf /tmp/apps /usr/bin/strip
 
 # Default command
 ENTRYPOINT ["/app/gui_fullscreen_demo"]

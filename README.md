@@ -103,7 +103,7 @@ build-windows\apps\rl_nav_demo.exe
 build-windows\apps\main_imgui_vulkan.exe
 ```
 
-For detailed instructions, see [BUILD.md](BUILD.md) and [RUN.md](RUN.md).
+For detailed instructions, see `DEVELOPER_GUIDE.md`. Legacy docs have moved to `docs/legacy/`.
 
 ## 📁 Repository Structure
 
@@ -127,7 +127,7 @@ VoxelVK/
 ├── 📂 config/                 # Configuration files (weather.yaml, etc.)
 ├── 📂 scripts/                # Validation & benchmark scripts
 ├── 📂 tools/                  # Development tools & utilities
-└── 📖 Documentation files     # BUILD.md, RUN.md, README.md
+└── 📖 Documentation files     # README.md, DEVELOPER_GUIDE.md (legacy in docs/legacy)
 ```
 
 ## 🎮 Demo Applications
@@ -227,8 +227,7 @@ VoxelVK implements a layered architecture:
 
 ## 📖 Documentation
 
-- **[BUILD.md](BUILD.md)**: Comprehensive build instructions
-- **[RUN.md](RUN.md)**: Application usage and controls  
+- See `DEVELOPER_GUIDE.md` for build and run instructions.  
 - **[SECURITY.md](SECURITY.md)**: Security policy
 - **`docs/archive/`**: Development documentation archive
 
