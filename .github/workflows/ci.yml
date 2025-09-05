@@ -866,10 +866,10 @@ with open('reports/shaders/layout_check.json') as f:
             libxinerama-dev libxcursor-dev libxi-dev libxrandr-dev \
             xvfb x11vnc websockify fluxbox novnc imagemagick
       
-      - name: Setup vcpkg
-        uses: microsoft/setup-vcpkg@v1
+      - name: Setup vcpkg  
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkg-version: '2024.12.12'
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
       
       - name: Build
         run: |
