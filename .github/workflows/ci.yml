@@ -130,6 +130,62 @@ jobs:
           name: coverage-linux
           path: coverage.xml
 
+  coverage:
+    name: Coverage Report (Linux)
+    runs-on: ubuntu-latest
+    needs: [format_check]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          
+      - name: Setup vcpkg cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/vcpkg
+            ${{ runner.temp }}/vcpkg_bin_cache
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+      
+      - name: Setup vcpkg
+        uses: microsoft/setup-vcpkg@v1
+        with:
+          vcpkg-version: '2024.12.12'
+          
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build \
+            libvulkan-dev vulkan-validationlayers-dev glslang-tools \
+            gcovr
+            
+      - name: Configure with coverage
+        run: |
+          cmake --preset coverage \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+            
+      - name: Build
+        run: |
+          cmake --build build_coverage -j
+          
+      - name: Run tests with coverage
+        run: |
+          ctest --test-dir build_coverage --output-on-failure -j 2
+          
+      - name: Generate coverage report
+        run: |
+          gcovr -r . --xml-pretty -o coverage.xml \
+            --exclude-unreachable-branches \
+            --exclude-directories build_coverage
+            
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
   tidy:
     name: Clang-Tidy (Linux)
     runs-on: ubuntu-latest
