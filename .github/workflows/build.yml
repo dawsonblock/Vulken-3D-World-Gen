@@ -14,7 +14,7 @@ jobs:
         build_type: [RelWithDebInfo, Debug]
         include:
           - os: ubuntu-22.04
-            cmake_preset: linux-default
+            cmake_preset: default
             vcpkg_triplet: x64-linux
           - os: windows-2022
             cmake_preset: windows-default
