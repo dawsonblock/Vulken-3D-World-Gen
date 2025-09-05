@@ -35,7 +35,7 @@ jobs:
         cmakeVersion: '3.27'
 
     - name: Cache previous benchmark results
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           reports/bench/
