@@ -640,7 +640,15 @@ int main(int argc, char* argv[]) {
         } else if (arg == "--headless") {
             headless = true;
         } else if (arg == "--timeout" && i + 1 < argc) {
-            timeoutMs = std::atoi(argv[++i]);
+            try {
+                timeoutMs = std::stoi(argv[++i]);
+            } catch (const std::invalid_argument&) {
+                std::cerr << "Error: Invalid value for --timeout. Must be an integer." << std::endl;
+                return -1;
+            } catch (const std::out_of_range&) {
+                std::cerr << "Error: Timeout value out of range." << std::endl;
+                return -1;
+            }
         } else if (arg == "--help") {
             std::cout << "Usage: " << argv[0] << " [options]\n";
             std::cout << "Options:\n";
