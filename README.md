@@ -1,7 +1,12 @@
 # VoxelVK - Production Voxel Rendering Engine
 
+[![Build](https://github.com/dawsonblock/VoxelVK/actions/workflows/build.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/build.yml)
 [![CI](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/ci.yml)
+[![Lint](https://github.com/dawsonblock/VoxelVK/actions/workflows/lint.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/lint.yml)
 [![GUI Smoke](https://github.com/dawsonblock/VoxelVK/actions/workflows/gui_smoke.yml/badge.svg)](https://github.com/dawsonblock/VoxelVK/actions/workflows/gui_smoke.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Vulkan](https://img.shields.io/badge/Vulkan-1.3-red.svg)](https://vulkan.org/)
+[![C++](https://img.shields.io/badge/C++-20-blue.svg)](https://isocpp.org/)
 
 **VoxelVK** is a production-grade voxel rendering engine built on Vulkan 1.3, featuring advanced weather simulation, AI integration, and 120 FPS performance optimization.
 

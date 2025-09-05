@@ -128,3 +128,45 @@ release/
 # Environment files
 *.env
 *.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+
+# Build / tool caches
+build/
+build-*/
+out/
+dist/
+.cache/
+.ccls-cache/
+.ipynb_checkpoints/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Local agents / scratch
+.emergent/
+*.log
+*.tmp
+
+# Package mgr / venv
+.venv/
+__pycache__/
+*.egg-info/
+pip-wheel-metadata/
+
+# Test artifacts
+coverage/
+*.gcda
+*.gcno
+*.lcov
+# Production scaffold completed on Fri Sep  5 22:27:02 UTC 2025
