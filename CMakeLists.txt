@@ -944,11 +944,20 @@ set(CPACK_PACKAGE_EXECUTABLES
   "operator_console;Operator Console"
 )
 
-# Install rules for packaging
-install(TARGETS main_imgui_vulkan operator_console
-  DESTINATION bin
-  COMPONENT Runtime
-)
+# Install rules for packaging (only install targets that exist)
+if(TARGET main_imgui_vulkan)
+  install(TARGETS main_imgui_vulkan
+    DESTINATION bin
+    COMPONENT Runtime
+  )
+endif()
+
+if(TARGET operator_console)
+  install(TARGETS operator_console
+    DESTINATION bin
+    COMPONENT Runtime
+  )
+endif()
 
 install(DIRECTORY assets/ DESTINATION assets COMPONENT Assets)
 install(DIRECTORY config/ DESTINATION config COMPONENT Config)
