@@ -1,10 +1,24 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.24...3.28 FATAL_ERROR)
 project(VoxelVK_Elite_ALL LANGUAGES CXX)
+
+# Set policies for modern CMake
+cmake_policy(SET CMP0077 NEW)  # option() honors normal variables
+cmake_policy(SET CMP0144 NEW)  # FindPython3 uses FindPython
+cmake_policy(SET CMP0155 NEW)  # CMAKE_FIND_PACKAGE_PREFER_CONFIG
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Global warning flags
+if(MSVC)
+  add_compile_options(/W4 /permissive- /Zc:__cplusplus)
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter)
+  add_link_options(-Wl,--no-undefined)
+endif()
 
 # Toolchain selection is driven by CMakePresets and CI; avoid overriding here
 
@@ -73,29 +87,67 @@ option(VOXELVK_HEADLESS_ONLY    "Build minimal headless utilities without Vulkan
 option(VOXELVK_DEMO_WERROR      "Treat warnings as errors for demo/sample apps only" OFF)
 set(VOXELVK_WERROR_TARGETS "" CACHE STRING "Semicolon-separated list of targets to build with -Werror; defaults to core demos if empty")
 option(VOXELVK_ENABLE_REDIS     "Build Redis-backed asset loader and link demos against it" ON)
+option(VOXELVK_ENABLE_ASAN      "Enable AddressSanitizer" OFF)
+option(VOXELVK_ENABLE_UBSAN     "Enable UndefinedBehaviorSanitizer" OFF)
 
 # Propagate debug markers flag to all targets when enabled
 add_compile_definitions(
   $<$<BOOL:${ENABLE_VK_DEBUG_MARKERS}>:ENABLE_VK_DEBUG_MARKERS=1>
 )
 
+# Sanitizer configuration
+if(VOXELVK_ENABLE_ASAN OR VOXELVK_ENABLE_UBSAN)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    if(VOXELVK_ENABLE_ASAN)
+      add_compile_options(-fsanitize=address)
+      add_link_options(-fsanitize=address)
+    endif()
+    if(VOXELVK_ENABLE_UBSAN)
+      add_compile_options(-fsanitize=undefined)
+      add_link_options(-fsanitize=undefined)
+    endif()
+    # Disable optimizations for sanitizers
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type" FORCE)
+    message(STATUS "Sanitizers enabled - forcing Debug build")
+  else()
+    message(WARNING "Sanitizers only supported with Clang/GCC")
+  endif()
+endif()
+
 # Include shader compilation system
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(CompileShaders)
+
+# Enhanced shader build pipeline
+option(VOXELVK_USE_PYTHON_SHADER_BUILD "Use Python shader build pipeline" ON)
+if(VOXELVK_USE_PYTHON_SHADER_BUILD)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  
+  set(SHADER_SOURCE_DIRS "shaders" "shaders_vk")
+  set(SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/resources/spv")
+  
+  add_custom_target(compile_all_shaders
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/shader_build.py
+      --source-dirs ${SHADER_SOURCE_DIRS}
+      --output-dir ${SHADER_OUTPUT_DIR}
+      --verbose
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Building shaders with Python pipeline"
+    VERBATIM
+  )
+  
+  # Make shader compilation a dependency of the main build
+  add_dependencies(ShaderSPV compile_all_shaders)
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Build type" FORCE)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter)
-  add_link_options(-Wl,--no-undefined)
-  
-  # Force use of system libstdc++ instead of conda's
-  if(EXISTS "/usr/lib/x86_64-linux-gnu/libstdc++.so.6")
-    add_link_options(-Wl,--rpath=/usr/lib/x86_64-linux-gnu)
-    add_link_options(-L/usr/lib/x86_64-linux-gnu)
-  endif()
+# Force use of system libstdc++ instead of conda's
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND EXISTS "/usr/lib/x86_64-linux-gnu/libstdc++.so.6")
+  add_link_options(-Wl,--rpath=/usr/lib/x86_64-linux-gnu)
+  add_link_options(-L/usr/lib/x86_64-linux-gnu)
 endif()
 
 # --- Build tagging injection ---

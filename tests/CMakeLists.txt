@@ -50,3 +50,9 @@ endif()
 
 include(GoogleTest)
 gtest_discover_tests(voxelvk_tests)
+
+# Add performance tests
+add_subdirectory(perf)
+
+# Add image regression tests
+add_subdirectory(render_diff)
