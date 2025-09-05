@@ -993,12 +993,22 @@ int main(int argc, char** argv) {
             struct Cmd { const char* name; std::function<void()> fn; };
             std::vector<Cmd> cmds = {
                 {"Toggle Fullscreen", [&](){ g_isFullscreen = !g_isFullscreen; voxelvk::RequestFullscreen(g_isFullscreen); }},
+                {"Open AI Configuration", [&](){ showAiPanel = true; }},
+                {"Toggle RAG", [&](){ 
+                    bool newState = !last_rag_enabled; 
+                    voxelvk::ai::UpdateRagConfig(newState, last_rag_top_k); 
+                    last_rag_enabled = newState; 
+                }},
                 {"Save Screenshot", [&](){
 #if defined(__linux__)
                     SaveWindowScreenshot(window, "screenshot.png");
 #endif
                 }},
                 {"Export Perf JSON", [&](){ voxelvk::PerformanceMonitor::instance().exportPerformanceData("."); }},
+                {"Hot Reload Config", [&](){ 
+                    paletteRuntime.load_from_file(paletteRuntime.path);
+                    try { weatherSystem.loadFromYaml("config/weather.yaml"); } catch(...) {}
+                }},
                 #ifdef IMGUI_HAS_VIEWPORT
                 {"Toggle Viewports", [&](){ io.ConfigFlags ^= ImGuiConfigFlags_ViewportsEnable; }},
                 #endif
