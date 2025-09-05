@@ -273,8 +273,34 @@ int main(int argc, char* argv[]) {
     
     std::string test_name = argv[1];
     std::string output_file = argv[2];
-    uint32_t width = argc > 3 ? std::stoi(argv[3]) : 800;
-    uint32_t height = argc > 4 ? std::stoi(argv[4]) : 600;
+    uint32_t width = 800;
+    uint32_t height = 600;
+    if (argc > 3) {
+        try {
+            int w = std::stoi(argv[3]);
+            if (w <= 0) throw std::out_of_range("Width must be positive");
+            width = static_cast<uint32_t>(w);
+        } catch (const std::invalid_argument&) {
+            std::cerr << "Invalid width parameter: '" << argv[3] << "' is not a valid integer." << std::endl;
+            return 1;
+        } catch (const std::out_of_range&) {
+            std::cerr << "Invalid width parameter: '" << argv[3] << "' is out of range or not positive." << std::endl;
+            return 1;
+        }
+    }
+    if (argc > 4) {
+        try {
+            int h = std::stoi(argv[4]);
+            if (h <= 0) throw std::out_of_range("Height must be positive");
+            height = static_cast<uint32_t>(h);
+        } catch (const std::invalid_argument&) {
+            std::cerr << "Invalid height parameter: '" << argv[4] << "' is not a valid integer." << std::endl;
+            return 1;
+        } catch (const std::out_of_range&) {
+            std::cerr << "Invalid height parameter: '" << argv[4] << "' is out of range or not positive." << std::endl;
+            return 1;
+        }
+    }
     
     MinimalRenderer renderer(width, height);
     
