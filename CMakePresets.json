@@ -229,7 +229,8 @@
   ],
   "testPresets": [
     { "name": "default", "configurePreset": "default", "output": {"outputOnFailure": true} },
-  { "name": "werror-demos-rl", "configurePreset": "werror-demos-rl", "output": {"outputOnFailure": true} },
+    { "name": "werror-demos-rl", "configurePreset": "werror-demos-rl", "output": {"outputOnFailure": true} },
+    { "name": "coverage", "configurePreset": "coverage", "output": {"outputOnFailure": true} },
     { "name": "debug",   "configurePreset": "debug",   "output": {"outputOnFailure": true} },
     { "name": "release", "configurePreset": "release", "output": {"outputOnFailure": true} },
     { "name": "headless", "configurePreset": "headless", "output": {"outputOnFailure": true} },
