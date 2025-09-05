@@ -14,7 +14,7 @@ add_executable(test_smoke_init test_smoke_init.cpp)
 target_link_libraries(test_smoke_init PRIVATE GTest::gtest_main)
 gtest_discover_tests(test_smoke_init)
 
-add_executable(test_math_util tests/test_math_util.cpp)
+add_executable(test_math_util test_math_util.cpp)
 target_compile_features(test_math_util PRIVATE cxx_std_20)
 target_include_directories(test_math_util PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(test_math_util PRIVATE GTest::gtest_main)
