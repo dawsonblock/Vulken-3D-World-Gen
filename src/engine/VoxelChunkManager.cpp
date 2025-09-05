@@ -1,4 +1,6 @@
 #include "engine/VoxelChunkManager.h"
+#include <mutex>
+#include <optional>
 
 namespace vulken {
 
