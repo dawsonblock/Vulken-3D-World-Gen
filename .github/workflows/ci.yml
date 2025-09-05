@@ -83,11 +83,19 @@ jobs:
             -DVOXELVK_DEMO_WERROR=ON \
             -DENABLE_TESTS=ON
             
-      - name: Shader validation (glslangValidator)
+      - name: Shader validation (glslangValidator) - Ubuntu
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y glslang-tools
           find shaders shaders_vk -type f \( -name "*.vert" -o -name "*.frag" -o -name "*.comp" -o -name "*.glsl" \) -print0 | xargs -0 -n1 -I{} glslangValidator -V {}
+          
+      - name: Shader validation (glslangValidator) - Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          # glslangValidator should be available via Vulkan SDK installation
+          Get-ChildItem -Recurse -Filter "*.vert", "*.frag", "*.comp", "*.glsl" -Path "shaders", "shaders_vk" | ForEach-Object { glslangValidator -V $_.FullName }
+        shell: powershell
             
       - name: Run pre-commit (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
