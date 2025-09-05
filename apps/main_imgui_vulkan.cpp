@@ -1145,14 +1145,72 @@ int main(int argc, char** argv) {
                 showAiPanel = aiPanelOpen;
             }
 
-            if (ImGui::Begin("Performance")) {
+            // Enhanced Performance panel with graphs
+            if (showPerf && ImGui::Begin("Performance", &showPerf)) {
                 auto& pm = voxelvk::PerformanceMonitor::instance();
                 auto& tracker = pm.getBudgetTracker();
-                ImGui::Text("Avg frame: %.2f ms", tracker.getAverageTime(voxelvk::PerformanceBudget::FRAME_TOTAL));
-                ImGui::Text("P95 frame: %.2f ms", tracker.getP95Time(voxelvk::PerformanceBudget::FRAME_TOTAL));
+                
+                // Performance Summary Table
+                if (ImGui::BeginTable("PerfSummary", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                    ImGui::TableSetupColumn("Metric", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+                    ImGui::TableSetupColumn("Current", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                    ImGui::TableSetupColumn("Target", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                    ImGui::TableHeadersRow();
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("Frame Time");
+                    ImGui::TableNextColumn(); 
+                    float frameTime = tracker.getAverageTime(voxelvk::PerformanceBudget::FRAME_TOTAL);
+                    ImVec4 frameColor = frameTime < 16.67f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                                       frameTime < 33.33f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
+                    ImGui::TextColored(frameColor, "%.2f ms", frameTime);
+                    ImGui::TableNextColumn(); ImGui::Text("16.67 ms");
+                    
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::Text("P95 Frame");
+                    ImGui::TableNextColumn(); ImGui::Text("%.2f ms", tracker.getP95Time(voxelvk::PerformanceBudget::FRAME_TOTAL));
+                    ImGui::TableNextColumn(); ImGui::Text("20.0 ms");
+                    
+                    ImGui::EndTable();
+                }
+                
+                ImGui::Spacing();
+                
+                // Frame time history graph
+                if (!fpsHistory_.empty()) {
+                    ImGui::Text("FPS History (2 min)");
+                    ImGui::PlotLines("##FPSGraph", fpsHistory_.data(), (int)fpsHistory_.size(), 0, nullptr, 0.0f, 120.0f, ImVec2(0, 80));
+                    
+                    ImGui::Text("Frame Time History");
+                    ImGui::PlotLines("##FrameTimeGraph", frameTimeHistory_.data(), (int)frameTimeHistory_.size(), 0, nullptr, 0.0f, 50.0f, ImVec2(0, 80));
+                }
+                
+                // GPU Timings
                 const auto& timings = pm.getGPUTimer().getAllTimings();
-                if (!timings.empty()) { ImGui::Separator(); ImGui::Text("GPU timings:"); for (const auto& kv : timings) { ImGui::BulletText("%s: %.3f ms", kv.first.c_str(), kv.second); } }
-                else { ImGui::TextDisabled("GPU timings not available"); }
+                if (!timings.empty()) {
+                    ImGui::Separator();
+                    ImGui::Text("GPU Pipeline Timings:");
+                    for (const auto& kv : timings) {
+                        ImGui::BulletText("%s: %.3f ms", kv.first.c_str(), kv.second);
+                        
+                        // Add a small progress bar for visual representation
+                        float normalized = std::min(kv.second / 16.67f, 1.0f); // Normalize to 60 FPS budget
+                        ImVec4 barColor = normalized < 0.5f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                                         normalized < 0.8f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
+                        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, barColor);
+                        ImGui::ProgressBar(normalized, ImVec2(150, 0), "");
+                        ImGui::PopStyleColor();
+                    }
+                } else {
+                    ImGui::TextDisabled("GPU timings not available");
+                }
+                
+                // Performance actions
+                ImGui::Spacing();
+                ImGui::Separator();
+                if (ImGui::Button("Export Performance Data", ImVec2(180, 30))) {
+                    pm.exportPerformanceData(".");
+                }
             }
             ImGui::End();
             // Status bar
