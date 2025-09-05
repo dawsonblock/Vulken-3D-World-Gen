@@ -885,3 +885,71 @@ if(VOXELVK_DEMO_WERROR)
   string(JOIN ", " _WERROR_TARGETS_STR ${_WERROR_TARGETS})
   message(STATUS "Werror enabled for targets: ${_WERROR_TARGETS_STR}")
 endif()
+
+# ======================================
+# Production Testing Framework
+# ======================================
+
+if(ENABLE_TESTS)
+  include(CTest)
+  enable_testing()
+  
+  find_package(GTest CONFIG QUIET)
+  if(GTest_FOUND)
+    message(STATUS "GoogleTest found - enabling test suite")
+    
+    # Unit and integration tests
+    add_executable(unit_tests 
+      tests/unit/test_math_basics.cpp 
+      tests/integration/test_engine_boot.cpp
+    )
+    target_link_libraries(unit_tests PRIVATE 
+      GTest::gtest 
+      GTest::gtest_main
+    )
+    target_include_directories(unit_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    
+    # Register unit tests with CTest
+    add_test(NAME unit_tests COMMAND unit_tests)
+    
+    # Shader compilation smoke test
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/render/test_shader_compile.sh")
+      add_test(NAME shader_smoke 
+        COMMAND ${CMAKE_SOURCE_DIR}/tests/render/test_shader_compile.sh
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      )
+    endif()
+    
+    message(STATUS "Test suite configured successfully")
+  else()
+    message(WARNING "GoogleTest not found - tests disabled")
+  endif()
+endif()
+
+# ======================================
+# CPack Configuration (Release Packaging)
+# ======================================
+
+include(CPack)
+set(CPACK_PACKAGE_NAME "vulken-3d-world-gen")
+set(CPACK_PACKAGE_VENDOR "Aetheron Research")
+set(CPACK_PACKAGE_VERSION "0.1.0")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "High-performance voxel rendering engine with Vulkan graphics")
+set(CPACK_GENERATOR "ZIP;TGZ")
+set(CPACK_SOURCE_GENERATOR "TGZ")
+
+# Include documentation and assets in package
+set(CPACK_PACKAGE_EXECUTABLES 
+  "main_imgui_vulkan;VoxelVK Main Demo"
+  "operator_console;Operator Console"
+)
+
+# Install rules for packaging
+install(TARGETS main_imgui_vulkan operator_console
+  DESTINATION bin
+  COMPONENT Runtime
+)
+
+install(DIRECTORY assets/ DESTINATION assets COMPONENT Assets)
+install(DIRECTORY config/ DESTINATION config COMPONENT Config)
+install(FILES README.md LICENSE CHANGELOG.md DESTINATION . COMPONENT Documentation)
