@@ -100,3 +100,7 @@ vcpkg-configuration.json
 
 # Release bundles
 release/
+-e 
+# Environment files
+*.env
+*.env.*
