@@ -1204,7 +1204,7 @@ int main(int argc, char** argv) {
                         ImGui::BulletText("%s: %.3f ms", kv.first.c_str(), kv.second);
                         
                         // Add a small progress bar for visual representation
-                        float normalized = std::min(kv.second / 16.67f, 1.0f); // Normalize to 60 FPS budget
+                        float normalized = std::min(static_cast<float>(kv.second / 16.67f), 1.0f); // Normalize to 60 FPS budget
                         ImVec4 barColor = normalized < 0.5f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
                                          normalized < 0.8f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
                         ImGui::PushStyleColor(ImGuiCol_PlotHistogram, barColor);
