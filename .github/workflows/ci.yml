@@ -623,7 +623,7 @@ jobs:
           cat perf/perf_compare_report.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       - name: Post sticky comment
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v2.9.0
         with:
           message: |
             **Perf Report**
