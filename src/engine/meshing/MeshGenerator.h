@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/meshing/IMeshGenerator.h"
+#include "IMeshGenerator.h"
 
 namespace vulken::meshing {
 

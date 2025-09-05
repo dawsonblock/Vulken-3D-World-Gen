@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 
 enable_testing()
-find_package(GTest CONFIG REQUIRED)
+find_package(GTest CONFIG QUIET)
+if(NOT GTest_FOUND)
+  message(WARNING "GTest not found - tests will be disabled")
+  return()
+endif()
 find_package(yaml-cpp CONFIG QUIET)
 find_package(glm CONFIG QUIET)
 
@@ -50,3 +54,13 @@ endif()
 
 include(GoogleTest)
 gtest_discover_tests(voxelvk_tests)
+
+# Add performance tests (if dependencies available)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/perf")
+  add_subdirectory(perf)
+endif()
+
+# Add image regression tests (if dependencies available)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/render_diff")
+  add_subdirectory(render_diff)
+endif()

@@ -1,0 +1,122 @@
+{
+  "version": "1.0",
+  "local_assets": {
+    "models/README.md": {
+      "size_bytes": 122,
+      "size_mb": 0.0001163482666015625,
+      "type": ".md",
+      "path": "assets/models/README.md"
+    },
+    "samples/cube.obj": {
+      "size_bytes": 546,
+      "size_mb": 0.0005207061767578125,
+      "type": ".obj",
+      "path": "assets/samples/cube.obj"
+    },
+    "samples/test_voxel_chunk.json": {
+      "size_bytes": 672,
+      "size_mb": 0.000640869140625,
+      "type": ".json",
+      "path": "assets/samples/test_voxel_chunk.json"
+    },
+    "samples/simple_voxels.mvox": {
+      "size_bytes": 215,
+      "size_mb": 0.00020503997802734375,
+      "type": ".mvox",
+      "path": "assets/samples/simple_voxels.mvox"
+    },
+    "palettes/volcanic.json": {
+      "size_bytes": 295,
+      "size_mb": 0.00028133392333984375,
+      "type": ".json",
+      "path": "assets/palettes/volcanic.json"
+    },
+    "palettes/arctic.json": {
+      "size_bytes": 289,
+      "size_mb": 0.00027561187744140625,
+      "type": ".json",
+      "path": "assets/palettes/arctic.json"
+    },
+    "palettes/desert.json": {
+      "size_bytes": 64,
+      "size_mb": 6.103515625e-05,
+      "type": ".json",
+      "path": "assets/palettes/desert.json"
+    },
+    "palettes/forest.json": {
+      "size_bytes": 298,
+      "size_mb": 0.0002841949462890625,
+      "type": ".json",
+      "path": "assets/palettes/forest.json"
+    },
+    "sounds/README.md": {
+      "size_bytes": 124,
+      "size_mb": 0.000118255615234375,
+      "type": ".md",
+      "path": "assets/sounds/README.md"
+    },
+    "videos/README.md": {
+      "size_bytes": 125,
+      "size_mb": 0.00011920928955078125,
+      "type": ".md",
+      "path": "assets/videos/README.md"
+    },
+    "textures/water_normal.png": {
+      "size_bytes": 37,
+      "size_mb": 3.528594970703125e-05,
+      "type": ".png",
+      "path": "assets/textures/water_normal.png"
+    },
+    "textures/stone_albedo.png": {
+      "size_bytes": 38,
+      "size_mb": 3.62396240234375e-05,
+      "type": ".png",
+      "path": "assets/textures/stone_albedo.png"
+    },
+    "textures/default_albedo.png": {
+      "size_bytes": 54,
+      "size_mb": 5.14984130859375e-05,
+      "type": ".png",
+      "path": "assets/textures/default_albedo.png"
+    },
+    "textures/grass_albedo.png": {
+      "size_bytes": 38,
+      "size_mb": 3.62396240234375e-05,
+      "type": ".png",
+      "path": "assets/textures/grass_albedo.png"
+    },
+    "fonts/README.md": {
+      "size_bytes": 66,
+      "size_mb": 6.29425048828125e-05,
+      "type": ".md",
+      "path": "assets/fonts/README.md"
+    },
+    "config/materials.json": {
+      "size_bytes": 432,
+      "size_mb": 0.0004119873046875,
+      "type": ".json",
+      "path": "assets/config/materials.json"
+    },
+    "meshes_library/cube.obj": {
+      "size_bytes": 46,
+      "size_mb": 4.38690185546875e-05,
+      "type": ".obj",
+      "path": "assets/meshes_library/cube.obj"
+    },
+    "textures/hd/README.md": {
+      "size_bytes": 142,
+      "size_mb": 0.0001354217529296875,
+      "type": ".md",
+      "path": "assets/textures/hd/README.md"
+    },
+    "meshes/hd/README.md": {
+      "size_bytes": 138,
+      "size_mb": 0.0001316070556640625,
+      "type": ".md",
+      "path": "assets/meshes/hd/README.md"
+    }
+  },
+  "external_assets": {},
+  "duplicates_removed": [],
+  "large_files_moved": []
+}

@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <string>
-#include "engine_export.h"
+#include "../engine_export.h"
 #include "../ChunkCoord.h"
 #include "../VoxelTypes.h"
 #include "../Result.h"

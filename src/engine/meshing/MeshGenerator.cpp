@@ -1,4 +1,4 @@
-#include "engine/meshing/MeshGenerator.h"
+#include "MeshGenerator.h"
 
 namespace vulken::meshing {
 

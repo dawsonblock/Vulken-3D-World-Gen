@@ -1,8 +1,8 @@
 #pragma once
 #include <optional>
 #include <string>
-#include "engine/core/VoxelTypes.h"
-#include "engine/core/EngineConfig.h"
+#include "../core/VoxelTypes.h"
+#include "../core/EngineConfig.h"
 
 namespace vulken::storage {
 

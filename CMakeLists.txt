@@ -1,10 +1,24 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.24...3.28 FATAL_ERROR)
 project(VoxelVK_Elite_ALL LANGUAGES CXX)
+
+# Set policies for modern CMake
+cmake_policy(SET CMP0077 NEW)  # option() honors normal variables
+cmake_policy(SET CMP0144 NEW)  # FindPython3 uses FindPython
+cmake_policy(SET CMP0155 NEW)  # CMAKE_FIND_PACKAGE_PREFER_CONFIG
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Global warning flags
+if(MSVC)
+  add_compile_options(/W4 /permissive- /Zc:__cplusplus)
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter)
+  add_link_options(-Wl,--no-undefined)
+endif()
 
 # Toolchain selection is driven by CMakePresets and CI; avoid overriding here
 
@@ -73,29 +87,68 @@ option(VOXELVK_HEADLESS_ONLY    "Build minimal headless utilities without Vulkan
 option(VOXELVK_DEMO_WERROR      "Treat warnings as errors for demo/sample apps only" OFF)
 set(VOXELVK_WERROR_TARGETS "" CACHE STRING "Semicolon-separated list of targets to build with -Werror; defaults to core demos if empty")
 option(VOXELVK_ENABLE_REDIS     "Build Redis-backed asset loader and link demos against it" ON)
+option(VOXELVK_ENABLE_ASAN      "Enable AddressSanitizer" OFF)
+option(VOXELVK_ENABLE_UBSAN     "Enable UndefinedBehaviorSanitizer" OFF)
 
 # Propagate debug markers flag to all targets when enabled
 add_compile_definitions(
   $<$<BOOL:${ENABLE_VK_DEBUG_MARKERS}>:ENABLE_VK_DEBUG_MARKERS=1>
 )
 
+# Sanitizer configuration
+if(VOXELVK_ENABLE_ASAN OR VOXELVK_ENABLE_UBSAN)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    if(VOXELVK_ENABLE_ASAN)
+      add_compile_options(-fsanitize=address)
+      add_link_options(-fsanitize=address)
+    endif()
+    if(VOXELVK_ENABLE_UBSAN)
+      add_compile_options(-fsanitize=undefined)
+      add_link_options(-fsanitize=undefined)
+    endif()
+    # Disable optimizations for sanitizers
+    message(WARNING "Sanitizers work best with Debug builds. Consider setting CMAKE_BUILD_TYPE=Debug")
+  else()
+    message(WARNING "Sanitizers only supported with Clang/GCC")
+  endif()
+endif()
+
 # Include shader compilation system
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(CompileShaders)
+
+# Enhanced shader build pipeline
+option(VOXELVK_USE_PYTHON_SHADER_BUILD "Use Python shader build pipeline" ON)
+if(VOXELVK_USE_PYTHON_SHADER_BUILD AND SHADER_COMPILATION_AVAILABLE)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  
+  set(SHADER_SOURCE_DIRS "shaders" "shaders_vk")
+  set(SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/resources/spv")
+  
+  add_custom_target(compile_all_shaders
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/shader_build.py
+      --source-dirs ${SHADER_SOURCE_DIRS}
+      --output-dir ${SHADER_OUTPUT_DIR}
+      --verbose
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Building shaders with Python pipeline"
+    VERBATIM
+  )
+  
+  # Make shader compilation a dependency of the main build
+  add_dependencies(ShaderSPV compile_all_shaders)
+else()
+  message(STATUS "Python shader build pipeline disabled - no shader tools available")
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Build type" FORCE)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter)
-  add_link_options(-Wl,--no-undefined)
-  
-  # Force use of system libstdc++ instead of conda's
-  if(EXISTS "/usr/lib/x86_64-linux-gnu/libstdc++.so.6")
-    add_link_options(-Wl,--rpath=/usr/lib/x86_64-linux-gnu)
-    add_link_options(-L/usr/lib/x86_64-linux-gnu)
-  endif()
+# Force use of system libstdc++ instead of conda's
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND EXISTS "/usr/lib/x86_64-linux-gnu/libstdc++.so.6")
+  add_link_options(-Wl,--rpath=/usr/lib/x86_64-linux-gnu)
+  add_link_options(-L/usr/lib/x86_64-linux-gnu)
 endif()
 
 # --- Build tagging injection ---
@@ -133,7 +186,14 @@ endif()
 
 # Only configure graphics stack when not headless-only
 if(NOT VOXELVK_HEADLESS_ONLY)
-  find_package(Vulkan REQUIRED)
+  find_package(Vulkan QUIET)
+  if(NOT Vulkan_FOUND)
+    message(WARNING "Vulkan not found - enabling headless-only mode")
+    set(VOXELVK_HEADLESS_ONLY ON CACHE BOOL "Build minimal headless utilities without Vulkan/GLFW" FORCE)
+  endif()
+endif()
+
+if(NOT VOXELVK_HEADLESS_ONLY AND Vulkan_FOUND)
 
   # VMA (Vulkan Memory Allocator) integration
   find_package(VulkanMemoryAllocator QUIET)
@@ -160,8 +220,13 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   if(glfw3_FOUND)
     set(GLFW_LIB glfw)
   else()
-    find_package(GLFW REQUIRED)
-    set(GLFW_LIB GLFW::GLFW)
+    find_package(GLFW QUIET)
+    if(GLFW_FOUND)
+      set(GLFW_LIB GLFW::GLFW)
+    else()
+      message(WARNING "GLFW not found - disabling GUI applications")
+      set(VOXELVK_HEADLESS_ONLY ON CACHE BOOL "Build minimal headless utilities without Vulkan/GLFW" FORCE)
+    endif()
   endif()
 endif()
 
@@ -615,7 +680,7 @@ if(ENABLE_TESTS)
   set_tests_properties(test_smoke_headless PROPERTIES TIMEOUT 10)
   
   # Weather system tests
-  if(VOXELVK_ENABLE_WEATHER)
+  if(VOXELVK_ENABLE_WEATHER AND (GLM_FOUND OR glm_FOUND))
     add_executable(test_weather_system tests/test_weather_system.cpp ${WEATHER_SRC} src/core/logger.cpp)
     target_include_directories(test_weather_system PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(test_weather_system PRIVATE Threads::Threads)
@@ -623,8 +688,13 @@ if(ENABLE_TESTS)
       target_link_libraries(test_weather_system PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(test_weather_system PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
+    if(GLM_FOUND OR glm_FOUND)
+      target_link_libraries(test_weather_system PRIVATE ${GLM_LIB})
+    endif()
     add_test(NAME test_weather_system COMMAND test_weather_system)
     set_tests_properties(test_weather_system PROPERTIES TIMEOUT 30)
+  else()
+    message(STATUS "Weather system tests disabled - GLM not available")
   endif()
   
   # RL backend tests
@@ -695,8 +765,12 @@ if(VOXELVK_ENABLE_REDIS)
   find_library(REDISPLUSPLUS_LIBRARY NAMES redis++ redisplusplus)
   find_library(HIREDIS_LIBRARY NAMES hiredis)
   if(NOT REDISPLUSPLUS_INCLUDE_DIR OR NOT REDISPLUSPLUS_LIBRARY OR NOT HIREDIS_LIBRARY)
-    message(FATAL_ERROR "redis-plus-plus / hiredis not found. Install via vcpkg or disable with -DVOXELVK_ENABLE_REDIS=OFF.")
+    message(WARNING "redis-plus-plus / hiredis not found. Disabling Redis support.")
+    set(VOXELVK_ENABLE_REDIS OFF CACHE BOOL "Build Redis-backed asset loader and link demos against it" FORCE)
   endif()
+endif()
+
+if(VOXELVK_ENABLE_REDIS AND REDISPLUSPLUS_INCLUDE_DIR AND REDISPLUSPLUS_LIBRARY AND HIREDIS_LIBRARY)
 
   add_library(redis_assets src/redis_asset_store.cpp)
   target_include_directories(redis_assets PUBLIC ${REDISPLUSPLUS_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)

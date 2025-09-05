@@ -2,6 +2,7 @@
   "name": "voxelvk",
   "version-string": "2025.09",
   "description": "VoxelVK - High-performance voxel engine with Vulkan rendering, weather systems, and RL training",
+  "builtin-baseline": "2024.12.12",
   "dependencies": [
     "glfw3",
     "glm",
