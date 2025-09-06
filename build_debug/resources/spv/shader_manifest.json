@@ -1,0 +1,250 @@
+{
+  "version": "1.0",
+  "generated_by": "VoxelVK Shader Build Pipeline",
+  "shaders": {
+    "core_chunk_cull.comp": {
+      "source_path": "shaders/core/chunk_cull.comp",
+      "output_path": "core/chunk_cull.spv",
+      "stage": "compute",
+      "hash": "7c589794909a8ade0f9e29f6fce161f24e3c4b9e241a27292ce15bb6af11830a",
+      "compiled": true
+    },
+    "core_greedy_mesh.comp": {
+      "source_path": "shaders/core/greedy_mesh.comp",
+      "output_path": "core/greedy_mesh.spv",
+      "stage": "compute",
+      "hash": "d4777faffb1a156fa2cbcba1fd52b70ab490f977af07f788ea2575bbd73bcd32",
+      "compiled": true
+    },
+    "core_voxel_mesher.comp": {
+      "source_path": "shaders/core/voxel_mesher.comp",
+      "output_path": "core/voxel_mesher.spv",
+      "stage": "compute",
+      "hash": "83804338c60c0e16ab524347123e892aad1776b0f7fcc557a3957c0108d1df10",
+      "compiled": true
+    },
+    "ibl_brdf_lut.frag": {
+      "source_path": "shaders/ibl/brdf_lut.frag",
+      "output_path": "ibl/brdf_lut.spv",
+      "stage": "fragment",
+      "hash": "b2257a599c56fda38774cb672704661d9c14b21c020eb963ea68d4ddea59eb24",
+      "compiled": true
+    },
+    "ibl_equirect_to_cubemap.frag": {
+      "source_path": "shaders/ibl/equirect_to_cubemap.frag",
+      "output_path": "ibl/equirect_to_cubemap.spv",
+      "stage": "fragment",
+      "hash": "e9b033672ef434e67e57391900e2f444b130aadaae3fbf0b803661a97c96cf0d",
+      "compiled": true
+    },
+    "ibl_pmrem_prefilter.frag": {
+      "source_path": "shaders/ibl/pmrem_prefilter.frag",
+      "output_path": "ibl/pmrem_prefilter.spv",
+      "stage": "fragment",
+      "hash": "3021d881cd4e0ac7340730a42806eba8de32887161939163e19b8508ba61b164",
+      "compiled": true
+    },
+    "post_atmosphere.frag": {
+      "source_path": "shaders/post/atmosphere.frag",
+      "output_path": "post/atmosphere.spv",
+      "stage": "fragment",
+      "hash": "7508393aae029d446183814cc7a6619316ec090bf51de79014108973838d2b8d",
+      "compiled": true
+    },
+    "post_bilateral_blur.frag": {
+      "source_path": "shaders/post/bilateral_blur.frag",
+      "output_path": "post/bilateral_blur.spv",
+      "stage": "fragment",
+      "hash": "eba817e879f77625ee4cdc08a2fd65d887fee500b5e1f922ba5b6e20f9d23e6f",
+      "compiled": true
+    },
+    "post_clouds.frag": {
+      "source_path": "shaders/post/clouds.frag",
+      "output_path": "post/clouds.spv",
+      "stage": "fragment",
+      "hash": "8327f820fd2320faf083ae6196822320981eaa316b43492dcd40f7491ff04b31",
+      "compiled": true
+    },
+    "post_taa.frag": {
+      "source_path": "shaders/post/taa.frag",
+      "output_path": "post/taa.spv",
+      "stage": "fragment",
+      "hash": "ddd7bdc6e3025c39a7f5e5c49b52c1e01a398470f9fcd27883089b4a0b580f86",
+      "compiled": true
+    },
+    "ai_blockize.comp.glsl": {
+      "source_path": "shaders_vk/ai/blockize.comp.glsl",
+      "output_path": "ai/blockize.comp.spv",
+      "stage": "compute",
+      "hash": "21d96d4684413263b46e2fcdde8f39067c40fd2f8764f0b15a906e040b894df1",
+      "compiled": true
+    },
+    "clouds_clouds_fullscreen.frag": {
+      "source_path": "shaders_vk/clouds/clouds_fullscreen.frag",
+      "output_path": "clouds/clouds_fullscreen.spv",
+      "stage": "fragment",
+      "hash": "3463d2d17387e0094416559b2fbe425da325e96e76b39ad3abb5560d57b876a7",
+      "compiled": true
+    },
+    "common_fullscreen.vert.glsl": {
+      "source_path": "shaders_vk/common/fullscreen.vert.glsl",
+      "output_path": "common/fullscreen.vert.spv",
+      "stage": "vertex",
+      "hash": "7d4c0c4360d7d15ebf8b9092a8af4463cd5674090fcf61c054869d39c3652e4e",
+      "compiled": true
+    },
+    "ibl_brdf_lut.comp.glsl": {
+      "source_path": "shaders_vk/ibl/brdf_lut.comp.glsl",
+      "output_path": "ibl/brdf_lut.comp.spv",
+      "stage": "compute",
+      "hash": "3c680890367d22753b23fca9aa85f66f9d3d324b41ef12ac7cac10f55b0a1eaa",
+      "compiled": true
+    },
+    "particles_precip_render.frag": {
+      "source_path": "shaders_vk/particles/precip_render.frag",
+      "output_path": "particles/precip_render.spv",
+      "stage": "fragment",
+      "hash": "3e70cd6f10e058b7cc627c13141d18de7f81e327c6fa1b01b84e2cd67d6de093",
+      "compiled": true
+    },
+    "particles_precip_render.vert": {
+      "source_path": "shaders_vk/particles/precip_render.vert",
+      "output_path": "particles/precip_render.spv",
+      "stage": "vertex",
+      "hash": "1eebf645879be5eda1cfbebb035c91d22bd70057674848f669a283cd55a1ad7e",
+      "compiled": true
+    },
+    "particles_precip_update.comp": {
+      "source_path": "shaders_vk/particles/precip_update.comp",
+      "output_path": "particles/precip_update.spv",
+      "stage": "compute",
+      "hash": "69a0293179c3944deff1655af4c834ca6b9ff43b051acc7b0f63d25ba223fce3",
+      "compiled": true
+    },
+    "post_atmosphere.frag.glsl": {
+      "source_path": "shaders_vk/post/atmosphere.frag.glsl",
+      "output_path": "post/atmosphere.frag.spv",
+      "stage": "fragment",
+      "hash": "3ce3df78c80b8c55f42d2a9143469b0305eb0bd82ae6e3c3d7c003289a4607b2",
+      "compiled": true
+    },
+    "post_clouds.frag.glsl": {
+      "source_path": "shaders_vk/post/clouds.frag.glsl",
+      "output_path": "post/clouds.frag.spv",
+      "stage": "fragment",
+      "hash": "78e21f0aef0d2e1e477581b6d42c7f718260ba38acd93e6ed1e92417e6b3801d",
+      "compiled": true
+    },
+    "post_height_fog.frag": {
+      "source_path": "shaders_vk/post/height_fog.frag",
+      "output_path": "post/height_fog.spv",
+      "stage": "fragment",
+      "hash": "cdd7b262468d40f62bd8c302a59b84d2ad653eacba098071249eb29dd6344e56",
+      "compiled": true
+    },
+    "post_ssao.frag": {
+      "source_path": "shaders_vk/post/ssao.frag",
+      "output_path": "post/ssao.spv",
+      "stage": "fragment",
+      "hash": "6c55cff33fa502ca1d004b0b241b5fb04950f00db22315cef3ac72add7c82ee2",
+      "compiled": true
+    },
+    "post_ssao_blur.frag": {
+      "source_path": "shaders_vk/post/ssao_blur.frag",
+      "output_path": "post/ssao_blur.spv",
+      "stage": "fragment",
+      "hash": "e76e37eff1c9ae9618ac9caefaea7a0aa9f6a5d543fc5c52e30b1e088c914c76",
+      "compiled": true
+    },
+    "post_ssr.frag": {
+      "source_path": "shaders_vk/post/ssr.frag",
+      "output_path": "post/ssr.spv",
+      "stage": "fragment",
+      "hash": "18a879fb74a8c6562f602c8137d69f0a588b6e5e715c4ccab2b1ebe3d68738b0",
+      "compiled": true
+    },
+    "post_temporal_accum.comp": {
+      "source_path": "shaders_vk/post/temporal_accum.comp",
+      "output_path": "post/temporal_accum.spv",
+      "stage": "compute",
+      "hash": "1c4140dac018eeb19495dc3d5c05c8432d7f48909627922f2686b3b44a37ed9a",
+      "compiled": true
+    },
+    "shadows_csm_depth.frag.glsl": {
+      "source_path": "shaders_vk/shadows/csm_depth.frag.glsl",
+      "output_path": "shadows/csm_depth.frag.spv",
+      "stage": "fragment",
+      "hash": "0e247ee93cfdee845b4a629a98ce3f25631bcaa6d1c6fa667be1aebb1608a9c0",
+      "compiled": true
+    },
+    "shadows_csm_depth.vert.glsl": {
+      "source_path": "shaders_vk/shadows/csm_depth.vert.glsl",
+      "output_path": "shadows/csm_depth.vert.spv",
+      "stage": "vertex",
+      "hash": "1f35f4fcc38b0e35f1dc24e276bc5bfb06858b23543e08919a6ed374281191bd",
+      "compiled": true
+    },
+    "simple_triangle.frag": {
+      "source_path": "shaders_vk/simple_triangle.frag",
+      "output_path": "simple_triangle.spv",
+      "stage": "fragment",
+      "hash": "a0512dfd11f08bc76d3d53653f1b8ff6170a9a1852388ca67869117ddc7b7bfe",
+      "compiled": true
+    },
+    "simple_triangle.vert": {
+      "source_path": "shaders_vk/simple_triangle.vert",
+      "output_path": "simple_triangle.spv",
+      "stage": "vertex",
+      "hash": "ff23770216da2eac436e7b59dc06a0a6d4d4140e8a66dad7febcde2c69ec1187",
+      "compiled": true
+    },
+    "sky_sky_fullscreen.vert": {
+      "source_path": "shaders_vk/sky/sky_fullscreen.vert",
+      "output_path": "sky/sky_fullscreen.spv",
+      "stage": "vertex",
+      "hash": "ef13edea718bdc35433229db0fd2270d75e38028f3c827d49cf6350068bf1604",
+      "compiled": true
+    },
+    "sky_sky_hw.frag": {
+      "source_path": "shaders_vk/sky/sky_hw.frag",
+      "output_path": "sky/sky_hw.spv",
+      "stage": "fragment",
+      "hash": "34967ee317cb1d3944aea56cecefbd95977ef71344c34214ef18322adecdc731",
+      "compiled": true
+    },
+    "taa_motion_vectors.frag": {
+      "source_path": "shaders_vk/taa/motion_vectors.frag",
+      "output_path": "taa/motion_vectors.spv",
+      "stage": "fragment",
+      "hash": "6f50632463c32910c9d39335a5f6d38ab2ba3ec5bfcba3fbb4f68be8409fa7eb",
+      "compiled": true
+    },
+    "taa_motion_vectors.vert": {
+      "source_path": "shaders_vk/taa/motion_vectors.vert",
+      "output_path": "taa/motion_vectors.spv",
+      "stage": "vertex",
+      "hash": "1a89dc2d6d48b764b98f0c1139f3083ea9f2880bdc6a334bbd1f80bdd023a28f",
+      "compiled": true
+    },
+    "taa_taa_resolve.frag": {
+      "source_path": "shaders_vk/taa/taa_resolve.frag",
+      "output_path": "taa/taa_resolve.spv",
+      "stage": "fragment",
+      "hash": "79cbf0f81c069bac49a054922d40bcde7a7163c41cc94f48dc4174c66d1feee3",
+      "compiled": true
+    },
+    "taa_weather_taa_blend.frag": {
+      "source_path": "shaders_vk/taa/weather_taa_blend.frag",
+      "output_path": "taa/weather_taa_blend.spv",
+      "stage": "fragment",
+      "hash": "915e2f7937015839c1043a91975d459debf0d10d190b081456b6ad46a97457b5",
+      "compiled": true
+    }
+  },
+  "statistics": {
+    "total_shaders": 34,
+    "compiled_successfully": 34,
+    "compilation_errors": 0,
+    "optimization_errors": 0
+  }
+}

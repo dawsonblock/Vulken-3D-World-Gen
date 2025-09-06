@@ -1,49 +1,31 @@
-# Build directories
+# Build
 /build/
-/build_*/
-/_out/
 /out/
-/dist/
-/artifacts/
 /bin/
-/lib/
+/dist/
 /obj/
-
-# CMake
-CMakeCache.txt
-CMakeFiles/
-/cmake_install.cmake
-/CTestTestfile.cmake
-/install_manifest.txt
- CMakeUserPresets.json
-
-# Generators and compiled assets
-/spv/
-/generated/
-/vcpkg_installed/
-/_deps/
-
-# IDE/editor
-.vscode/
-.vscode/.cache/
-.vs/
-.idea/
-/.clangd/
-*.VC.db
-*.user
-*.sln
+/CMakeFiles/
+/CMakeCache.txt
 *.vcxproj*
+*.sln
+/.cache/
+/__pycache__/
 
-# OS/filesystem
+# Shaders (compiled)
+/shaders_vk/**/*.spv
+/build/shaders/
+
+# Local configs & logs
+/config/local/
+/logs/
+*.log
+
+# Editor/IDE
+.vscode/
+.vs/
+*.user
 .DS_Store
 Thumbs.db
-*~
-
-# Logs and profiles
-*.log
-*.nsys-rep
-*.qdrep
-*.sqlite
 
 # Python cache
 __pycache__/
@@ -86,13 +68,8 @@ redis_validation_report.json
 *.env
 *.env.*
 
-
-
-# Keep only the standard vcpkg configuration
-
 # vcpkg configuration: use vcpkg.json + CMakePresets.json only
 .vcpkg-configuration.json
-        main
 vcpkg-configuration.json
 
 # Local caches
@@ -100,67 +77,22 @@ vcpkg-configuration.json
 
 # Release bundles
 release/
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
 
 # Build / tool caches
-build/
 build-*/
-out/
-dist/
-.cache/
 .ccls-cache/
 .ipynb_checkpoints/
 
 # OS / editor junk
-.DS_Store
-Thumbs.db
 *.swp
-.vscode/
 .idea/
 
 # Local agents / scratch
 .emergent/
-*.log
 *.tmp
 
 # Package mgr / venv
 .venv/
-__pycache__/
 *.egg-info/
 pip-wheel-metadata/
 
@@ -169,4 +101,3 @@ coverage/
 *.gcda
 *.gcno
 *.lcov
-# Production scaffold completed on Fri Sep  5 22:27:02 UTC 2025

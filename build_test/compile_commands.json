@@ -1,0 +1,362 @@
+[
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/rl_nav_demo.dir/apps/rl_nav_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/apps/rl_nav_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/apps/rl_nav_demo.cpp",
+  "output": "CMakeFiles/rl_nav_demo.dir/apps/rl_nav_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/rl_nav_demo.dir/src/rl/rl_backend_dummy.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "output": "CMakeFiles/rl_nav_demo.dir/src/rl/rl_backend_dummy.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/rl_nav_demo.dir/src/rl/rl_backend_minimal.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "output": "CMakeFiles/rl_nav_demo.dir/src/rl/rl_backend_minimal.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/rl_nav_demo.dir/src/core/logger.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "output": "CMakeFiles/rl_nav_demo.dir/src/core/logger.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/rl/rl_backend_dummy.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/rl/rl_backend_dummy.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/rl/rl_backend_minimal.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/rl/rl_backend_minimal.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/core/performance_monitor.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/core/performance_monitor.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/core/performance_monitor.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/core/performance_monitor.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/render/frame_graph.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/frame_graph.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/frame_graph.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/render/frame_graph.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/render/screen_space_effects.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/screen_space_effects.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/screen_space_effects.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/render/screen_space_effects.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/render/taa_system.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/taa_system.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/taa_system.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/render/taa_system.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/render/mesh_optimizer.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/mesh_optimizer.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/mesh_optimizer.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/render/mesh_optimizer.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/render/texture_manager.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/texture_manager.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/texture_manager.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/render/texture_manager.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/frame_allocator.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/vk/frame_allocator.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/vk/frame_allocator.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/frame_allocator.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/memory_manager.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/vk/memory_manager.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/vk/memory_manager.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/memory_manager.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/device_caps.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/vk/device_caps.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/vk/device_caps.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/device_caps.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/error_handling.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/vk/error_handling.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/vk/error_handling.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/error_handling.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/pipeline_cache_manager.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/vk/pipeline_cache_manager.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/vk/pipeline_cache_manager.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/pipeline_cache_manager.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/swapchain_manager.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/vk/swapchain_manager.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/vk/swapchain_manager.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/vk/swapchain_manager.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -I/Users/dawsonblock/Vulken-3D-World-Gen/external/third_party -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/apps/main_imgui_vulkan.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/apps/main_imgui_vulkan.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/apps/main_imgui_vulkan.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/apps/main_imgui_vulkan.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -isystem /opt/homebrew/include -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/gui_fullscreen_demo.dir/apps/gui_fullscreen_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/apps/gui_fullscreen_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/apps/gui_fullscreen_demo.cpp",
+  "output": "CMakeFiles/gui_fullscreen_demo.dir/apps/gui_fullscreen_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -isystem /opt/homebrew/include -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/gui_fullscreen_demo.dir/src/ai/ai_imgui_palette_panel.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_imgui_palette_panel.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_imgui_palette_panel.cpp",
+  "output": "CMakeFiles/gui_fullscreen_demo.dir/src/ai/ai_imgui_palette_panel.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -isystem /opt/homebrew/include -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/gui_fullscreen_demo.dir/src/ai/ai_palette_config_io.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_palette_config_io.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_palette_config_io.cpp",
+  "output": "CMakeFiles/gui_fullscreen_demo.dir/src/ai/ai_palette_config_io.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -isystem /opt/homebrew/include -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/gui_fullscreen_demo.dir/src/ai/ai_pipeline_gui.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_pipeline_gui.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_pipeline_gui.cpp",
+  "output": "CMakeFiles/gui_fullscreen_demo.dir/src/ai/ai_pipeline_gui.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/vulkan_fullscreen_demo.dir/apps/vulkan_fullscreen_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/apps/vulkan_fullscreen_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/apps/vulkan_fullscreen_demo.cpp",
+  "output": "CMakeFiles/vulkan_fullscreen_demo.dir/apps/vulkan_fullscreen_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/vulkan_fullscreen_demo.dir/src/ai/ai_imgui_palette_panel.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_imgui_palette_panel.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_imgui_palette_panel.cpp",
+  "output": "CMakeFiles/vulkan_fullscreen_demo.dir/src/ai/ai_imgui_palette_panel.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/vulkan_fullscreen_demo.dir/src/ai/ai_palette_config_io.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_palette_config_io.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_palette_config_io.cpp",
+  "output": "CMakeFiles/vulkan_fullscreen_demo.dir/src/ai/ai_palette_config_io.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/vulkan_fullscreen_demo.dir/src/ai/ai_pipeline_gui.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_pipeline_gui.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/ai/ai_pipeline_gui.cpp",
+  "output": "CMakeFiles/vulkan_fullscreen_demo.dir/src/ai/ai_pipeline_gui.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_shaders_compile.dir/tests/test_shaders_compile.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/tests/test_shaders_compile.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/tests/test_shaders_compile.cpp",
+  "output": "CMakeFiles/test_shaders_compile.dir/tests/test_shaders_compile.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_weather_system.dir/tests/test_weather_system.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/tests/test_weather_system.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/tests/test_weather_system.cpp",
+  "output": "CMakeFiles/test_weather_system.dir/tests/test_weather_system.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_weather_system.dir/src/env/weather/lightning.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/lightning.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/lightning.cpp",
+  "output": "CMakeFiles/test_weather_system.dir/src/env/weather/lightning.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_weather_system.dir/src/env/weather/sky_model.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/sky_model.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/sky_model.cpp",
+  "output": "CMakeFiles/test_weather_system.dir/src/env/weather/sky_model.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_weather_system.dir/src/env/weather/weather_system.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/weather_system.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/weather_system.cpp",
+  "output": "CMakeFiles/test_weather_system.dir/src/env/weather/weather_system.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_weather_system.dir/src/render/framegraph/frame_graph_min.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/framegraph/frame_graph_min.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/framegraph/frame_graph_min.cpp",
+  "output": "CMakeFiles/test_weather_system.dir/src/render/framegraph/frame_graph_min.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_weather_system.dir/src/render/post/height_fog.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/post/height_fog.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/post/height_fog.cpp",
+  "output": "CMakeFiles/test_weather_system.dir/src/render/post/height_fog.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_weather_system.dir/src/render/post/temporal_accum.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/post/temporal_accum.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/post/temporal_accum.cpp",
+  "output": "CMakeFiles/test_weather_system.dir/src/render/post/temporal_accum.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_weather_system.dir/src/core/logger.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "output": "CMakeFiles/test_weather_system.dir/src/core/logger.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_rl_backend.dir/tests/test_rl_backend.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/tests/test_rl_backend.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/tests/test_rl_backend.cpp",
+  "output": "CMakeFiles/test_rl_backend.dir/tests/test_rl_backend.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_rl_backend.dir/src/rl/rl_backend_dummy.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "output": "CMakeFiles/test_rl_backend.dir/src/rl/rl_backend_dummy.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_rl_backend.dir/src/rl/rl_backend_minimal.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "output": "CMakeFiles/test_rl_backend.dir/src/rl/rl_backend_minimal.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_rl_backend.dir/src/core/logger.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "output": "CMakeFiles/test_rl_backend.dir/src/core/logger.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_P2_PERFORMANCE=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_performance_monitoring.dir/tests/test_performance_monitoring.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/tests/test_performance_monitoring.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/tests/test_performance_monitoring.cpp",
+  "output": "CMakeFiles/test_performance_monitoring.dir/tests/test_performance_monitoring.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_P2_PERFORMANCE=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_performance_monitoring.dir/src/core/logger.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "output": "CMakeFiles/test_performance_monitoring.dir/src/core/logger.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_P2_PERFORMANCE=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_performance_monitoring.dir/src/core/performance_monitor.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/core/performance_monitor.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/core/performance_monitor.cpp",
+  "output": "CMakeFiles/test_performance_monitoring.dir/src/core/performance_monitor.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_P2_PERFORMANCE=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_performance_monitoring.dir/src/core/nvtx_profiler.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/core/nvtx_profiler.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/core/nvtx_profiler.cpp",
+  "output": "CMakeFiles/test_performance_monitoring.dir/src/core/nvtx_profiler.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/tests/test_integration.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/tests/test_integration.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/tests/test_integration.cpp",
+  "output": "CMakeFiles/test_integration.dir/tests/test_integration.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/env/weather/lightning.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/lightning.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/lightning.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/env/weather/lightning.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/env/weather/sky_model.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/sky_model.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/sky_model.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/env/weather/sky_model.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/env/weather/weather_system.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/weather_system.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/env/weather/weather_system.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/env/weather/weather_system.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/render/framegraph/frame_graph_min.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/framegraph/frame_graph_min.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/framegraph/frame_graph_min.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/render/framegraph/frame_graph_min.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/render/post/height_fog.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/post/height_fog.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/post/height_fog.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/render/post/height_fog.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/render/post/temporal_accum.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/render/post/temporal_accum.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/render/post/temporal_accum.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/render/post/temporal_accum.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/core/logger.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/core/logger.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/core/performance_monitor.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/core/performance_monitor.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/core/performance_monitor.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/core/performance_monitor.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/core/nvtx_profiler.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/core/nvtx_profiler.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/core/nvtx_profiler.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/core/nvtx_profiler.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/rl/rl_backend_dummy.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/rl/rl_backend_dummy.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -DVOXELVK_ENABLE_WEATHER=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/test_integration.dir/src/rl/rl_backend_minimal.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "output": "CMakeFiles/test_integration.dir/src/rl/rl_backend_minimal.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test/src/engine",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVULKEN_ENGINE_ENABLE_LOGGING=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src/engine/include -I/Users/dawsonblock/Vulken-3D-World-Gen/src/engine -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/vulken_engine.dir/VoxelChunkManager.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/engine/VoxelChunkManager.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/engine/VoxelChunkManager.cpp",
+  "output": "src/engine/CMakeFiles/vulken_engine.dir/VoxelChunkManager.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test/src/engine",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVULKEN_ENGINE_ENABLE_LOGGING=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src/engine/include -I/Users/dawsonblock/Vulken-3D-World-Gen/src/engine -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/vulken_engine.dir/storage/FileStorageBackend.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/engine/storage/FileStorageBackend.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/engine/storage/FileStorageBackend.cpp",
+  "output": "src/engine/CMakeFiles/vulken_engine.dir/storage/FileStorageBackend.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test/src/engine",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVULKEN_ENGINE_ENABLE_LOGGING=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src/engine/include -I/Users/dawsonblock/Vulken-3D-World-Gen/src/engine -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/vulken_engine.dir/meshing/MeshGenerator.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/engine/meshing/MeshGenerator.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/engine/meshing/MeshGenerator.cpp",
+  "output": "src/engine/CMakeFiles/vulken_engine.dir/meshing/MeshGenerator.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/build_test/src/engine",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVULKEN_ENGINE_ENABLE_LOGGING=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/build_test/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/src/engine/include -I/Users/dawsonblock/Vulken-3D-World-Gen/src/engine -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/vulken_engine.dir/render/VulkanRenderer.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/src/engine/render/VulkanRenderer.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/src/engine/render/VulkanRenderer.cpp",
+  "output": "src/engine/CMakeFiles/vulken_engine.dir/render/VulkanRenderer.cpp.o"
+}
+]

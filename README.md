@@ -23,7 +23,7 @@
 - **6 Weather States**: Clear, Cloudy, Rain, Snow, Storm, Fog with smooth transitions
 - **Lightning System**: Storm-based flash generation with realistic timing
 - **Hosek-Preetham Sky**: Physically-based atmospheric scattering
-- **Temporal Reprojection**: Wind-based cloud/precipitation stability  
+- **Temporal Reprojection**: Wind-based cloud/precipitation stability
 - **Dynamic Effects**: Real-time weather parameter control via console commands
 
 ### 🤖 **AI & Machine Learning**
@@ -50,10 +50,26 @@
 > **📖 For detailed development instructions, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)**
 
 ### Prerequisites
-- **Vulkan SDK 1.3+**
+- **Vulkan SDK 1.3+** (includes glslc for shader compilation)
 - **CMake 3.24+** and **Ninja**
 - **C++20 compatible compiler**
 - **vcpkg** (optional but recommended)
+
+### Shader Build
+This repo does **not** commit SPIR-V. Shaders are compiled at build time.
+
+- Linux: `sudo apt-get install glslang-tools shaderc`
+- Windows: Install Vulkan SDK (glslc in `%VULKAN_SDK%\Bin`)
+
+Then:
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+scripts/compile_shaders.sh
+```
+
+### Config
+Copy config/*.yaml.example to config/local/*.yaml and edit for your machine. config/local is ignored by git.
 
 ### Build (with CMake Presets)
 
@@ -123,7 +139,7 @@ VoxelVK/
 │   └── ⚙️ core/               # Core utilities & performance monitoring
 ├── 📂 shaders_vk/             # Vulkan GLSL shaders
 │   ├── ☁️ sky/                 # Sky & atmosphere shaders
-│   ├── 🌧️ clouds/             # Cloud rendering shaders  
+│   ├── 🌧️ clouds/             # Cloud rendering shaders
 │   ├── 💧 particles/          # Precipitation & particles
 │   ├── 📸 taa/                # Temporal anti-aliasing shaders
 │   └── ✨ post/               # Post-processing effects
@@ -139,7 +155,7 @@ VoxelVK/
 
 ### **Core Demos**
 - **`smoke_headless`**: Basic engine functionality test
-- **`weather_demo`**: Complete weather system demonstration  
+- **`weather_demo`**: Complete weather system demonstration
 - **`weather_integration_test`**: Comprehensive weather validation
 
 ### **Graphics Demos**
@@ -177,7 +193,7 @@ PORT=6080 scripts/stop_gui_web.sh
 ```bash
 # Run complete system validation
 ./scripts/p0_validation.sh  # P0 Reliability: Device recovery + error handling
-./scripts/p1_validation.sh  # P1 Memory: VMA budgets + zero-GC allocators  
+./scripts/p1_validation.sh  # P1 Memory: VMA budgets + zero-GC allocators
 ./scripts/p2_validation.sh  # P2 Performance: 120 FPS + TAA + effects
 
 # Expected: All scripts report "COMPLETE SUCCESS"
@@ -232,7 +248,7 @@ VoxelVK implements a layered architecture:
 
 ## 📖 Documentation
 
-- See `DEVELOPER_GUIDE.md` for build and run instructions.  
+- See `DEVELOPER_GUIDE.md` for build and run instructions.
 - **[SECURITY.md](SECURITY.md)**: Security policy
 - **`docs/archive/`**: Development documentation archive
 

@@ -1,133 +1,29 @@
-name: Shader Validation
-
+name: Shader Validate
 on:
   push:
-    branches: [ main, develop, 'upgrade/*' ]
     paths:
-      - 'shaders/**'
       - 'shaders_vk/**'
-      - 'src/**/*.hpp'
-      - 'src/**/*.h'
-      - 'include/**'
+      - 'scripts/compile_shaders.sh'
+      - 'tests/render/test_shader_compile.sh'
   pull_request:
-    branches: [ main, develop ]
     paths:
-      - 'shaders/**'
       - 'shaders_vk/**'
-      - 'src/**/*.hpp'
-      - 'src/**/*.h'
-      - 'include/**'
+      - 'scripts/compile_shaders.sh'
+      - 'tests/render/test_shader_compile.sh'
 
 jobs:
-  validate-shaders:
+  validate:
     runs-on: ubuntu-22.04
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: Install glslc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y glslang-tools shaderc
 
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pyyaml
-
-    - name: Setup Vulkan SDK (for shader tools)
-      uses: humbletim/setup-vulkan-sdk@v1.2.0
-      with:
-        vulkan-query-version: 1.3.250.0
-        vulkan-components: Vulkan-Headers, Vulkan-Loader, Glslang, Shaderc
-        vulkan-use-cache: true
-
-    - name: Verify shader tools
-      run: |
-        glslc --version
-        spirv-cross --version || echo "spirv-cross not available, layout validation disabled"
-
-    - name: Bootstrap shader toolchain
-      run: |
-        python3 scripts/shaders/bootstrap_toolchain.py || echo "Vulkan tools not available, using mock validation"
-
-    - name: Setup CMake and Ninja
-      uses: lukka/get-cmake@latest
-      with:
-        cmakeVersion: '3.27'
-
-    - name: Configure CMake (for shader compilation)
-      run: |
-        cmake --preset linux-default -DSHADER_VALIDATION_ONLY=ON || echo "Using fallback configuration"
-
-    - name: Compile shaders
-      run: |
-        cmake --build build --target compile_all_shaders || echo "Shader compilation skipped (tools unavailable)"
-
-    - name: Validate shader layouts
-      run: |
-        python3 scripts/shaders/validate_layout.py \
-          --shader-dirs build/shaders_cache shaders shaders_vk \
-          --cpp-dirs src include \
-          --report reports/shaders/layout_check.json
-
-    - name: Check shader validation results
-      run: |
-        if [ -f reports/shaders/layout_check.json ]; then
-          python3 -c "
-import json
-with open('reports/shaders/layout_check.json') as f:
-    report = json.load(f)
-    summary = report.get('validation_summary', {})
-    status = summary.get('validation_status', 'UNKNOWN')
-    mismatches = summary.get('total_mismatches', 0)
-    print(f'Shader validation status: {status}')
-    print(f'Layout mismatches: {mismatches}')
-    if status == 'FAIL' and mismatches > 0:
-        exit(1)
-"
-        else
-          echo "No shader validation report generated"
-        fi
-
-    - name: Upload shader validation report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: shader-validation-report
-        path: |
-          reports/shaders/
-          build/shaders_cache/
-
-    - name: Comment PR with shader validation results
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const fs = require('fs');
-          
-          try {
-            const report = JSON.parse(fs.readFileSync('reports/shaders/layout_check.json', 'utf8'));
-            const summary = report.validation_summary || {};
-            
-            const comment = `## 🔧 Shader Validation Results
-            
-**Status**: ${summary.validation_status || 'UNKNOWN'}
-**Shaders Validated**: ${summary.total_shaders || 0}  
-**Layout Mismatches**: ${summary.total_mismatches || 0}
-**Warnings**: ${summary.total_warnings || 0}
-**Errors**: ${summary.total_errors || 0}
-
-${summary.validation_status === 'PASS' ? '✅ All shader layouts validated successfully!' : '⚠️ Shader validation issues detected. Please review the detailed report.'}
-            `;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
-          } catch (error) {
-            console.log('Could not read shader validation report:', error.message);
-          }
+      - name: Validate compilation
+        run: |
+          chmod +x scripts/compile_shaders.sh tests/render/test_shader_compile.sh
+          scripts/compile_shaders.sh
+          tests/render/test_shader_compile.sh

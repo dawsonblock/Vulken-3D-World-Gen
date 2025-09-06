@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.24...3.28 FATAL_ERROR)
 project(VoxelVK_Elite_ALL LANGUAGES CXX)
 
+# Find glslc (Vulkan SDK / shaderc)
+find_program(GLSLC_EXECUTABLE NAMES glslc HINTS ENV VULKAN_SDK PATH_SUFFIXES Bin bin)
+if (NOT GLSLC_EXECUTABLE)
+    message(FATAL_ERROR "glslc not found. Install Vulkan SDK or glslang-tools.")
+endif()
+
 # Set policies for modern CMake
 cmake_policy(SET CMP0077 NEW)  # option() honors normal variables
 # cmake_policy(SET CMP0144 NEW)  # FindPython3 uses FindPython - requires CMake 3.27+
@@ -154,7 +160,7 @@ endif()
 
 # Include shader compilation system
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-include(CompileShaders)
+include(cmake/shaders.cmake)
 
 # Enhanced shader build pipeline
 option(VOXELVK_USE_PYTHON_SHADER_BUILD "Use Python shader build pipeline" ON)
@@ -175,7 +181,7 @@ if(VOXELVK_USE_PYTHON_SHADER_BUILD AND SHADER_COMPILATION_AVAILABLE)
   )
 
   # Make shader compilation a dependency of the main build
-  add_dependencies(ShaderSPV compile_all_shaders)
+  add_dependencies(compile_shaders compile_all_shaders)
 else()
   message(STATUS "Python shader build pipeline disabled - no shader tools available")
 endif()
@@ -353,7 +359,7 @@ if(NOT VOXELVK_HEADLESS_ONLY)
       target_include_directories(main_imgui_vulkan PRIVATE ${X11_INCLUDE_DIR})
       target_link_libraries(main_imgui_vulkan PRIVATE ${X11_LIBRARIES})
     endif()
-    add_dependencies(main_imgui_vulkan ShaderSPV)
+    add_dependencies(main_imgui_vulkan compile_shaders)
   endif()
 
   if(BUILD_EXTRAS)
@@ -608,7 +614,7 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   list(APPEND VOXELVK_ELITE_SOURCES src/core/logger.cpp)
 
   # Configure the main target
-  add_dependencies(VoxelVK_Elite_ALL ShaderSPV)
+  add_dependencies(VoxelVK_Elite_ALL compile_shaders)
   target_include_directories(VoxelVK_Elite_ALL PRIVATE ${CMAKE_SOURCE_DIR}/src)
   target_link_libraries(VoxelVK_Elite_ALL PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
   if(JSON_LIB)
@@ -630,7 +636,7 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   if(OpenGL_FOUND)
     add_executable(gui_fullscreen_demo apps/gui_fullscreen_demo.cpp ${AI_SRC})
     target_link_libraries(gui_fullscreen_demo PRIVATE ${GLFW_LIB} OpenGL::GL)
-    add_dependencies(gui_fullscreen_demo ShaderSPV)
+    add_dependencies(gui_fullscreen_demo compile_shaders)
   else()
     message(WARNING "OpenGL not found; gui_fullscreen_demo will be skipped")
   endif()
@@ -756,7 +762,7 @@ if(ENABLE_TESTS)
 
   # Core functionality tests
   add_executable(test_shaders_compile tests/test_shaders_compile.cpp)
-  add_dependencies(test_shaders_compile ShaderSPV)
+  add_dependencies(test_shaders_compile compile_shaders)
   add_test(NAME test_shaders_compile COMMAND test_shaders_compile)
   set_tests_properties(test_shaders_compile PROPERTIES TIMEOUT 30)
 

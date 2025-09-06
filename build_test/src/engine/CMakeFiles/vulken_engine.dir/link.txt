@@ -1,0 +1,2 @@
+/usr/bin/ar qc libvulken_engine.a CMakeFiles/vulken_engine.dir/VoxelChunkManager.cpp.o CMakeFiles/vulken_engine.dir/storage/FileStorageBackend.cpp.o CMakeFiles/vulken_engine.dir/meshing/MeshGenerator.cpp.o CMakeFiles/vulken_engine.dir/render/VulkanRenderer.cpp.o
+/usr/bin/ranlib libvulken_engine.a

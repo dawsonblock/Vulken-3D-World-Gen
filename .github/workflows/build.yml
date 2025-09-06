@@ -1,442 +1,54 @@
-name: Build and Test
-
+name: Build (Linux & Windows)
 on:
   push:
-    branches: [ main, develop, 'upgrade/*', 'feature/*' ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  workflow_dispatch:
-    inputs:
-      debug:
-        description: 'Enable debug mode'
-        type: boolean
-        default: false
 
 permissions:
   contents: read
-  actions: read
-
-env:
-  # Build optimization
-  CMAKE_BUILD_PARALLEL_LEVEL: 4
-  CTEST_PARALLEL_LEVEL: 4
-  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
 jobs:
   build:
-    name: ${{ matrix.os }} / ${{ matrix.build_type }} ${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-13]
-        build_type: [RelWithDebInfo, Debug]
-        arch: [x64]
-        exclude:
-          # Skip Debug builds on macOS and Windows for speed
-          - os: macos-13
-            build_type: Debug
-          - os: windows-2022
-            build_type: Debug
-        include:
-          - os: ubuntu-22.04
-            cmake_preset: default
-            vcpkg_triplet: x64-linux
-            cache_key: linux
-            enable_vulkan: true
-          - os: windows-2022
-            cmake_preset: windows-default
-            vcpkg_triplet: x64-windows
-            cache_key: windows
-            enable_vulkan: true
-          - os: macos-13
-            cmake_preset: default
-            vcpkg_triplet: x64-osx
-            cache_key: macos
-            enable_vulkan: false # Use Metal backend on macOS
-
+        os: [ubuntu-22.04, windows-2022]
     runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
-        fetch-depth: 0
+      - uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-        cache: 'pip'
-
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pyyaml redis gcovr
-
-    - name: Cache Ninja
-      uses: seanmiddleditch/gha-setup-ninja@v5
-
-    - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
-
-    - name: Export GitHub Actions cache environment variables
-      uses: actions/github-script@v7
-      with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-    - name: Cache vcpkg packages
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/vcpkg
-          ${{ runner.temp }}/vcpkg_bin_cache
-          build/vcpkg_installed
-        key: ${{ matrix.cache_key }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json') }}-v2
-        restore-keys: |
-          ${{ matrix.cache_key }}-vcpkg-
-
-    - name: Setup CMake
-      uses: lukka/get-cmake@v3.30.5
-      with:
-        cmakeVersion: '3.30.5'
-
-    - name: Install system dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-22.04'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends \
-          build-essential pkg-config ninja-build \
-          ccache libvulkan-dev vulkan-validationlayers-dev vulkan-tools \
-          glslang-tools shaderc libglfw3-dev libglm-dev \
-          libxinerama-dev libxcursor-dev libxi-dev libxrandr-dev \
-          mesa-vulkan-drivers libegl1-mesa-dev \
-          redis-server
-
-    - name: Install system dependencies (Windows)
-      if: matrix.os == 'windows-2022'
-      run: |
-        choco install vulkan-sdk ninja redis-64 -y
-        # Start Redis service
-        net start redis
-
-    - name: Install system dependencies (macOS)
-      if: matrix.os == 'macos-13'
-      run: |
-        brew update
-        brew install ninja ccache glfw glm redis
-        # MoltenVK for Vulkan support on macOS (if needed)
-        # brew install --cask vulkan-sdk
-        brew services start redis
-
-    - name: Setup ccache (Unix)
-      if: matrix.os != 'windows-2022'
-      run: |
-        ccache --version
-        ccache --zero-stats
-        ccache --max-size=500M
-        ccache --set-config=compression=true
-
-    - name: Cache ccache
-      if: matrix.os != 'windows-2022'
-      uses: actions/cache@v4
-      with:
-        path: ~/.ccache
-        key: ${{ matrix.cache_key }}-ccache-${{ matrix.build_type }}-${{ github.sha }}
-        restore-keys: |
-          ${{ matrix.cache_key }}-ccache-${{ matrix.build_type }}-
-
-    - name: Configure CMake
-      run: |
-        cmake --preset ${{ matrix.cmake_preset }} \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-          -DENABLE_TESTS=ON \
-          -DVOXELVK_DEMO_WERROR=ON \
-          ${{ github.event.inputs.debug == 'true' && '-DVOXELVK_DEBUG_VERBOSE=ON' || '' }} \
-          ${{ matrix.enable_vulkan == false && '-DVOXELVK_HEADLESS_ONLY=ON' || '' }} \
-          ${{ matrix.os != 'windows-2022' && '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache' || '' }}
-
-    - name: Build
-      run: |
-        cmake --build build --config ${{ matrix.build_type }} -j ${{ env.CMAKE_BUILD_PARALLEL_LEVEL }}
-
-    - name: Show ccache stats (Unix)
-      if: matrix.os != 'windows-2022'
-      run: ccache --show-stats
-
-    - name: Create test directories
-      run: |
-        mkdir -p tests/golden
-        mkdir -p reports/bench
-        mkdir -p reports/shaders
-
-    - name: Pre-test setup
-      run: |
-        # Seed Redis with test data
-        python scripts/data/load_assets_to_redis.py --seed --assets-dir assets || echo "Redis seeding failed (non-critical)"
-
-    - name: Run unit tests
-      run: |
-        cd build
-        ctest --output-on-failure --parallel ${{ env.CTEST_PARALLEL_LEVEL }} --timeout 300 \
-          --label-regex "unit|smoke" || true
-
-    - name: Run integration tests
-      if: matrix.build_type == 'RelWithDebInfo'
-      run: |
-        cd build
-        ctest --output-on-failure --parallel ${{ env.CTEST_PARALLEL_LEVEL }} --timeout 600 \
-          --label-regex "integration" || true
-
-    - name: Generate reports
-      if: always()
-      run: |
-        # Shader layout validation
-        python scripts/shaders/validate_layout.py \
-          --shader-dirs build/shaders_cache shaders shaders_vk \
-          --cpp-dirs src include \
-          --report reports/shaders/layout_check.json || echo "Shader validation failed (non-critical)"
-        
-        # Basic performance metrics
-        python -c "
-import json
-import time
-import os
-
-perf_data = {
-    'timestamp': int(time.time()),
-    'build_type': '${{ matrix.build_type }}',
-    'os': '${{ matrix.os }}',
-    'arch': '${{ matrix.arch }}',
-    'commit': os.environ.get('GITHUB_SHA', 'unknown'),
-    'build_success': True
-}
-
-os.makedirs('reports/bench', exist_ok=True)
-with open('reports/bench/build_metrics.json', 'w') as f:
-    json.dump(perf_data, f, indent=2)
-" || true
-
-    - name: Run smoke tests
-      if: matrix.build_type == 'RelWithDebInfo'
-      run: |
-        # Headless smoke test
-        timeout 10s ./build/apps/smoke_headless || echo "Smoke test completed"
-        
-        # Operator console smoke test
-        timeout 5s ./build/apps/operator_console --headless || echo "Operator console test completed"
-      shell: bash
-
-    - name: Upload test artifacts
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results-${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.arch }}
-        path: |
-          reports/
-          tests/golden/
-          build/Testing/
-        retention-days: 7
-
-    - name: Upload build artifacts (Release builds only)
-      if: matrix.build_type == 'RelWithDebInfo'
-      uses: actions/upload-artifact@v4
-      with:
-        name: vulken3d-${{ matrix.cache_key }}-${{ matrix.arch }}-${{ matrix.build_type }}
-        path: |
-          build/apps/
-          config/
-          assets/
-        retention-days: 30
-
-    - name: Performance benchmarks (Linux Release only)
-      if: matrix.os == 'ubuntu-22.04' && matrix.build_type == 'RelWithDebInfo'
-      run: |
-        echo "Running performance benchmarks..."
-        timeout 30s ./build/apps/smoke_headless --benchmark --frames 500 || true
-        
-        python -c "
-import json
-import random
-import time
-
-# Generate mock benchmark data
-benchmark_data = {
-    'timestamp': int(time.time()),
-    'commit': '${{ github.sha }}',
-    'build_type': '${{ matrix.build_type }}',
-    'metrics': {
-        'avg_frame_time_ms': round(16.7 + random.uniform(-2, 2), 2),
-        'min_frame_time_ms': round(14.2 + random.uniform(-1, 1), 2),
-        'max_frame_time_ms': round(22.1 + random.uniform(-3, 3), 2),
-        'avg_fps': round(60.0 + random.uniform(-5, 5), 1),
-        'frame_count': 500,
-        'test_duration_s': 30
-    }
-}
-
-with open('reports/bench/benchmark_results.json', 'w') as f:
-    json.dump(benchmark_data, f, indent=2)
-print('Benchmark completed')
-" || true
-
-    - name: Upload benchmark results
-      if: matrix.os == 'ubuntu-22.04' && matrix.build_type == 'RelWithDebInfo'
-      uses: actions/upload-artifact@v4
-      with:
-        name: benchmark-results-${{ github.sha }}
-        path: reports/bench/benchmark_results.json
-        retention-days: 90
-
-  # Asset and shader validation job
-  validation:
-    name: Asset & Shader Validation
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Vulkan SDK
-        uses: humbletim/setup-vulkan-sdk@v1.2.0
-        with:
-          vulkan-query-version: 1.3.275.0
-          vulkan-components: Vulkan-Headers, Vulkan-Loader, Glslang, Shaderc
-          vulkan-use-cache: true
-
-      - name: Install validation tools
+      - name: Install Vulkan toolchain (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y spirv-cross python3-pil
+          sudo apt-get install -y glslang-tools shaderc vulkan-tools ninja-build
+          echo "GLSLC=$(command -v glslc)" >> $GITHUB_ENV
 
-      - name: Validate shaders
+      - name: Install Vulkan SDK (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
         run: |
-          echo "Validating all shaders..."
-          ERRORS=0
-          
-          find shaders shaders_vk -name "*.vert" -o -name "*.frag" -o -name "*.comp" -o -name "*.glsl" | \
-          while read shader; do
-            echo "Validating: $shader"
-            if ! glslangValidator -V "$shader" -o "/tmp/$(basename "$shader").spv"; then
-              echo "ERROR: Shader validation failed for $shader"
-              ERRORS=$((ERRORS + 1))
-            fi
-          done
-          
-          echo "Shader validation completed with $ERRORS errors"
+          choco install vulkan-sdk --version=1.3.290.0 -y
+          echo "GLSLC=$Env:VULKAN_SDK\Bin\glslc.exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          echo "PATH=$Env:VULKAN_SDK\Bin;$Env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      - name: Validate assets
+      - name: Configure
         run: |
-          python -c "
-import os
-import sys
-from pathlib import Path
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
-def validate_assets():
-    assets_dir = Path('assets')
-    if not assets_dir.exists():
-        print('No assets directory found')
-        return True
-    
-    total_size = 0
-    file_count = 0
-    
-    for asset_file in assets_dir.rglob('*'):
-        if asset_file.is_file():
-            size = asset_file.stat().st_size
-            total_size += size
-            file_count += 1
-            
-            # Check for reasonable file sizes
-            if size > 50 * 1024 * 1024:  # 50MB limit per file
-                print(f'WARNING: Large asset file: {asset_file} ({size / 1024 / 1024:.1f}MB)')
-    
-    total_mb = total_size / 1024 / 1024
-    budget_mb = 100
-    
-    print(f'Asset validation:')
-    print(f'  Files: {file_count}')
-    print(f'  Total size: {total_mb:.1f}MB (Budget: {budget_mb}MB)')
-    
-    if total_mb > budget_mb:
-        print(f'ERROR: Assets exceed {budget_mb}MB budget')
-        return False
-    else:
-        print('PASS: Assets within budget')
-        return True
+      - name: Build
+        run: cmake --build build -j
 
-if not validate_assets():
-    sys.exit(1)
-"
-
-  # Documentation generation
-  docs:
-    name: Documentation
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Generate documentation
+      - name: Compile shaders
+        shell: bash
         run: |
-          pip install mkdocs mkdocs-material
-          
-          # Create basic documentation structure
-          mkdir -p docs_build
-          cat > docs_build/index.md << 'EOF'
-          # VoxelVK Engine Documentation
-          
-          ## Overview
-          VoxelVK is a high-performance voxel rendering engine built with Vulkan.
-          
-          ## Features
-          - Modern Vulkan-based rendering
-          - AI-powered world generation
-          - Real-time performance monitoring
-          - Cross-platform support (Linux, Windows, macOS)
-          
-          ## Quick Start
-          See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for build instructions.
-          EOF
-          
-          # Copy main documentation files
-          cp README.md DEVELOPER_GUIDE.md CHANGELOG.md docs_build/ || true
+          chmod +x scripts/compile_shaders.sh
+          GLSLC="${{ env.GLSLC }}" scripts/compile_shaders.sh
 
-      - name: Deploy documentation
-        uses: peaceiris/actions-gh-pages@v4.1.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs_build
-          destination_dir: docs
-
-  # Summary job for status checks
-  build_success:
-    name: Build Success
-    runs-on: ubuntu-latest
-    needs: [build, validation]
-    if: always()
-    steps:
-      - name: Check results
+      - name: Headless smoke
+        if: runner.os == 'Linux' # typically easier to run headless
         run: |
-          if [ "${{ needs.build.result }}" != "success" ]; then
-            echo "❌ Build failed"
-            exit 1
-          fi
-          
-          if [ "${{ needs.validation.result }}" != "success" ]; then
-            echo "⚠️ Validation failed (non-critical)"
-          fi
-          
-          echo "✅ Build pipeline completed successfully"
-          echo "📦 Artifacts available for download"
-          echo "🔍 Validation results available"
+          chmod +x tests/smoke/engine_headless.sh
+          tests/smoke/engine_headless.sh

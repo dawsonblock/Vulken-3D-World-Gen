@@ -1,9 +1,15 @@
 * text=auto eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
 
-# Images/binaries
+# Binary assets
 *.png binary
 *.jpg binary
+*.jpeg binary
+*.ktx binary
 *.ktx2 binary
+*.hdr binary
+*.exr binary
 *.spv binary
 
 # Preserve shader formatting

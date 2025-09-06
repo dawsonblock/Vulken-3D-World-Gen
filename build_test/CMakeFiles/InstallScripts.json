@@ -1,0 +1,10 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/dawsonblock/Vulken-3D-World-Gen/build_test/cmake_install.cmake",
+		"/Users/dawsonblock/Vulken-3D-World-Gen/build_test/src/engine/cmake_install.cmake",
+		"/Users/dawsonblock/Vulken-3D-World-Gen/build_test/tests/cmake_install.cmake",
+		"/Users/dawsonblock/Vulken-3D-World-Gen/build_test/tools/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
