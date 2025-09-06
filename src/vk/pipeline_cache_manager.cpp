@@ -251,7 +251,12 @@ bool PipelineCacheManager::loadFromDisk() {
 
     // Read cache data
     file.seekg(0, std::ios::end);
-    size_t totalSize = static_cast<size_t>(file.tellg());
+    std::streamoff tellgResult = file.tellg();
+    if (tellgResult < 0) {
+        g_cacheLogger.Warn("Failed to get file size");
+        return false;
+    }
+    size_t totalSize = static_cast<size_t>(tellgResult);
     size_t cacheDataSize = totalSize - sizeof(header);
 
     if (cacheDataSize == 0) {
@@ -265,6 +270,14 @@ bool PipelineCacheManager::loadFromDisk() {
 
     if (!file.good()) {
         g_cacheLogger.Warn("Failed to read cache data");
+        return false;
+    }
+
+    // Verify the number of bytes read matches expected size
+    std::streamsize bytesRead = file.gcount();
+    if (bytesRead != static_cast<std::streamsize>(cacheDataSize)) {
+        g_cacheLogger.Warn("Cache data read mismatch: expected {} bytes, read {} bytes",
+                          cacheDataSize, bytesRead);
         return false;
     }
 
@@ -616,7 +629,12 @@ std::vector<uint32_t> SPIRVLoader::loadFromFile(const std::string& filePath) {
     }
 
     file.seekg(0, std::ios::end);
-    auto fileSize = static_cast<size_t>(file.tellg());
+    std::streamoff tellgResult = file.tellg();
+    if (tellgResult < 0) {
+        s_lastValidationError = "Failed to get file size: " + filePath;
+        return {};
+    }
+    auto fileSize = static_cast<size_t>(tellgResult);
     file.seekg(0, std::ios::beg);
 
     if (fileSize % sizeof(uint32_t) != 0) {
@@ -629,6 +647,14 @@ std::vector<uint32_t> SPIRVLoader::loadFromFile(const std::string& filePath) {
 
     if (!file.good()) {
         s_lastValidationError = "Failed to read SPIR-V file: " + filePath;
+        return {};
+    }
+
+    // Verify the number of bytes read matches expected size
+    std::streamsize bytesRead = file.gcount();
+    if (bytesRead != static_cast<std::streamsize>(fileSize)) {
+        s_lastValidationError = "SPIR-V file read mismatch: expected " + std::to_string(fileSize) +
+                               " bytes, read " + std::to_string(bytesRead) + " bytes: " + filePath;
         return {};
     }
 

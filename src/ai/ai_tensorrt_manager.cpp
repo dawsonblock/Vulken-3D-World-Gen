@@ -22,35 +22,40 @@ bool TensorRTEngine::loadFromFile(const std::string& engine_path) {
         std::cerr << "Failed to open engine file: " << engine_path << std::endl;
         return false;
     }
-    
+
     // Read engine data
     file.seekg(0, std::ios::end);
-    size_t size = file.tellg();
+    std::streamoff tellgResult = file.tellg();
+    if (tellgResult < 0) {
+        std::cerr << "Failed to get file size for engine: " << engine_path << std::endl;
+        return false;
+    }
+    size_t size = static_cast<size_t>(tellgResult);
     file.seekg(0, std::ios::beg);
-    
+
     std::vector<char> engine_data(size);
     file.read(engine_data.data(), size);
     file.close();
-    
+
     // Create runtime and deserialize engine
     runtime_ = nvinfer1::createInferRuntime(nvinfer1::ILogger::Severity::kWARNING);
     if (!runtime_) {
         std::cerr << "Failed to create TensorRT runtime" << std::endl;
         return false;
     }
-    
+
     engine_ = runtime_->deserializeCudaEngine(engine_data.data(), size);
     if (!engine_) {
         std::cerr << "Failed to deserialize CUDA engine" << std::endl;
         return false;
     }
-    
+
     context_ = engine_->createExecutionContext();
     if (!context_) {
         std::cerr << "Failed to create execution context" << std::endl;
         return false;
     }
-    
+
     return setupBindings();
 }
 
@@ -60,7 +65,7 @@ bool TensorRTEngine::buildFromOnnx(const std::string& onnx_path, const std::stri
     if (!cache_path.empty()) {
         return loadFromFile(cache_path);
     }
-    
+
     std::cerr << "ONNX to TensorRT conversion not implemented. Please provide pre-built engine." << std::endl;
     return false;
 }
@@ -74,18 +79,18 @@ void TensorRTEngine::destroy() {
     }
     device_buffers_.clear();
     buffer_sizes_.clear();
-    
+
     // Cleanup TensorRT objects
     if (context_) {
         context_->destroy();
         context_ = nullptr;
     }
-    
+
     if (engine_) {
         engine_->destroy();
         engine_ = nullptr;
     }
-    
+
     if (runtime_) {
         runtime_->destroy();
         runtime_ = nullptr;
@@ -110,22 +115,22 @@ void TensorRTEngine::cleanupCuda() {
 
 bool TensorRTEngine::setupBindings() {
     if (!engine_) return false;
-    
+
     int num_bindings = engine_->getNbBindings();
     device_buffers_.resize(num_bindings);
     buffer_sizes_.resize(num_bindings);
-    
+
     for (int i = 0; i < num_bindings; ++i) {
         std::string binding_name = engine_->getBindingName(i);
         nvinfer1::Dims dims = engine_->getBindingDimensions(i);
         nvinfer1::DataType dtype = engine_->getBindingDataType(i);
-        
+
         // Calculate buffer size
         size_t buffer_size = 1;
         for (int d = 0; d < dims.nbDims; ++d) {
             buffer_size *= dims.d[d];
         }
-        
+
         // Adjust for data type
         switch (dtype) {
             case nvinfer1::DataType::kFLOAT: buffer_size *= 4; break;
@@ -134,17 +139,17 @@ bool TensorRTEngine::setupBindings() {
             case nvinfer1::DataType::kINT32: buffer_size *= 4; break;
             default: buffer_size *= 4; break;
         }
-        
+
         buffer_sizes_[i] = buffer_size;
-        
+
         // Allocate GPU memory
         cudaError_t result = cudaMalloc(&device_buffers_[i], buffer_size);
         if (result != cudaSuccess) {
-            std::cerr << "Failed to allocate GPU memory for binding " << binding_name 
+            std::cerr << "Failed to allocate GPU memory for binding " << binding_name
                       << ": " << cudaGetErrorString(result) << std::endl;
             return false;
         }
-        
+
         // Store binding information
         if (engine_->bindingIsInput(i)) {
             input_bindings_[binding_name] = i;
@@ -152,7 +157,7 @@ bool TensorRTEngine::setupBindings() {
             output_bindings_[binding_name] = i;
         }
     }
-    
+
     return true;
 }
 
@@ -162,39 +167,39 @@ bool TensorRTEngine::setInputData(const std::string& input_name, const void* dat
         std::cerr << "Input binding not found: " << input_name << std::endl;
         return false;
     }
-    
+
     int binding_index = it->second;
     if (size > buffer_sizes_[binding_index]) {
         std::cerr << "Input data size exceeds buffer size for " << input_name << std::endl;
         return false;
     }
-    
+
     cudaError_t result = cudaMemcpyAsync(device_buffers_[binding_index], data, size,
                                        cudaMemcpyHostToDevice, cuda_stream_);
     if (result != cudaSuccess) {
         std::cerr << "Failed to copy input data to GPU: " << cudaGetErrorString(result) << std::endl;
         return false;
     }
-    
+
     return true;
 }
 
 bool TensorRTEngine::executeInference() {
     if (!context_) return false;
-    
+
     bool success = context_->enqueueV2(device_buffers_.data(), cuda_stream_, nullptr);
     if (!success) {
         std::cerr << "TensorRT inference execution failed" << std::endl;
         return false;
     }
-    
+
     // Synchronize stream
     cudaError_t result = cudaStreamSynchronize(cuda_stream_);
     if (result != cudaSuccess) {
         std::cerr << "CUDA stream synchronization failed: " << cudaGetErrorString(result) << std::endl;
         return false;
     }
-    
+
     return true;
 }
 
@@ -204,17 +209,17 @@ bool TensorRTEngine::getOutputData(const std::string& output_name, void* data, s
         std::cerr << "Output binding not found: " << output_name << std::endl;
         return false;
     }
-    
+
     int binding_index = it->second;
     size_t copy_size = std::min(size, buffer_sizes_[binding_index]);
-    
+
     cudaError_t result = cudaMemcpyAsync(data, device_buffers_[binding_index], copy_size,
                                        cudaMemcpyDeviceToHost, cuda_stream_);
     if (result != cudaSuccess) {
         std::cerr << "Failed to copy output data from GPU: " << cudaGetErrorString(result) << std::endl;
         return false;
     }
-    
+
     // Synchronize to ensure data is available
     result = cudaStreamSynchronize(cuda_stream_);
     return result == cudaSuccess;
@@ -251,13 +256,13 @@ TensorRTMultiModelManager::~TensorRTMultiModelManager() {
 
 bool TensorRTMultiModelManager::initialize(const EnhancedAiGenConfig& config) {
     config_ = config;
-    
+
     // Load TensorRT engines for different content types
     struct ModelInfo {
         ContentType type;
         std::string path;
     };
-    
+
     std::vector<ModelInfo> models = {
         {ContentType::Structure, config.structure_trt_path},
         {ContentType::Terrain, config.terrain_trt_path},
@@ -265,7 +270,7 @@ bool TensorRTMultiModelManager::initialize(const EnhancedAiGenConfig& config) {
         {ContentType::Biome, config.biome_trt_path},
         {ContentType::Settlement, config.settlement_trt_path}
     };
-    
+
     for (const auto& model : models) {
         if (!model.path.empty()) {
             auto engine = std::make_unique<TensorRTEngine>();
@@ -286,7 +291,7 @@ bool TensorRTMultiModelManager::initialize(const EnhancedAiGenConfig& config) {
             }
         }
     }
-    
+
     // Start worker thread for async processing
     worker_thread_ = std::thread(&TensorRTMultiModelManager::workerLoop, this);
 
@@ -295,7 +300,7 @@ bool TensorRTMultiModelManager::updateConfig(const EnhancedAiGenConfig& cfg){
     return true;
 }
 
-    
+
     return !engines_.empty();
 }
 
@@ -303,29 +308,29 @@ void TensorRTMultiModelManager::shutdown() {
     // Signal shutdown
     shutdown_requested_ = true;
     queue_cv_.notify_all();
-    
+
     // Wait for worker thread
     if (worker_thread_.joinable()) {
         worker_thread_.join();
     }
-    
+
     // Cleanup engines
     engines_.clear();
 }
 
 StructureBlueprint TensorRTMultiModelManager::generateStructure(
     const StructurePrompt& prompt, const EnvironmentalContext& context) {
-    
+
     StructureBlueprint result;
-    
+
     auto it = engines_.find(ContentType::Structure);
     if (it == engines_.end() || !it->second->isReady()) {
         setError("Structure generation engine not available");
         return result;
     }
-    
+
     auto start_time = std::chrono::high_resolution_clock::now();
-    
+
     if (generateStructureImpl(prompt, context, result)) {
         auto end_time = std::chrono::high_resolution_clock::now();
         float elapsed_ms = std::chrono::duration<float, std::milli>(end_time - start_time).count();
@@ -333,15 +338,15 @@ StructureBlueprint TensorRTMultiModelManager::generateStructure(
     } else {
         updatePerformanceStats(0.0f, false);
     }
-    
+
     return result;
 }
 
 bool TensorRTMultiModelManager::generateStructureImpl(
     const StructurePrompt& prompt, const EnvironmentalContext& context, StructureBlueprint& result) {
-    
+
     auto& engine = engines_[ContentType::Structure];
-    
+
 
     // RAG augmentation: if enabled in config and engine present, augment the prompt description
     StructurePrompt prompt_aug = prompt;
@@ -362,62 +367,62 @@ bool TensorRTMultiModelManager::generateStructureImpl(
         setError("Failed to preprocess structure input");
         return false;
     }
-    
+
     // Set input data
     if (!engine->setInputData("input", input_data.data(), input_data.size() * sizeof(float))) {
         setError("Failed to set input data for structure generation");
         return false;
     }
-    
+
     // Execute inference
     if (!engine->executeInference()) {
         setError("Structure generation inference failed");
         return false;
     }
-    
+
     // Get output data
     std::vector<float> output_data(1024); // Adjust size based on model
     if (!engine->getOutputData("output", output_data.data(), output_data.size() * sizeof(float))) {
         setError("Failed to get structure generation output");
         return false;
     }
-    
+
     // Post-process output
     if (!postprocessStructureOutput(output_data, result)) {
         setError("Failed to postprocess structure output");
         return false;
     }
-    
+
     clearError();
     return true;
 }
 
 bool TensorRTMultiModelManager::preprocessStructureInput(
     const StructurePrompt& prompt, std::vector<float>& input_data) {
-    
+
     // This is a simplified preprocessing - in reality, you'd encode the prompt
     // into a format suitable for your trained model
     input_data.clear();
     input_data.reserve(256); // Adjust based on model input size
-    
+
     // Encode position
     input_data.push_back(prompt.position.x);
     input_data.push_back(prompt.position.y);
     input_data.push_back(prompt.position.z);
-    
+
     // Encode size bounds
     input_data.push_back(prompt.size_bounds.x);
     input_data.push_back(prompt.size_bounds.y);
     input_data.push_back(prompt.size_bounds.z);
-    
+
     // Encode complexity
     input_data.push_back(prompt.complexity);
-    
+
     // Encode architectural style (one-hot)
     for (int i = 0; i < 8; ++i) {
         input_data.push_back((i == (int)prompt.style) ? 1.0f : 0.0f);
     }
-    
+
     // Encode description influence by hashing the text (final_description if available)
     // Use a stable simple hash over characters to fill remaining slots deterministically.
     auto hash_text = [&](const std::string &txt){
@@ -435,34 +440,34 @@ bool TensorRTMultiModelManager::preprocessStructureInput(
         if (input_data.size() >= 256) break;
     }
     while (input_data.size() < 256) input_data.push_back(0.0f);
-    
+
     return true;
 }
 
 bool TensorRTMultiModelManager::postprocessStructureOutput(
     const std::vector<float>& output_data, StructureBlueprint& result) {
-    
+
     // This is a simplified postprocessing - in reality, you'd decode the model output
     // into a proper voxel structure
-    
+
     // For demonstration, create a simple structure
     result.structure.W = result.structure.H = result.structure.D = 16;
     result.structure.occupancy.resize(16 * 16 * 16, 0);
-    
+
     // Generate a simple box structure based on output
     if (!output_data.empty()) {
         float density = std::min(1.0f, std::max(0.0f, output_data[0]));
-        
+
         for (int z = 0; z < 16; ++z) {
             for (int y = 0; y < 16; ++y) {
                 for (int x = 0; x < 16; ++x) {
                     int idx = z * 16 * 16 + y * 16 + x;
-                    
+
                     // Simple wall structure
                     bool is_wall = (x == 0 || x == 15 || z == 0 || z == 15) && y < 8;
                     bool is_floor = y == 0;
                     bool is_roof = y == 7 && x > 0 && x < 15 && z > 0 && z < 15;
-                    
+
                     if (is_wall || is_floor || is_roof) {
                         result.structure.occupancy[idx] = 1;
                     }
@@ -470,40 +475,40 @@ bool TensorRTMultiModelManager::postprocessStructureOutput(
             }
         }
     }
-    
+
     // Set metadata
     result.structure_type = "building";
     result.style = ArchitecturalStyle::Medieval;
     result.estimated_complexity = 0.5f;
     result.bounding_box = {16, 16, 16};
-    
+
     return true;
 }
 
 void TensorRTMultiModelManager::workerLoop() {
     while (!shutdown_requested_) {
         std::unique_lock<std::mutex> lock(queue_mutex_);
-        
+
         // Wait for requests
-        queue_cv_.wait(lock, [this] { 
-            return !request_queue_.empty() || shutdown_requested_; 
+        queue_cv_.wait(lock, [this] {
+            return !request_queue_.empty() || shutdown_requested_;
         });
-        
+
         if (shutdown_requested_) break;
-        
+
         // Process request
         GenerationRequest request = request_queue_.front();
         request_queue_.pop();
         lock.unlock();
-        
+
         MultiModalAiOutputs result;
         bool success = processGenerationRequest(request, result);
-        
+
         // Store result
         lock.lock();
         completed_results_[request.request_id] = std::move(result);
         lock.unlock();
-        
+
         // Call callback if provided
         if (request.callback) {
             request.callback(result);
@@ -513,23 +518,23 @@ void TensorRTMultiModelManager::workerLoop() {
 
 bool TensorRTMultiModelManager::processGenerationRequest(
     const GenerationRequest& request, MultiModalAiOutputs& result) {
-    
+
     switch (request.type) {
         case ContentType::Structure:
-            return generateStructureImpl(request.request_data.structure_prompt, 
+            return generateStructureImpl(request.request_data.structure_prompt,
                                        request.context, result.structures.emplace_back());
-        
+
         case ContentType::Texture:
-            return generateTextureImpl(request.request_data.material_request, 
+            return generateTextureImpl(request.request_data.material_request,
                                      result.generated_textures.emplace_back());
-        
+
         case ContentType::Biome:
-            return generateBiomeRuleImpl(request.request_data.biome_context, 
+            return generateBiomeRuleImpl(request.request_data.biome_context,
                                        result.dynamic_biome_rules.emplace_back());
-        
+
         case ContentType::Terrain:
             return generateTerrainImpl(request.context, result);
-        
+
         default:
             setError("Unsupported generation request type");
             return false;
@@ -538,19 +543,19 @@ bool TensorRTMultiModelManager::processGenerationRequest(
 
 void TensorRTMultiModelManager::updatePerformanceStats(float inference_time, bool success) {
     std::lock_guard<std::mutex> lock(stats_mutex_);
-    
+
     perf_stats_.total_generations++;
     if (!success) {
         perf_stats_.failed_generations++;
     }
-    
-    perf_stats_.success_rate = (float)(perf_stats_.total_generations - perf_stats_.failed_generations) 
+
+    perf_stats_.success_rate = (float)(perf_stats_.total_generations - perf_stats_.failed_generations)
                               / perf_stats_.total_generations;
-    
+
     if (success && inference_time > 0.0f) {
         // Update average inference time with exponential moving average
         float alpha = 0.1f;
-        perf_stats_.average_inference_time_ms = 
+        perf_stats_.average_inference_time_ms =
             alpha * inference_time + (1.0f - alpha) * perf_stats_.average_inference_time_ms;
     }
 }
@@ -603,22 +608,22 @@ CUDAMemoryPool::~CUDAMemoryPool() {
 
 void* CUDAMemoryPool::allocate(size_t size) {
     std::lock_guard<std::mutex> lock(pool_mutex_);
-    
+
     // Simple linear allocation - in practice, you'd want a more sophisticated allocator
     if (used_size_ + size <= pool_size_) {
         void* ptr = static_cast<char*>(pool_memory_) + used_size_;
         used_size_ += size;
-        
+
         blocks_.push_back({ptr, size, true});
         return ptr;
     }
-    
+
     return nullptr; // Out of memory
 }
 
 void CUDAMemoryPool::deallocate(void* ptr) {
     std::lock_guard<std::mutex> lock(pool_mutex_);
-    
+
     for (auto& block : blocks_) {
         if (block.ptr == ptr) {
             block.in_use = false;
@@ -651,7 +656,7 @@ CUDAStreamManager::~CUDAStreamManager() {
 cudaStream_t CUDAStreamManager::getAvailableStream() {
     std::unique_lock<std::mutex> lock(stream_mutex_);
     stream_cv_.wait(lock, [this] { return !available_streams_.empty(); });
-    
+
     cudaStream_t stream = available_streams_.front();
     available_streams_.pop();
     return stream;

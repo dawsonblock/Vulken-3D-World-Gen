@@ -20,7 +20,9 @@ inline bool read_file(const std::string& path, std::vector<char>& out){
     std::ifstream f(path, std::ios::binary);
     if(!f.good()) return false;
     f.seekg(0, std::ios::end);
-    std::streampos sz = f.tellg();
+    std::streamoff tellgResult = f.tellg();
+    if(tellgResult < 0) return false;
+    std::streampos sz = tellgResult;
     if(sz <= 0) return false;
     out.resize(static_cast<size_t>(sz));
     f.seekg(0, std::ios::beg);
