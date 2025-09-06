@@ -24,14 +24,14 @@ inline bool read_file(const std::string& path, std::vector<char>& out){
     if(sz <= 0) return false;
     out.resize(static_cast<size_t>(sz));
     f.seekg(0, std::ios::beg);
-    f.read(out.data(), out.size());
+    f.read(out.data(), static_cast<std::streamsize>(out.size()));
     return f.good();
 }
 
 inline bool write_file(const std::string& path, const std::vector<char>& data){
     std::ofstream f(path, std::ios::binary | std::ios::trunc);
     if(!f.good()) return false;
-    f.write(data.data(), data.size());
+    f.write(data.data(), static_cast<std::streamsize>(data.size()));
     return f.good();
 }
 

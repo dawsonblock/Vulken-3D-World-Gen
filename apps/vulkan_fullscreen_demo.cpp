@@ -13,7 +13,9 @@
 #include <algorithm>
 #include <string>
 #include "../src/core/fullscreen_toggle.hpp"
+#ifdef VOXELVK_ENABLE_REDIS
 #include "redis_asset_store.h"
+#endif
 #include <iostream>
 
 static VkPipelineCache g_pipelineCache = VK_NULL_HANDLE;
@@ -124,6 +126,7 @@ private:
 
 static void framebuffer_size_cb(GLFWwindow* w, int, int){ (void)w; g_resize_requested=true; }
 
+#ifdef VOXELVK_ENABLE_REDIS
 std::unique_ptr<RedisAssetStore> redis_store;
 
 void init_redis() {
@@ -139,6 +142,7 @@ void init_redis() {
         std::cerr << "Failed to initialize RedisAssetStore: " << e.what() << std::endl;
     }
 }
+#endif
 
 int main(){
     if(!glfwInit()){ std::fprintf(stderr, "Failed to init GLFW\n"); return 1; }
@@ -160,6 +164,7 @@ int main(){
     try { app.create(window); }
     catch(const std::exception& e){ std::fprintf(stderr, "Init error: %s\n", e.what()); glfwDestroyWindow(window); glfwTerminate(); return 4; }
 
+#ifdef VOXELVK_ENABLE_REDIS
     // Initialize Redis asset store
     init_redis();
 
@@ -173,6 +178,7 @@ int main(){
             std::cerr << "Failed to fetch mesh 'rock01'." << std::endl;
         }
     }
+#endif
 
     double last = glfwGetTime(); double fps=0.0; double acc=0.0; int frames=0;
 

@@ -77,6 +77,7 @@ static VkSemaphore g_RenderFinishedSemaphore = VK_NULL_HANDLE;
 static std::vector<VkFence> g_InFlightFences;
 static bool g_FramebufferResized = false;
 static VkPipelineCache g_PipelineCache = VK_NULL_HANDLE;
+static VkPipeline g_GraphicsPipeline = VK_NULL_HANDLE;
 
 // ImGui descriptor pool (if used)
 static VkDescriptorPool g_ImGuiDescriptorPool = VK_NULL_HANDLE;
@@ -99,7 +100,7 @@ static bool createSurface(GLFWwindow* window){
 
 static bool initializeVulkan(GLFWwindow* window) {
     g_logger.Info("Initializing Vulkan for ImGui integration...");
-    
+
     // Create Vulkan instance
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -108,12 +109,16 @@ static bool initializeVulkan(GLFWwindow* window) {
     appInfo.pEngineName = "VoxelVK";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_3;
-    
+
     // Get required extensions
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    
+
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+    // Add portability enumeration extension for MoltenVK
+#ifdef VK_KHR_portability_enumeration
+    extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+#endif
     // Add debug utils only if available (avoid instance creation failure on minimal drivers)
     {
         uint32_t instExtCount = 0; vkEnumerateInstanceExtensionProperties(nullptr, &instExtCount, nullptr);
@@ -125,12 +130,12 @@ static bool initializeVulkan(GLFWwindow* window) {
         }
         if (hasDebugUtils) extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
-    
+
     std::vector<const char*> layers;
 #ifndef NDEBUG
     layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
-    
+
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
@@ -138,14 +143,17 @@ static bool initializeVulkan(GLFWwindow* window) {
     createInfo.ppEnabledExtensionNames = extensions.data();
     createInfo.enabledLayerCount = static_cast<uint32_t>(layers.size());
     createInfo.ppEnabledLayerNames = layers.data();
-    
+#ifdef VK_KHR_portability_enumeration
+    createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
+
     if (vkCreateInstance(&createInfo, nullptr, &g_Instance) != VK_SUCCESS) {
         g_logger.Error("Failed to create Vulkan instance");
         return false;
     }
     // Create surface for presentation
     if(!createSurface(window)) return false;
-    
+
     // Select physical device
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(g_Instance, &deviceCount, nullptr);
@@ -153,18 +161,18 @@ static bool initializeVulkan(GLFWwindow* window) {
         g_logger.Error("No Vulkan devices found");
         return false;
     }
-    
+
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(g_Instance, &deviceCount, devices.data());
     g_PhysicalDevice = devices[0]; // Use first device
-    
+
     // Find graphics queue family
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(g_PhysicalDevice, &queueFamilyCount, nullptr);
-    
+
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(g_PhysicalDevice, &queueFamilyCount, queueFamilies.data());
-    
+
     // Find graphics and present queue families
     for (uint32_t i = 0; i < queueFamilyCount; i++) {
         if ((queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && g_GraphicsQueueFamily == UINT32_MAX) {
@@ -181,7 +189,7 @@ static bool initializeVulkan(GLFWwindow* window) {
         g_logger.Error("No suitable graphics/present queue family found");
         return false;
     }
-    
+
     // Create logical device
     float queuePriority = 1.0f;
     VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -189,9 +197,12 @@ static bool initializeVulkan(GLFWwindow* window) {
     queueCreateInfo.queueFamilyIndex = g_GraphicsQueueFamily;
     queueCreateInfo.queueCount = 1;
     queueCreateInfo.pQueuePriorities = &queuePriority;
-    
+
     // Enable swapchain extension
-    const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+    std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+#ifdef VK_KHR_portability_subset
+    deviceExtensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
+#endif
 
     VkDeviceCreateInfo deviceCreateInfo{};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -205,26 +216,26 @@ static bool initializeVulkan(GLFWwindow* window) {
     }
     deviceCreateInfo.queueCreateInfoCount = uniqueCount;
     deviceCreateInfo.pQueueCreateInfos = queueInfos;
-    deviceCreateInfo.enabledExtensionCount = 1;
-    deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions;
-    
+    deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+    deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+
     if (vkCreateDevice(g_PhysicalDevice, &deviceCreateInfo, nullptr, &g_Device) != VK_SUCCESS) {
         g_logger.Error("Failed to create Vulkan device");
         return false;
     }
-    
+
     // Create/load pipeline cache (best-effort)
     g_PipelineCache = voxelvk::util::create_pipeline_cache_from_env(g_Device);
 
     // Get queues
     vkGetDeviceQueue(g_Device, g_GraphicsQueueFamily, 0, &g_GraphicsQueue);
     vkGetDeviceQueue(g_Device, g_PresentQueueFamily, 0, &g_PresentQueue);
-    
+
     g_logger.Info("Vulkan initialized successfully for ImGui");
     return true;
 }
 
-static bool createImGuiDescriptorPool() {
+[[maybe_unused]] static bool createImGuiDescriptorPool() {
     // Create descriptor pool for ImGui
     VkDescriptorPoolSize pool_sizes[] = {
         { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
@@ -239,19 +250,19 @@ static bool createImGuiDescriptorPool() {
         { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
         { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
     };
-    
+
     VkDescriptorPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     pool_info.maxSets = 1000 * (sizeof(pool_sizes) / sizeof(pool_sizes[0]));
     pool_info.poolSizeCount = sizeof(pool_sizes) / sizeof(pool_sizes[0]);
     pool_info.pPoolSizes = pool_sizes;
-    
+
     if (vkCreateDescriptorPool(g_Device, &pool_info, nullptr, &g_ImGuiDescriptorPool) != VK_SUCCESS) {
         g_logger.Error("Failed to create ImGui descriptor pool");
         return false;
     }
-    
+
     return true;
 }
 
@@ -281,17 +292,17 @@ static void shutdownVulkan() {
     if (g_RenderFinishedSemaphore) { vkDestroySemaphore(g_Device, g_RenderFinishedSemaphore, nullptr); g_RenderFinishedSemaphore = VK_NULL_HANDLE; }
     for(auto f : g_InFlightFences){ if(f) vkDestroyFence(g_Device, f, nullptr); }
     g_InFlightFences.clear();
-    
+
     if (g_ImGuiDescriptorPool != VK_NULL_HANDLE) {
         vkDestroyDescriptorPool(g_Device, g_ImGuiDescriptorPool, nullptr);
         g_ImGuiDescriptorPool = VK_NULL_HANDLE;
     }
-    
+
     if (g_Device != VK_NULL_HANDLE) {
         vkDestroyDevice(g_Device, nullptr);
         g_Device = VK_NULL_HANDLE;
     }
-    
+
     if (g_Surface != VK_NULL_HANDLE) { vkDestroySurfaceKHR(g_Instance, g_Surface, nullptr); g_Surface = VK_NULL_HANDLE; }
     if (g_Instance != VK_NULL_HANDLE) { vkDestroyInstance(g_Instance, nullptr); g_Instance = VK_NULL_HANDLE; }
 }
@@ -464,12 +475,17 @@ static void recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex){
     // GPU timestamp: whole render pass region
     auto& pm_top = voxelvk::PerformanceMonitor::instance();
     uint32_t tsRenderBegin = pm_top.getGPUTimer().beginTimestamp(cmd, "RenderPass");
-    VkClearValue clear{}; clear.color = { { 0.10f, 0.12f, 0.16f, 1.0f } };
+    VkClearValue clear{}; clear.color = { { 0.2f, 0.4f, 0.8f, 1.0f } }; // Bright blue background
     VkRenderPassBeginInfo rpbi{}; rpbi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rpbi.renderPass = g_RenderPass; rpbi.framebuffer = g_Framebuffers[imageIndex];
     rpbi.renderArea.offset = {0,0}; rpbi.renderArea.extent = g_SwapchainExtent;
     rpbi.clearValueCount = 1; rpbi.pClearValues = &clear;
     vkCmdBeginRenderPass(cmd, &rpbi, VK_SUBPASS_CONTENTS_INLINE);
+
+    // For now, just clear the screen with the background color
+    // The clear color should be visible even without drawing geometry
+    // TODO: Add proper shader pipeline for triangle rendering
+
     // Optional: render ImGui within the pass
 #ifdef MAIN_HAS_IMGUI_VULKAN
     ImDrawData* draw_data = ImGui::GetDrawData();
@@ -483,6 +499,156 @@ static void recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex){
     vkCmdEndRenderPass(cmd);
     pm_top.getGPUTimer().endTimestamp(cmd, tsRenderBegin);
     vkEndCommandBuffer(cmd);
+}
+
+static bool createGraphicsPipeline() {
+    // Create a simple vertex shader (hardcoded for now)
+    const char* vertexShaderSource = R"(
+#version 450
+void main() {
+    vec2 positions[3] = vec2[](
+        vec2(0.0, -0.5),
+        vec2(0.5, 0.5),
+        vec2(-0.5, 0.5)
+    );
+    gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);
+}
+)";
+
+    const char* fragmentShaderSource = R"(
+#version 450
+layout(location = 0) out vec4 outColor;
+void main() {
+    outColor = vec4(1.0, 0.0, 0.0, 1.0); // Red triangle
+}
+)";
+
+    // Create shader modules
+    VkShaderModule vertexShaderModule = VK_NULL_HANDLE;
+    VkShaderModule fragmentShaderModule = VK_NULL_HANDLE;
+
+    // For now, we'll create empty shader modules and let the pipeline creation fail gracefully
+    // In a real implementation, you'd compile the shaders to SPIR-V
+
+    // Create pipeline layout
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = 0;
+    pipelineLayoutInfo.pushConstantRangeCount = 0;
+
+    VkPipelineLayout pipelineLayout;
+    if (vkCreatePipelineLayout(g_Device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+        g_logger.Error("Failed to create pipeline layout");
+        return false;
+    }
+
+    // Create graphics pipeline
+    VkGraphicsPipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.layout = pipelineLayout;
+    pipelineInfo.renderPass = g_RenderPass;
+    pipelineInfo.subpass = 0;
+
+    // Create shader stages (empty for now, but valid structure)
+    VkPipelineShaderStageCreateInfo shaderStages[2] = {};
+
+    // Vertex shader stage
+    shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+    shaderStages[0].module = VK_NULL_HANDLE; // No shader module for now
+    shaderStages[0].pName = "main";
+
+    // Fragment shader stage
+    shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    shaderStages[1].module = VK_NULL_HANDLE; // No shader module for now
+    shaderStages[1].pName = "main";
+
+    pipelineInfo.stageCount = 2;
+    pipelineInfo.pStages = shaderStages;
+
+    // Vertex input state (no vertex attributes for now)
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertexInputInfo.vertexBindingDescriptionCount = 0;
+    vertexInputInfo.vertexAttributeDescriptionCount = 0;
+    pipelineInfo.pVertexInputState = &vertexInputInfo;
+
+    // Input assembly
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssembly.primitiveRestartEnable = VK_FALSE;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+
+    // Viewport and scissor
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)g_SwapchainExtent.width;
+    viewport.height = (float)g_SwapchainExtent.height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = g_SwapchainExtent;
+
+    VkPipelineViewportStateCreateInfo viewportState{};
+    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 1;
+    viewportState.pViewports = &viewport;
+    viewportState.scissorCount = 1;
+    viewportState.pScissors = &scissor;
+    pipelineInfo.pViewportState = &viewportState;
+
+    // Rasterizer
+    VkPipelineRasterizationStateCreateInfo rasterizer{};
+    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizer.depthClampEnable = VK_FALSE;
+    rasterizer.rasterizerDiscardEnable = VK_FALSE;
+    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizer.lineWidth = 1.0f;
+    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizer.depthBiasEnable = VK_FALSE;
+    pipelineInfo.pRasterizationState = &rasterizer;
+
+    // Multisampling
+    VkPipelineMultisampleStateCreateInfo multisampling{};
+    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampling.sampleShadingEnable = VK_FALSE;
+    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    pipelineInfo.pMultisampleState = &multisampling;
+
+    // Color blending
+    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachment.blendEnable = VK_FALSE;
+
+    VkPipelineColorBlendStateCreateInfo colorBlending{};
+    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorBlending.logicOpEnable = VK_FALSE;
+    colorBlending.logicOp = VK_LOGIC_OP_COPY;
+    colorBlending.attachmentCount = 1;
+    colorBlending.pAttachments = &colorBlendAttachment;
+    pipelineInfo.pColorBlendState = &colorBlending;
+
+    // Dynamic state
+    VkPipelineDynamicStateCreateInfo dynamicState{};
+    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicState.dynamicStateCount = 0;
+    pipelineInfo.pDynamicState = &dynamicState;
+
+    if (vkCreateGraphicsPipelines(g_Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &g_GraphicsPipeline) != VK_SUCCESS) {
+        g_logger.Error("Failed to create graphics pipeline");
+        vkDestroyPipelineLayout(g_Device, pipelineLayout, nullptr);
+        return false;
+    }
+
+    vkDestroyPipelineLayout(g_Device, pipelineLayout, nullptr);
+    g_logger.Info("Graphics pipeline created successfully");
+    return true;
 }
 
 static bool createSyncObjects(){
@@ -644,24 +810,24 @@ static const char* getArgValue(int argc, char** argv, const char* key) {
 
 int main(int argc, char** argv) {
     g_logger.Info("=== VoxelVK Production ImGui Demo ===");
-    
+
     glfwSetErrorCallback(error_callback);
     if (!glfwInit()) {
         g_logger.Error("Failed to initialize GLFW");
         return 1;
     }
-    
+
     // Create window for Vulkan (no OpenGL context)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    
+
     GLFWwindow* window = glfwCreateWindow(1600, 900, "VoxelVK Production App", nullptr, nullptr);
     if (!window) {
         g_logger.Error("Failed to create GLFW window");
         glfwTerminate();
         return 2;
     }
-    
+
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Initialize Vulkan
@@ -674,6 +840,7 @@ int main(int argc, char** argv) {
     // Swapchain + draw setup
     if(!createSwapchainAndViews(window)) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     if(!createRenderPassAndFramebuffers()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
+    // if(!createGraphicsPipeline()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     if(!createCommandPoolAndBuffers()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     if(!createSyncObjects()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     // Initialize performance monitor and GPU timer (best-effort)
@@ -682,7 +849,7 @@ int main(int argc, char** argv) {
         uint32_t framesInFlight = g_SwapchainImages.empty() ? 2u : (uint32_t)g_SwapchainImages.size();
         voxelvk::PerformanceMonitor::instance().enableGPUTimer(g_Device, g_PhysicalDevice, framesInFlight, 64);
     }
-    
+
     // Initialize weather system for demo
     WeatherSystem weatherSystem;
     try {
@@ -691,7 +858,7 @@ int main(int argc, char** argv) {
     } catch (const std::exception& e) {
         g_logger.Warn("Using default weather config: {}", e.what());
     }
-    
+
     // Set up fullscreen toggle handler
     voxelvk::SetFullscreenHandler([window](bool fullscreen) {
         static voxelvk::WindowedState windowedState;
@@ -699,21 +866,21 @@ int main(int argc, char** argv) {
         const char* title = fullscreen ? "VoxelVK Production App (Fullscreen)" : "VoxelVK Production App (Windowed)";
         glfwSetWindowTitle(window, title);
     });
-    
+
     // Initialize AI palette runtime
     voxelvk::ai::PaletteRuntime paletteRuntime;
     paletteRuntime.load_from_file("ai_palette.cfg");
-    
+
     // Set up RAG config handler
     voxelvk::ai::SetRagConfigHandler([&](bool enabled, int topK) {
         g_logger.Info("RAG config updated: enabled={}, top_k={}", enabled, topK);
     });
-    
+
     // Track last-known RAG config to avoid spamming updates/logs
     bool last_rag_enabled = paletteRuntime.cfg.ai_generation.enable_rag;
     int  last_rag_top_k  = paletteRuntime.cfg.ai_generation.rag_top_k;
     voxelvk::ai::UpdateRagConfig(last_rag_enabled, last_rag_top_k);
-    
+
 #ifdef MAIN_HAS_IMGUI_VULKAN
     // Initialize ImGui with Vulkan backend
     IMGUI_CHECKVERSION();
@@ -810,10 +977,10 @@ int main(int argc, char** argv) {
         s.ItemSpacing = ImVec2(10, 8); s.ItemInnerSpacing = ImVec2(8, 6); s.WindowPadding = ImVec2(12, 10); s.FramePadding = ImVec2(10, 6);
     };
     ApplyDarkTheme();
-    
+
     // Initialize ImGui backends
     ImGui_ImplGlfw_InitForVulkan(window, true);
-    
+
     if (!createImGuiDescriptorPool()) {
         g_logger.Error("Failed to create ImGui descriptor pool");
         shutdownVulkan();
@@ -836,7 +1003,7 @@ int main(int argc, char** argv) {
 #ifdef IMGUI_IMPL_VULKAN_HAS_PIPELINE_CACHE
     init_info.PipelineCache = g_PipelineCache;
 #endif
-    
+
     // Initialize ImGui Vulkan backend - render pass passed separately in older versions
     ImGui_ImplVulkan_Init(&init_info, g_RenderPass);
 
@@ -847,9 +1014,9 @@ int main(int argc, char** argv) {
         begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         vkBeginCommandBuffer(cmd, &begin_info);
-        
+
         ImGui_ImplVulkan_CreateFontsTexture(cmd);
-        
+
         vkEndCommandBuffer(cmd);
         VkSubmitInfo submit_info{};
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -857,13 +1024,13 @@ int main(int argc, char** argv) {
         submit_info.pCommandBuffers = &cmd;
         vkQueueSubmit(g_GraphicsQueue, 1, &submit_info, VK_NULL_HANDLE);
         vkQueueWaitIdle(g_GraphicsQueue);
-        
+
         ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
 
     g_logger.Info("ImGui Vulkan backend initialized");
 #endif
-    
+
     // Frame timing
     double lastTime = glfwGetTime();
     double fps = 0.0;
@@ -890,48 +1057,49 @@ int main(int argc, char** argv) {
 
     FlyCamera cam; // track camera state
     bool autoScreenshotPending = false;
-    
+    (void)autoScreenshotPending; // Suppress unused variable warning
+
     // Performance history for graphs
     std::vector<float> frameTimeHistory_(120, 16.67f);
     std::vector<float> fpsHistory_(120, 60.0f);
     if (hasArg(argc, argv, "--autoscreenshot") || std::getenv("VOXELVK_AUTOSCREENSHOT")) {
         autoScreenshotPending = true;
     }
-    
+
     g_logger.Info("Entering main loop...");
-    
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
-        
+
     // Update timing
         double currentTime = glfwGetTime();
         double deltaTime = currentTime - lastTime;
         lastTime = currentTime;
-        
+
         frameCount++;
         fpsAccum += deltaTime;
-        
+
         if (fpsAccum >= 1.0) {
             fps = frameCount / fpsAccum;
             frameCount = 0;
             fpsAccum = 0.0;
-            
+
             // Update performance history for graphs
             frameTimeHistory_.erase(frameTimeHistory_.begin());
             frameTimeHistory_.push_back(static_cast<float>(1000.0 / fps));
             fpsHistory_.erase(fpsHistory_.begin());
             fpsHistory_.push_back(static_cast<float>(fps));
-            
+
             std::string title = "VoxelVK Production App - " + std::to_string(static_cast<int>(fps)) + " FPS";
             glfwSetWindowTitle(window, title.c_str());
         }
-        
+
     // Update weather system
         {
             PERF_WEATHER_TIMER("WeatherTick");
             weatherSystem.tick(deltaTime);
         }
-        
+
     // Hot reload palette and propagate RAG settings (only on change)
         paletteRuntime.tick_hot_reload();
         bool cur_enabled = paletteRuntime.cfg.ai_generation.enable_rag;
@@ -944,13 +1112,13 @@ int main(int argc, char** argv) {
 
     // Camera input
     updateCameraInput(cam, window, static_cast<float>(deltaTime));
-        
+
     // Handle fullscreen toggle with edge detection (shared state)
     static bool g_isFullscreen = false;
     static bool f11Prev = false; bool f11Now = (glfwGetKey(window, GLFW_KEY_F11) == GLFW_PRESS);
     if (f11Now && !f11Prev) { g_isFullscreen = !g_isFullscreen; voxelvk::RequestFullscreen(g_isFullscreen); }
     f11Prev = f11Now;
-        
+
         // Config hot-reload on F5
         {
             static bool reloadPressed = false;
@@ -970,7 +1138,7 @@ int main(int argc, char** argv) {
                 reloadPressed = false;
             }
         }
-        
+
     // Start a new ImGui frame (if available)
 #ifdef MAIN_HAS_IMGUI_VULKAN
         {
@@ -981,7 +1149,7 @@ int main(int argc, char** argv) {
 
             // Panel visibility state (declare early)
             static bool showAiPanel = true, showOverview = true, showCamera = true, showSystems = true, showPerf = true;
-            
+
             // Dockspace & main menu (only when docking is available)
             #ifdef IMGUI_HAS_DOCKING
             ImGuiViewport* vp = ImGui::GetMainViewport();
@@ -1005,7 +1173,7 @@ int main(int argc, char** argv) {
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("Actions")) {
-                    if (ImGui::MenuItem("Toggle Fullscreen (F11)")) { g_isFullscreen = !g_isFullscreen; voxelvk::RequestFullscreen(g_isFullscreen);}            
+                    if (ImGui::MenuItem("Toggle Fullscreen (F11)")) { g_isFullscreen = !g_isFullscreen; voxelvk::RequestFullscreen(g_isFullscreen);}
                     ImGui::EndMenu();
                 }
                 ImGui::EndMainMenuBar();
@@ -1018,10 +1186,10 @@ int main(int argc, char** argv) {
             std::vector<Cmd> cmds = {
                 {"Toggle Fullscreen", [&](){ g_isFullscreen = !g_isFullscreen; voxelvk::RequestFullscreen(g_isFullscreen); }},
                 {"Open AI Configuration", [&](){ showAiPanel = true; }},
-                {"Toggle RAG", [&](){ 
-                    bool newState = !last_rag_enabled; 
-                    voxelvk::ai::UpdateRagConfig(newState, last_rag_top_k); 
-                    last_rag_enabled = newState; 
+                {"Toggle RAG", [&](){
+                    bool newState = !last_rag_enabled;
+                    voxelvk::ai::UpdateRagConfig(newState, last_rag_top_k);
+                    last_rag_enabled = newState;
                 }},
                 {"Save Screenshot", [&](){
 #if defined(__linux__)
@@ -1029,7 +1197,7 @@ int main(int argc, char** argv) {
 #endif
                 }},
                 {"Export Perf JSON", [&](){ voxelvk::PerformanceMonitor::instance().exportPerformanceData("."); }},
-                {"Hot Reload Config", [&](){ 
+                {"Hot Reload Config", [&](){
                     paletteRuntime.load_from_file(paletteRuntime.path);
                     try { weatherSystem.loadFromYaml("config/weather.yaml"); } catch(...) {}
                 }},
@@ -1061,31 +1229,31 @@ int main(int argc, char** argv) {
                 ImGui::TextColored(ImVec4(0.3f, 0.9f, 0.3f, 1.0f), "ACTIVE");
                 ImGui::SameLine(); ImGui::Text("VoxelVK Production Engine");
                 ImGui::Separator();
-                
+
                 // Performance metrics in a table
                 if (ImGui::BeginTable("PerformanceTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupColumn("Metric", ImGuiTableColumnFlags_WidthFixed, 120.0f);
                     ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
                     ImGui::TableHeadersRow();
-                    
+
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn(); ImGui::Text("FPS");
-                    ImGui::TableNextColumn(); 
-                    ImVec4 fpsColor = fps > 55.0f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                    ImGui::TableNextColumn();
+                    ImVec4 fpsColor = fps > 55.0f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) :
                                      fps > 30.0f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
                     ImGui::TextColored(fpsColor, "%.1f", fps);
-                    
+
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn(); ImGui::Text("Frame Time");
                     ImGui::TableNextColumn(); ImGui::Text("%.2f ms", 1000.0 * (fps > 0.0 ? 1.0 / fps : 0.0));
-                    
+
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn(); ImGui::Text("Resolution");
                     ImGui::TableNextColumn(); ImGui::Text("%dx%d", (int)g_SwapchainExtent.width, (int)g_SwapchainExtent.height);
-                    
+
                     ImGui::EndTable();
                 }
-                
+
                 ImGui::Spacing();
                 ImGui::TextDisabled("Controls: WASD/QE move, hold RMB to look, Shift to sprint, F11 toggle fullscreen");
 #if defined(__linux__)
@@ -1123,39 +1291,39 @@ int main(int argc, char** argv) {
             if (showSystems && ImGui::Begin("Systems", &showSystems)) {
                 ImGui::Text("Engine Systems Status");
                 ImGui::Separator();
-                
+
                 // Weather System Status
                 ImGui::BulletText("Weather System:");
                 ImGui::SameLine(); ImGui::TextColored(ImVec4(0.3f, 0.9f, 0.3f, 1.0f), "Running");
-                
+
                 // AI Systems Status
                 ImGui::BulletText("AI Generation:");
-                ImGui::SameLine(); 
+                ImGui::SameLine();
                 bool aiActive = last_rag_enabled || paletteRuntime.cfg.ai_generation.enable_ai_structures;
-                ImGui::TextColored(aiActive ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                ImGui::TextColored(aiActive ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
                                  aiActive ? "Active" : "Inactive");
-                
+
                 ImGui::Spacing();
-                
+
                 // Quick RAG Controls
                 ImGui::Text("Quick Controls:");
                 static bool rag_enabled = last_rag_enabled; static int rag_top_k = last_rag_top_k;
-                if (ImGui::Checkbox("Enable RAG", &rag_enabled)) { 
-                    voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); 
-                    last_rag_enabled = rag_enabled; 
+                if (ImGui::Checkbox("Enable RAG", &rag_enabled)) {
+                    voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k);
+                    last_rag_enabled = rag_enabled;
                 }
-                if (ImGui::SliderInt("RAG Top-K", &rag_top_k, 1, 16)) { 
-                    voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k); 
-                    last_rag_top_k = rag_top_k; 
+                if (ImGui::SliderInt("RAG Top-K", &rag_top_k, 1, 16)) {
+                    voxelvk::ai::UpdateRagConfig(rag_enabled, rag_top_k);
+                    last_rag_top_k = rag_top_k;
                 }
-                
+
                 ImGui::Spacing();
                 if (ImGui::Button("Open AI Configuration", ImVec2(180, 30))) {
                     showAiPanel = true;
                 }
             }
             ImGui::End();
-            
+
             // AI Palette Panel (modernized)
             if (showAiPanel) {
                 bool aiPanelOpen = showAiPanel;
@@ -1170,42 +1338,42 @@ int main(int argc, char** argv) {
             if (showPerf && ImGui::Begin("Performance", &showPerf)) {
                 auto& pm = voxelvk::PerformanceMonitor::instance();
                 auto& tracker = pm.getBudgetTracker();
-                
+
                 // Performance Summary Table
                 if (ImGui::BeginTable("PerfSummary", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupColumn("Metric", ImGuiTableColumnFlags_WidthFixed, 100.0f);
                     ImGui::TableSetupColumn("Current", ImGuiTableColumnFlags_WidthFixed, 80.0f);
                     ImGui::TableSetupColumn("Target", ImGuiTableColumnFlags_WidthFixed, 80.0f);
                     ImGui::TableHeadersRow();
-                    
+
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn(); ImGui::Text("Frame Time");
-                    ImGui::TableNextColumn(); 
+                    ImGui::TableNextColumn();
                     float frameTime = tracker.getAverageTime(voxelvk::PerformanceBudget::FRAME_TOTAL);
-                    ImVec4 frameColor = frameTime < 16.67f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                    ImVec4 frameColor = frameTime < 16.67f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) :
                                        frameTime < 33.33f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
                     ImGui::TextColored(frameColor, "%.2f ms", frameTime);
                     ImGui::TableNextColumn(); ImGui::Text("16.67 ms");
-                    
+
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn(); ImGui::Text("P95 Frame");
                     ImGui::TableNextColumn(); ImGui::Text("%.2f ms", tracker.getP95Time(voxelvk::PerformanceBudget::FRAME_TOTAL));
                     ImGui::TableNextColumn(); ImGui::Text("20.0 ms");
-                    
+
                     ImGui::EndTable();
                 }
-                
+
                 ImGui::Spacing();
-                
+
                 // Frame time history graph
                 if (!fpsHistory_.empty()) {
                     ImGui::Text("FPS History (2 min)");
                     ImGui::PlotLines("##FPSGraph", fpsHistory_.data(), (int)fpsHistory_.size(), 0, nullptr, 0.0f, 120.0f, ImVec2(0, 80));
-                    
+
                     ImGui::Text("Frame Time History");
                     ImGui::PlotLines("##FrameTimeGraph", frameTimeHistory_.data(), (int)frameTimeHistory_.size(), 0, nullptr, 0.0f, 50.0f, ImVec2(0, 80));
                 }
-                
+
                 // GPU Timings
                 const auto& timings = pm.getGPUTimer().getAllTimings();
                 if (!timings.empty()) {
@@ -1213,10 +1381,10 @@ int main(int argc, char** argv) {
                     ImGui::Text("GPU Pipeline Timings:");
                     for (const auto& kv : timings) {
                         ImGui::BulletText("%s: %.3f ms", kv.first.c_str(), kv.second);
-                        
+
                         // Add a small progress bar for visual representation
                         float normalized = std::min(static_cast<float>(kv.second / 16.67f), 1.0f); // Normalize to 60 FPS budget
-                        ImVec4 barColor = normalized < 0.5f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) : 
+                        ImVec4 barColor = normalized < 0.5f ? ImVec4(0.3f, 0.9f, 0.3f, 1.0f) :
                                          normalized < 0.8f ? ImVec4(0.9f, 0.9f, 0.3f, 1.0f) : ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
                         ImGui::PushStyleColor(ImGuiCol_PlotHistogram, barColor);
                         ImGui::ProgressBar(normalized, ImVec2(150, 0), "");
@@ -1225,7 +1393,7 @@ int main(int argc, char** argv) {
                 } else {
                     ImGui::TextDisabled("GPU timings not available");
                 }
-                
+
                 // Performance actions
                 ImGui::Spacing();
                 ImGui::Separator();
@@ -1336,15 +1504,15 @@ int main(int argc, char** argv) {
             static int frames = 0; if (++frames >= maxFrames) { g_logger.Info("Benchmark frames reached ({}); exiting.", maxFrames); break; }
         }
     }
-    
+
     g_logger.Info("Main loop exited, shutting down...");
-    
+
     // Optional ImGui cleanup
     #ifdef MAIN_HAS_IMGUI_VULKAN
     if (g_Device != VK_NULL_HANDLE) { vkDeviceWaitIdle(g_Device); }
     ImGui_ImplVulkan_Shutdown(); ImGui_ImplGlfw_Shutdown(); ImGui::DestroyContext();
     #endif
-    
+
     // Cleanup
     shutdownVulkan();
     glfwDestroyWindow(window);
@@ -1354,7 +1522,7 @@ int main(int argc, char** argv) {
     if (benchmarkMode || hasArg(argc, argv, "--export-perf") || std::getenv("VOXELVK_EXPORT_PERF")) {
         voxelvk::PerformanceMonitor::instance().exportPerformanceData(perfOutDir);
     }
-    
+
     g_logger.Info("VoxelVK Production App shutdown complete");
     return 0;
 }

@@ -28,8 +28,11 @@ if(MSVC)
   # Linker hardening flags
   add_link_options(/guard:cf /DYNAMICBASE /NXCOMPAT /CETCOMPAT)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter)
-  add_link_options(-Wl,--no-undefined)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness)
+  # macOS doesn't support --no-undefined linker flag
+  if(NOT APPLE)
+    add_link_options(-Wl,--no-undefined)
+  endif()
   if(VULKEN_ENABLE_WARNINGS_AS_ERRORS)
     add_compile_options(-Werror)
   endif()
@@ -38,7 +41,10 @@ endif()
 # Hardening flags
 if(VULKEN_ENABLE_HARDENING AND NOT MSVC)
   add_compile_options(-fstack-protector-strong -D_FORTIFY_SOURCE=2)
-  add_link_options(-Wl,-z,relro,-z,now)
+  # macOS doesn't support -z,relro,-z,now linker flags
+  if(NOT APPLE)
+    add_link_options(-Wl,-z,relro,-z,now)
+  endif()
 endif()
 
 # Optimize/instrument by config
@@ -78,7 +84,7 @@ if(VOXELVK_ENABLE_WEATHER)
     src/render/post/temporal_accum.cpp
     src/render/post/height_fog.cpp
   )
-  
+
   # Find yaml-cpp dependency
   find_package(yaml-cpp QUIET)
   if(NOT yaml-cpp_FOUND)
@@ -154,10 +160,10 @@ include(CompileShaders)
 option(VOXELVK_USE_PYTHON_SHADER_BUILD "Use Python shader build pipeline" ON)
 if(VOXELVK_USE_PYTHON_SHADER_BUILD AND SHADER_COMPILATION_AVAILABLE)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
-  
+
   set(SHADER_SOURCE_DIRS "shaders" "shaders_vk")
   set(SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/resources/spv")
-  
+
   add_custom_target(compile_all_shaders
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/shader_build.py
       --source-dirs ${SHADER_SOURCE_DIRS}
@@ -167,7 +173,7 @@ if(VOXELVK_USE_PYTHON_SHADER_BUILD AND SHADER_COMPILATION_AVAILABLE)
     COMMENT "Building shaders with Python pipeline"
     VERBATIM
   )
-  
+
   # Make shader compilation a dependency of the main build
   add_dependencies(ShaderSPV compile_all_shaders)
 else()
@@ -235,7 +241,7 @@ if(NOT VOXELVK_HEADLESS_ONLY AND Vulkan_FOUND)
     message(STATUS "VulkanMemoryAllocator found")
   else()
     # Fallback: look for the header manually
-    find_path(VMA_INCLUDE_DIR vk_mem_alloc.h HINTS /usr/include)
+    find_path(VMA_INCLUDE_DIR vk_mem_alloc.h HINTS /usr/include ${CMAKE_SOURCE_DIR}/external/third_party)
     if(VMA_INCLUDE_DIR)
       if(NOT TARGET vma_header)
         add_library(vma_header INTERFACE)
@@ -273,9 +279,9 @@ if(VOXELVK_ENABLE_RL)
     src/rl/rl_backend_dummy.cpp
     src/rl/rl_backend_minimal.cpp
   )
-  
+
   list(APPEND VOXELVK_ELITE_SOURCES ${RL_BACKEND_SRC})
-  
+
   # RL navigation demo
   if(VOXELVK_RL_MINIMAL AND NOT VOXELVK_HEADLESS_ONLY)
     add_executable(rl_nav_demo apps/rl_nav_demo.cpp ${RL_BACKEND_SRC} src/core/logger.cpp)
@@ -289,7 +295,7 @@ endif()
 if(NOT VOXELVK_HEADLESS_ONLY)
   # Production ImGui application with Vulkan backend
   if(BUILD_EXTRAS)
-    add_executable(main_imgui_vulkan apps/main_imgui_vulkan.cpp ${WEATHER_SRC} src/core/logger.cpp src/core/performance_monitor.cpp ${AI_SRC})
+    add_executable(main_imgui_vulkan apps/main_imgui_vulkan.cpp ${WEATHER_SRC} src/core/logger.cpp src/core/performance_monitor.cpp src/core/nvtx_profiler.cpp ${AI_SRC})
     target_include_directories(main_imgui_vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src)
     # Provide stb include dir (vcpkg header-only) for Linux screenshots
     if(EXISTS "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/stb_image_write.h")
@@ -320,25 +326,25 @@ if(NOT VOXELVK_HEADLESS_ONLY)
     endif()
     add_dependencies(main_imgui_vulkan ShaderSPV)
   endif()
-  
+
   if(BUILD_EXTRAS)
     if(WEATHER_YAML_LIB)
       target_link_libraries(main_imgui_vulkan PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(main_imgui_vulkan PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
   endif()
-  
+
   if(BUILD_EXTRAS)
     if(GLM_LIB)
       target_link_libraries(main_imgui_vulkan PRIVATE ${GLM_LIB})
     endif()
+
+    target_compile_definitions(main_imgui_vulkan PRIVATE
+      VOXELVK_ENABLE_P0_RELIABILITY=1
+      VOXELVK_ENABLE_P1_MEMORY=1
+      VOXELVK_ENABLE_P2_PERFORMANCE=1
+    )
   endif()
-  
-  target_compile_definitions(main_imgui_vulkan PRIVATE
-    VOXELVK_ENABLE_P0_RELIABILITY=1
-    VOXELVK_ENABLE_P1_MEMORY=1
-    VOXELVK_ENABLE_P2_PERFORMANCE=1
-  )
 endif()
 
 # === P2 Frame Pacing & Performance ===
@@ -352,9 +358,9 @@ if(VOXELVK_ENABLE_P2_PERFORMANCE)
     src/render/screen_space_effects.cpp
     src/core/performance_monitor.cpp
   )
-  
+
   list(APPEND VOXELVK_ELITE_SOURCES ${P2_PERFORMANCE_SRC})
-  
+
   # P2 performance shaders
   set(P2_SHADERS
     shaders_vk/taa/motion_vectors.vert
@@ -365,34 +371,34 @@ if(VOXELVK_ENABLE_P2_PERFORMANCE)
     shaders_vk/post/ssr.frag
     shaders_vk/post/ssao_blur.frag
   )
-  
+
   # Ensure P2 shaders are in the compilation list
   foreach(SHADER IN LISTS P2_SHADERS)
     if(EXISTS "${CMAKE_SOURCE_DIR}/${SHADER}")
       # Shader will be compiled by existing GLSL_SOURCES glob
     endif()
   endforeach()
-  
+
   # P2 concepts demo (simplified) - gated behind BUILD_EXTRAS
   if(NOT VOXELVK_HEADLESS_ONLY AND BUILD_EXTRAS)
     add_executable(p2_concepts_validator apps/p2_concepts_validator.cpp ${WEATHER_SRC} src/core/logger.cpp)
     target_include_directories(p2_concepts_validator PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(p2_concepts_validator PRIVATE Threads::Threads)
-    
+
     if(WEATHER_YAML_LIB)
       target_link_libraries(p2_concepts_validator PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(p2_concepts_validator PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
-    
-    target_compile_definitions(p2_concepts_validator PRIVATE 
+
+    target_compile_definitions(p2_concepts_validator PRIVATE
       VOXELVK_ENABLE_P2_PERFORMANCE=1
     )
-    
-    # P2 120 FPS target validator  
+
+    # P2 120 FPS target validator
     add_executable(p2_target_validator apps/p2_target_validator.cpp ${WEATHER_SRC} src/core/logger.cpp)
     target_include_directories(p2_target_validator PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(p2_target_validator PRIVATE Threads::Threads)
-    
+
     if(WEATHER_YAML_LIB)
       target_link_libraries(p2_target_validator PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(p2_target_validator PRIVATE VOXELVK_ENABLE_WEATHER=1)
@@ -406,16 +412,16 @@ set(VOXELVK_ENABLE_P1_MEMORY ON CACHE BOOL "Enable P1 memory management systems"
 if(VOXELVK_ENABLE_P1_MEMORY)
   # Try to find VMA (Vulkan Memory Allocator)
   find_package(VulkanMemoryAllocator QUIET)
-  
+
   if(VulkanMemoryAllocator_FOUND)
     set(VMA_TARGET GPUOpen::VulkanMemoryAllocator)
     message(STATUS "VulkanMemoryAllocator found via package")
   else()
-    # Fallback: look for VMA header manually  
-    find_path(VMA_INCLUDE_DIR vk_mem_alloc.h 
+    # Fallback: look for VMA header manually
+    find_path(VMA_INCLUDE_DIR vk_mem_alloc.h
       HINTS /usr/include /usr/local/include ${CMAKE_SOURCE_DIR}/third_party
       PATH_SUFFIXES vma VulkanMemoryAllocator)
-      
+
     if(VMA_INCLUDE_DIR)
       if(NOT TARGET vma_header)
         add_library(vma_header INTERFACE)
@@ -428,7 +434,7 @@ if(VOXELVK_ENABLE_P1_MEMORY)
       set(VOXELVK_ENABLE_P1_MEMORY OFF)
     endif()
   endif()
-  
+
   if(VOXELVK_ENABLE_P1_MEMORY)
     # P1 memory management sources
     file(GLOB P1_MEMORY_SRC
@@ -437,21 +443,21 @@ if(VOXELVK_ENABLE_P1_MEMORY)
       src/render/texture_manager.cpp
       src/render/mesh_optimizer.cpp
     )
-    
+
     list(APPEND VOXELVK_ELITE_SOURCES ${P1_MEMORY_SRC})
-    
+
     # P1 concepts demo (simplified) - gated behind BUILD_EXTRAS
     if(NOT VOXELVK_HEADLESS_ONLY AND BUILD_EXTRAS)
       add_executable(p1_concepts_simple apps/p1_concepts_simple.cpp ${WEATHER_SRC} src/core/logger.cpp)
       target_include_directories(p1_concepts_simple PRIVATE ${CMAKE_SOURCE_DIR}/src)
       target_link_libraries(p1_concepts_simple PRIVATE Threads::Threads)
-      
+
       if(WEATHER_YAML_LIB)
         target_link_libraries(p1_concepts_simple PRIVATE ${WEATHER_YAML_LIB})
         target_compile_definitions(p1_concepts_simple PRIVATE VOXELVK_ENABLE_WEATHER=1)
       endif()
-      
-      target_compile_definitions(p1_concepts_simple PRIVATE 
+
+      target_compile_definitions(p1_concepts_simple PRIVATE
         VOXELVK_ENABLE_P1_MEMORY=1
       )
     endif()
@@ -469,21 +475,21 @@ if(VOXELVK_ENABLE_P0_RELIABILITY)
     src/vk/swapchain_manager.cpp
     src/vk/pipeline_cache_manager.cpp
   )
-  
+
   list(APPEND VOXELVK_ELITE_SOURCES ${P0_RELIABILITY_SRC})
-  
+
   # P0 demo application (simplified) - gated behind BUILD_EXTRAS
   if(NOT VOXELVK_HEADLESS_ONLY AND BUILD_EXTRAS)
     add_executable(p0_reliability_test apps/p0_reliability_test.cpp ${WEATHER_SRC} src/core/logger.cpp)
     target_include_directories(p0_reliability_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(p0_reliability_test PRIVATE Threads::Threads)
-    
+
     if(WEATHER_YAML_LIB)
       target_link_libraries(p0_reliability_test PRIVATE ${WEATHER_YAML_LIB})
       target_compile_definitions(p0_reliability_test PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
-    
-    target_compile_definitions(p0_reliability_test PRIVATE 
+
+    target_compile_definitions(p0_reliability_test PRIVATE
       VOXELVK_ENABLE_P0_RELIABILITY=1
     )
   endif()
@@ -506,7 +512,7 @@ if(VOXELVK_ENABLE_WEATHER)
     shaders_vk/post/height_fog.frag
     shaders_vk/material/weather_material.glsl
   )
-  
+
   # Ensure weather shaders are compiled
   foreach(SHADER IN LISTS WEATHER_SHADERS)
     if(EXISTS "${CMAKE_SOURCE_DIR}/${SHADER}")
@@ -569,14 +575,14 @@ if(NOT VOXELVK_HEADLESS_ONLY)
 
   # --- CSM descriptor layout helper ---
   list(APPEND VOXELVK_ELITE_SOURCES src/render/csm_layout.cpp)
-  
+
   # --- Weather System Integration ---
   if(VOXELVK_ENABLE_WEATHER)
     list(APPEND VOXELVK_ELITE_SOURCES ${WEATHER_SRC})
   endif()
 
   if(NOT TARGET VoxelVK_Elite_ALL)
-  add_executable(VoxelVK_Elite_ALL apps/smoke_headless.cpp ${VOXELVK_ELITE_SOURCES} src/core/logger.cpp src/core/thread_pool.cpp)
+  add_executable(VoxelVK_Elite_ALL apps/smoke_headless.cpp ${VOXELVK_ELITE_SOURCES} src/core/logger.cpp src/core/thread_pool.cpp src/core/nvtx_profiler.cpp)
     add_dependencies(VoxelVK_Elite_ALL ShaderSPV)
     target_include_directories(VoxelVK_Elite_ALL PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(VoxelVK_Elite_ALL PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
@@ -716,16 +722,16 @@ endforeach()
 if(ENABLE_TESTS)
   include(CTest)
   enable_testing()
-  
+
   # Core functionality tests
   add_executable(test_shaders_compile tests/test_shaders_compile.cpp)
   add_dependencies(test_shaders_compile ShaderSPV)
   add_test(NAME test_shaders_compile COMMAND test_shaders_compile)
   set_tests_properties(test_shaders_compile PROPERTIES TIMEOUT 30)
-  
+
   add_test(NAME test_smoke_headless COMMAND smoke_headless)
   set_tests_properties(test_smoke_headless PROPERTIES TIMEOUT 10)
-  
+
   # Weather system tests
   if(VOXELVK_ENABLE_WEATHER AND (GLM_FOUND OR glm_FOUND))
     add_executable(test_weather_system tests/test_weather_system.cpp ${WEATHER_SRC} src/core/logger.cpp)
@@ -743,22 +749,22 @@ if(ENABLE_TESTS)
   else()
     message(STATUS "Weather system tests disabled - GLM not available")
   endif()
-  
+
   # RL backend tests
   if(VOXELVK_ENABLE_RL)
     add_executable(test_rl_backend tests/test_rl_backend.cpp ${RL_BACKEND_SRC} src/core/logger.cpp)
     target_include_directories(test_rl_backend PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(test_rl_backend PRIVATE Threads::Threads)
     target_compile_definitions(test_rl_backend PRIVATE VOXELVK_ENABLE_RL=1)
-    
+
     add_test(NAME test_rl_backend COMMAND test_rl_backend)
     set_tests_properties(test_rl_backend PROPERTIES TIMEOUT 30)
   endif()
-  
+
   # Performance monitoring tests
   if(VOXELVK_ENABLE_P2_PERFORMANCE)
     if(NOT VOXELVK_HEADLESS_ONLY)
-      add_executable(test_performance_monitoring tests/test_performance_monitoring.cpp src/core/logger.cpp src/core/performance_monitor.cpp)
+      add_executable(test_performance_monitoring tests/test_performance_monitoring.cpp src/core/logger.cpp src/core/performance_monitor.cpp src/core/nvtx_profiler.cpp)
       target_include_directories(test_performance_monitoring PRIVATE ${CMAKE_SOURCE_DIR}/src)
       target_link_libraries(test_performance_monitoring PRIVATE Threads::Threads Vulkan::Vulkan)
       if(JSON_LIB)
@@ -769,10 +775,10 @@ if(ENABLE_TESTS)
       set_tests_properties(test_performance_monitoring PROPERTIES TIMEOUT 30)
     endif()
   endif()
-  
+
   # Integration tests
   if(NOT VOXELVK_HEADLESS_ONLY)
-    add_executable(test_integration tests/test_integration.cpp ${WEATHER_SRC} src/core/logger.cpp src/core/performance_monitor.cpp)
+    add_executable(test_integration tests/test_integration.cpp ${WEATHER_SRC} src/core/logger.cpp src/core/performance_monitor.cpp src/core/nvtx_profiler.cpp)
     target_include_directories(test_integration PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(test_integration PRIVATE Threads::Threads Vulkan::Vulkan)
     if(JSON_LIB)
@@ -893,33 +899,33 @@ endif()
 if(ENABLE_TESTS)
   include(CTest)
   enable_testing()
-  
+
   find_package(GTest CONFIG QUIET)
   if(GTest_FOUND)
     message(STATUS "GoogleTest found - enabling test suite")
-    
+
     # Unit and integration tests
-    add_executable(unit_tests 
-      tests/unit/test_math_basics.cpp 
+    add_executable(unit_tests
+      tests/unit/test_math_basics.cpp
       tests/integration/test_engine_boot.cpp
     )
-    target_link_libraries(unit_tests PRIVATE 
-      GTest::gtest 
+    target_link_libraries(unit_tests PRIVATE
+      GTest::gtest
       GTest::gtest_main
     )
     target_include_directories(unit_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    
+
     # Register unit tests with CTest
     add_test(NAME unit_tests COMMAND unit_tests)
-    
+
     # Shader compilation smoke test
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/render/test_shader_compile.sh")
-      add_test(NAME shader_smoke 
+      add_test(NAME shader_smoke
         COMMAND ${CMAKE_SOURCE_DIR}/tests/render/test_shader_compile.sh
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
       )
     endif()
-    
+
     message(STATUS "Test suite configured successfully")
   else()
     message(WARNING "GoogleTest not found - tests disabled")
@@ -939,7 +945,7 @@ set(CPACK_GENERATOR "ZIP;TGZ")
 set(CPACK_SOURCE_GENERATOR "TGZ")
 
 # Include documentation and assets in package
-set(CPACK_PACKAGE_EXECUTABLES 
+set(CPACK_PACKAGE_EXECUTABLES
   "main_imgui_vulkan;VoxelVK Main Demo"
   "operator_console;Operator Console"
 )

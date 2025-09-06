@@ -1,3 +1,6 @@
+#ifdef __APPLE__
+#define GL_SILENCE_DEPRECATION
+#endif
 #include <GLFW/glfw3.h>
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
@@ -53,8 +56,10 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 130");
 #endif
 
+#ifdef MAIN_HAS_IMGUI
     double last_time = glfwGetTime();
-    double fps = 0.0; int frames = 0; double fps_accum = 0.0;
+    int frames = 0; double fps_accum = 0.0; double fps = 0.0;
+#endif
 
     while(!glfwWindowShouldClose(window)){
         glfwPollEvents();
@@ -105,9 +110,13 @@ int main(){
         glfwSwapBuffers(window);
 
         // Update FPS
+#ifdef MAIN_HAS_IMGUI
         double now = glfwGetTime();
-        double dt = now - last_time; last_time = now; fps_accum += dt; frames++;
+        double dt = now - last_time;
+        fps_accum += dt; frames++;
         if(fps_accum >= 0.5){ fps = frames / fps_accum; frames=0; fps_accum=0.0; }
+        last_time = now;
+#endif
     }
 
 #ifdef MAIN_HAS_IMGUI

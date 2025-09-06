@@ -113,10 +113,10 @@ private:
 // RAII debug label for command buffers
 #define VK_DEBUG_LABEL(commandBuffer, name)                                \
     struct VkDebugLabel_##__LINE__ {                                       \
-        VkCommandBuffer cmd;                                               \
-        VkDebugLabel_##__LINE__(VkCommandBuffer c, const char* n) : cmd(c) \
-        { voxelvk::VkDebugUtils::beginLabel(cmd, n); }                     \
-        ~VkDebugLabel_##__LINE__() { voxelvk::VkDebugUtils::endLabel(cmd);} \
+        VkCommandBuffer cmd_;                                              \
+        VkDebugLabel_##__LINE__(VkCommandBuffer c, const char* n) : cmd_(c) \
+        { voxelvk::VkDebugUtils::beginLabel(cmd_, n); }                    \
+        ~VkDebugLabel_##__LINE__() { voxelvk::VkDebugUtils::endLabel(cmd_);} \
     } _vk_debug_label_##__LINE__(commandBuffer, name)
 
 #define VK_OBJECT_NAME(device, object, type, name)                         \

@@ -40,7 +40,7 @@ void MinimalMLP::forward(const std::vector<float>& observations,
         // Resize and pad/truncate as needed
         std::vector<float> paddedObs(config_.inputSize, 0.0f);
         size_t copySize = std::min(observations.size(), static_cast<size_t>(config_.inputSize));
-        std::copy(observations.begin(), observations.begin() + copySize, paddedObs.begin());
+        std::copy(observations.begin(), observations.begin() + static_cast<ptrdiff_t>(copySize), paddedObs.begin());
         
         computePolicyForward(paddedObs, actions);
         

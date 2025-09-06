@@ -90,7 +90,7 @@ void WeatherSystem::tick(double dt){
   gustPhase_ += float(dt) * (0.2f + 0.8f*P_.gustiness); // slow gust
   if(P_.dayNight){
     // advance sun elevation sinusoidally
-    float phase = float(std::fmod(tSeconds_, P_.daySeconds) / P_.daySeconds);
+    float phase = static_cast<float>(std::fmod(static_cast<double>(tSeconds_), static_cast<double>(P_.daySeconds)) / static_cast<double>(P_.daySeconds));
     P_.sunElevDeg = std::max(1.0f, 180.f * std::sin(phase*6.2831853f) * 0.5f + 45.f);
   }
 }
@@ -108,7 +108,7 @@ WeatherUBO WeatherSystem::getUBO() const{
   u.state     = static_cast<uint32_t>(P_.state);
   u.cloudCoverage = P_.cloudCoverage;
   u.cloudDensity  = P_.cloudDensity;
-  float phase = P_.dayNight ? float(std::fmod(tSeconds_, P_.daySeconds)/P_.daySeconds) : (P_.sunElevDeg/90.f);
+  float phase = P_.dayNight ? static_cast<float>(std::fmod(static_cast<double>(tSeconds_), static_cast<double>(P_.daySeconds))/static_cast<double>(P_.daySeconds)) : (P_.sunElevDeg/90.f);
   u.timeOfDay = phase;
   float zenith = glm::radians(90.0f - P_.sunElevDeg);
   u.sunCosZenith = std::cos(zenith);
