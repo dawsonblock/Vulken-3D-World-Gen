@@ -1,1 +1,0 @@
-/usr/bin/c++ -O2 -g -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/smoke_graphics_headless.dir/src/core/logger.cpp.o -o smoke_graphics_headless

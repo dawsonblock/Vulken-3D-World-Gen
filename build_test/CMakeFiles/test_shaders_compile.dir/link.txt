@@ -1,1 +1,0 @@
-/usr/bin/c++ -O2 -g -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/test_shaders_compile.dir/tests/test_shaders_compile.cpp.o -o test_shaders_compile
