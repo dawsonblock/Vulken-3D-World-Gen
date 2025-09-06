@@ -1,0 +1,209 @@
+#version 450
+
+// Particle system compute shader
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// Particle data structure
+struct Particle {
+    vec3 position;
+    vec3 velocity;
+    vec3 acceleration;
+    vec4 color;
+    float life;
+    float size;
+    float rotation;
+    float angularVelocity;
+};
+
+// Particle buffers
+layout(binding = 0) buffer ParticleBuffer {
+    Particle particles[];
+} particleBuffer;
+
+// Particle system uniforms
+layout(binding = 1) uniform ParticleSystemUniforms {
+    float deltaTime;
+    float gravity;
+    vec3 windForce;
+    vec3 emitterPosition;
+    vec3 emitterVelocity;
+    float emitterRadius;
+    float particleLifetime;
+    float particleSize;
+    float particleSpeed;
+    float particleSpread;
+    int maxParticles;
+    int particleCount;
+    float spawnRate;
+    float time;
+} particleUniforms;
+
+// Force fields
+layout(binding = 2) uniform ForceFieldUniforms {
+    vec3 forceFieldPosition;
+    float forceFieldRadius;
+    float forceFieldStrength;
+    int forceFieldType; // 0 = attract, 1 = repel, 2 = vortex
+} forceField;
+
+// Noise texture for particle variation
+layout(binding = 3) uniform sampler2D noiseTexture;
+
+// Particle spawn function
+void spawnParticle(uint index) {
+    // Random position within emitter radius
+    vec2 random = vec2(
+        fract(sin(float(index) * 12.9898) * 43758.5453),
+        fract(sin(float(index) * 78.233) * 43758.5453)
+    );
+
+    float angle = random.x * 2.0 * 3.14159;
+    float radius = sqrt(random.y) * particleUniforms.emitterRadius;
+
+    vec3 offset = vec3(
+        cos(angle) * radius,
+        0.0,
+        sin(angle) * radius
+    );
+
+    // Set particle properties
+    particleBuffer.particles[index].position = particleUniforms.emitterPosition + offset;
+    particleBuffer.particles[index].velocity = particleUniforms.emitterVelocity +
+                               vec3(
+                                   (random.x - 0.5) * particleUniforms.particleSpread,
+                                   random.y * particleUniforms.particleSpeed,
+                                   (random.y - 0.5) * particleUniforms.particleSpread
+                               );
+    particleBuffer.particles[index].acceleration = vec3(0.0);
+    particleBuffer.particles[index].color = vec4(1.0, 1.0, 1.0, 1.0);
+    particleBuffer.particles[index].life = particleUniforms.particleLifetime;
+    particleBuffer.particles[index].size = particleUniforms.particleSize;
+    particleBuffer.particles[index].rotation = random.x * 2.0 * 3.14159;
+    particleBuffer.particles[index].angularVelocity = (random.y - 0.5) * 10.0;
+}
+
+// Force field calculation
+vec3 calculateForceField(vec3 position) {
+    vec3 direction = position - forceField.forceFieldPosition;
+    float distance = length(direction);
+
+    if(distance > forceField.forceFieldRadius) {
+        return vec3(0.0);
+    }
+
+    float strength = forceField.forceFieldStrength * (1.0 - distance / forceField.forceFieldRadius);
+
+    if(forceField.forceFieldType == 0) {
+        // Attract
+        return -normalize(direction) * strength;
+    } else if(forceField.forceFieldType == 1) {
+        // Repel
+        return normalize(direction) * strength;
+    } else if(forceField.forceFieldType == 2) {
+        // Vortex
+        vec3 vortexForce = cross(direction, vec3(0.0, 1.0, 0.0));
+        return normalize(vortexForce) * strength;
+    }
+
+    return vec3(0.0);
+}
+
+// Particle update function
+void updateParticle(uint index) {
+    Particle particle = particleBuffer.particles[index];
+
+    // Update life
+    particle.life -= particleUniforms.deltaTime;
+
+    if(particle.life <= 0.0) {
+        // Respawn particle
+        spawnParticle(index);
+        return;
+    }
+
+    // Apply gravity
+    particle.acceleration.y -= particleUniforms.gravity;
+
+    // Apply wind force
+    particle.acceleration += particleUniforms.windForce;
+
+    // Apply force field
+    particle.acceleration += calculateForceField(particle.position);
+
+    // Update velocity
+    particle.velocity += particle.acceleration * particleUniforms.deltaTime;
+
+    // Update position
+    particle.position += particle.velocity * particleUniforms.deltaTime;
+
+    // Update rotation
+    particle.rotation += particle.angularVelocity * particleUniforms.deltaTime;
+
+    // Update color based on life
+    float lifeRatio = particle.life / particleUniforms.particleLifetime;
+    particle.color.a = lifeRatio;
+
+    // Add color variation based on noise
+    vec3 noiseSample = texture(noiseTexture, particle.position.xz * 0.1 + particleUniforms.time).rgb;
+    particle.color.rgb = mix(particle.color.rgb, noiseSample, 0.3);
+
+    // Update size based on life
+    particle.size = particleUniforms.particleSize * lifeRatio;
+
+    // Reset acceleration
+    particle.acceleration = vec3(0.0);
+
+    // Store updated particle
+    particleBuffer.particles[index] = particle;
+}
+
+// Collision detection
+void handleCollision(uint index) {
+    Particle particle = particleBuffer.particles[index];
+
+    // Ground collision
+    if(particle.position.y < 0.0) {
+        particle.position.y = 0.0;
+        particle.velocity.y *= -0.5; // Bounce with energy loss
+        particle.velocity.x *= 0.8;  // Friction
+        particle.velocity.z *= 0.8;  // Friction
+    }
+
+    // Boundary collision
+    float boundary = 50.0;
+    if(abs(particle.position.x) > boundary) {
+        particle.position.x = sign(particle.position.x) * boundary;
+        particle.velocity.x *= -0.5;
+    }
+    if(abs(particle.position.z) > boundary) {
+        particle.position.z = sign(particle.position.z) * boundary;
+        particle.velocity.z *= -0.5;
+    }
+
+    particleBuffer.particles[index] = particle;
+}
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+
+    if(index >= particleUniforms.maxParticles) {
+        return;
+    }
+
+    // Initialize particles if needed
+    if(particleUniforms.particleCount == 0) {
+        spawnParticle(index);
+        return;
+    }
+
+    // Update existing particles
+    if(index < particleUniforms.particleCount) {
+        updateParticle(index);
+        handleCollision(index);
+    }
+
+    // Spawn new particles
+    if(index < particleUniforms.particleCount + uint(particleUniforms.spawnRate * particleUniforms.deltaTime)) {
+        spawnParticle(index);
+    }
+}

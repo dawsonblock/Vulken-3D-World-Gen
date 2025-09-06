@@ -1,0 +1,56 @@
+#version 450
+
+// Simple frustum culling compute shader
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// Input data
+layout(binding = 0) readonly buffer ObjectData {
+    vec4 positions[];
+} objects;
+
+// Output data
+layout(binding = 1) writeonly buffer VisibleObjects {
+    uint visibleIndices[];
+} visible;
+
+layout(binding = 2) writeonly buffer DrawCount {
+    uint drawCount;
+} count;
+
+// Frustum planes (6 planes: left, right, bottom, top, near, far)
+layout(binding = 3) uniform FrustumUniforms {
+    vec4 frustumPlanes[6];
+    uint objectCount;
+    float boundingRadius;
+} frustum;
+
+// Test if a sphere intersects with the frustum
+bool sphereInFrustum(vec3 center, float radius) {
+    for(int i = 0; i < 6; ++i) {
+        float distance = dot(vec4(center, 1.0), frustum.frustumPlanes[i]);
+        if(distance < -radius) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+
+    if(index >= frustum.objectCount) {
+        return;
+    }
+
+    // Get object position
+    vec3 objectPos = objects.positions[index].xyz;
+
+    // Test against frustum
+    bool isVisible = sphereInFrustum(objectPos, frustum.boundingRadius);
+
+    if(isVisible) {
+        // Use atomic counter to get unique index
+        uint visibleIndex = atomicAdd(count.drawCount, 1);
+        visible.visibleIndices[visibleIndex] = index;
+    }
+}

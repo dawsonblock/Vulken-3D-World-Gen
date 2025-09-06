@@ -16,6 +16,9 @@
 #include <vector>
 #include <thread>
 #include <cmath>
+#include <fstream>
+#include <array>
+#include <cstring>
 
 // VoxelVK systems
 #include "../src/core/fullscreen_toggle.hpp"
@@ -78,6 +81,8 @@ static std::vector<VkFence> g_InFlightFences;
 static bool g_FramebufferResized = false;
 static VkPipelineCache g_PipelineCache = VK_NULL_HANDLE;
 static VkPipeline g_GraphicsPipeline = VK_NULL_HANDLE;
+static VkBuffer g_VertexBuffer = VK_NULL_HANDLE;
+static VkDeviceMemory g_VertexBufferMemory = VK_NULL_HANDLE;
 
 // ImGui descriptor pool (if used)
 static VkDescriptorPool g_ImGuiDescriptorPool = VK_NULL_HANDLE;
@@ -482,9 +487,20 @@ static void recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex){
     rpbi.clearValueCount = 1; rpbi.pClearValues = &clear;
     vkCmdBeginRenderPass(cmd, &rpbi, VK_SUBPASS_CONTENTS_INLINE);
 
-    // For now, just clear the screen with the background color
-    // The clear color should be visible even without drawing geometry
-    // TODO: Add proper shader pipeline for triangle rendering
+    // Bind the graphics pipeline
+    if (g_GraphicsPipeline != VK_NULL_HANDLE) {
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, g_GraphicsPipeline);
+
+        // Bind vertex buffer
+        if (g_VertexBuffer != VK_NULL_HANDLE) {
+            VkBuffer vertexBuffers[] = {g_VertexBuffer};
+            VkDeviceSize offsets[] = {0};
+            vkCmdBindVertexBuffers(cmd, 0, 1, vertexBuffers, offsets);
+
+            // Draw the triangle
+            vkCmdDraw(cmd, 3, 1, 0, 0);
+        }
+    }
 
     // Optional: render ImGui within the pass
 #ifdef MAIN_HAS_IMGUI_VULKAN
@@ -501,85 +517,177 @@ static void recordCommandBuffer(VkCommandBuffer cmd, uint32_t imageIndex){
     vkEndCommandBuffer(cmd);
 }
 
-static bool createGraphicsPipeline() {
-    // Create a simple vertex shader (hardcoded for now)
-    const char* vertexShaderSource = R"(
-#version 450
-void main() {
-    vec2 positions[3] = vec2[](
-        vec2(0.0, -0.5),
-        vec2(0.5, 0.5),
-        vec2(-0.5, 0.5)
-    );
-    gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);
+static VkShaderModule createShaderModule(const std::vector<char>& code) {
+    VkShaderModuleCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = code.size();
+    createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+    VkShaderModule shaderModule;
+    if (vkCreateShaderModule(g_Device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+        g_logger.Error("Failed to create shader module");
+        return VK_NULL_HANDLE;
+    }
+
+    return shaderModule;
 }
-)";
 
-    const char* fragmentShaderSource = R"(
-#version 450
-layout(location = 0) out vec4 outColor;
-void main() {
-    outColor = vec4(1.0, 0.0, 0.0, 1.0); // Red triangle
+static std::vector<char> readFile(const std::string& filename) {
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open()) {
+        g_logger.Error("Failed to open file: {}", filename);
+        return {};
+    }
+
+    size_t fileSize = (size_t)file.tellg();
+    std::vector<char> buffer(fileSize);
+
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+
+    file.close();
+
+    return buffer;
 }
-)";
 
-    // Create shader modules
-    VkShaderModule vertexShaderModule = VK_NULL_HANDLE;
-    VkShaderModule fragmentShaderModule = VK_NULL_HANDLE;
+static bool createVertexBuffer() {
+    // Define triangle vertices with positions and colors
+    struct Vertex {
+        float pos[2];
+        float color[3];
+    };
 
-    // For now, we'll create empty shader modules and let the pipeline creation fail gracefully
-    // In a real implementation, you'd compile the shaders to SPIR-V
+    std::vector<Vertex> vertices = {
+        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},  // Red
+        {{0.5f, 0.5f},  {0.0f, 1.0f, 0.0f}},  // Green
+        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}   // Blue
+    };
 
-    // Create pipeline layout
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
+    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-    VkPipelineLayout pipelineLayout;
-    if (vkCreatePipelineLayout(g_Device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-        g_logger.Error("Failed to create pipeline layout");
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = bufferSize;
+    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateBuffer(g_Device, &bufferInfo, nullptr, &g_VertexBuffer) != VK_SUCCESS) {
+        g_logger.Error("Failed to create vertex buffer");
         return false;
     }
 
-    // Create graphics pipeline
-    VkGraphicsPipelineCreateInfo pipelineInfo{};
-    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = g_RenderPass;
-    pipelineInfo.subpass = 0;
+    // Get memory requirements
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(g_Device, g_VertexBuffer, &memRequirements);
 
-    // Create shader stages (empty for now, but valid structure)
-    VkPipelineShaderStageCreateInfo shaderStages[2] = {};
+    // Find memory type
+    VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(g_PhysicalDevice, &memProperties);
 
-    // Vertex shader stage
-    shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-    shaderStages[0].module = VK_NULL_HANDLE; // No shader module for now
-    shaderStages[0].pName = "main";
+    uint32_t memoryTypeIndex = UINT32_MAX;
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+        if ((memRequirements.memoryTypeBits & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+            memoryTypeIndex = i;
+            break;
+        }
+    }
 
-    // Fragment shader stage
-    shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    shaderStages[1].module = VK_NULL_HANDLE; // No shader module for now
-    shaderStages[1].pName = "main";
+    if (memoryTypeIndex == UINT32_MAX) {
+        g_logger.Error("Failed to find suitable memory type");
+        return false;
+    }
 
-    pipelineInfo.stageCount = 2;
-    pipelineInfo.pStages = shaderStages;
+    // Allocate memory
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = memoryTypeIndex;
 
-    // Vertex input state (no vertex attributes for now)
+    if (vkAllocateMemory(g_Device, &allocInfo, nullptr, &g_VertexBufferMemory) != VK_SUCCESS) {
+        g_logger.Error("Failed to allocate vertex buffer memory");
+        return false;
+    }
+
+    // Bind buffer to memory
+    vkBindBufferMemory(g_Device, g_VertexBuffer, g_VertexBufferMemory, 0);
+
+    // Copy vertex data to buffer
+    void* data;
+    vkMapMemory(g_Device, g_VertexBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, vertices.data(), (size_t)bufferSize);
+    vkUnmapMemory(g_Device, g_VertexBufferMemory);
+
+    g_logger.Info("Vertex buffer created successfully");
+    return true;
+}
+
+static bool createGraphicsPipeline() {
+    // Load shader modules from SPIR-V files
+    auto vertShaderCode = readFile("../shaders_vk/simple_triangle.vert.spv");
+    auto fragShaderCode = readFile("../shaders_vk/simple_triangle.frag.spv");
+
+    if (vertShaderCode.empty() || fragShaderCode.empty()) {
+        g_logger.Error("Failed to load shader files");
+        return false;
+    }
+
+    VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+    VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+
+    if (vertShaderModule == VK_NULL_HANDLE || fragShaderModule == VK_NULL_HANDLE) {
+        g_logger.Error("Failed to create shader modules");
+        return false;
+    }
+
+    // Define vertex input binding and attributes
+    VkVertexInputBindingDescription bindingDescription{};
+    bindingDescription.binding = 0;
+    bindingDescription.stride = sizeof(float) * 5; // 2 pos + 3 color
+    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+
+    // Position attribute
+    attributeDescriptions[0].binding = 0;
+    attributeDescriptions[0].location = 0;
+    attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[0].offset = 0;
+
+    // Color attribute
+    attributeDescriptions[1].binding = 0;
+    attributeDescriptions[1].location = 1;
+    attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributeDescriptions[1].offset = sizeof(float) * 2;
+
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.vertexAttributeDescriptionCount = 0;
-    pipelineInfo.pVertexInputState = &vertexInputInfo;
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+    // Create shader stages
+    VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+    vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertShaderStageInfo.module = vertShaderModule;
+    vertShaderStageInfo.pName = "main";
+
+    VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+    fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragShaderStageInfo.module = fragShaderModule;
+    fragShaderStageInfo.pName = "main";
+
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
     // Input assembly
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
-    pipelineInfo.pInputAssemblyState = &inputAssembly;
 
     // Viewport and scissor
     VkViewport viewport{};
@@ -600,7 +708,6 @@ void main() {
     viewportState.pViewports = &viewport;
     viewportState.scissorCount = 1;
     viewportState.pScissors = &scissor;
-    pipelineInfo.pViewportState = &viewportState;
 
     // Rasterizer
     VkPipelineRasterizationStateCreateInfo rasterizer{};
@@ -612,14 +719,12 @@ void main() {
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
-    pipelineInfo.pRasterizationState = &rasterizer;
 
     // Multisampling
     VkPipelineMultisampleStateCreateInfo multisampling{};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable = VK_FALSE;
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-    pipelineInfo.pMultisampleState = &multisampling;
 
     // Color blending
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
@@ -632,21 +737,50 @@ void main() {
     colorBlending.logicOp = VK_LOGIC_OP_COPY;
     colorBlending.attachmentCount = 1;
     colorBlending.pAttachments = &colorBlendAttachment;
-    pipelineInfo.pColorBlendState = &colorBlending;
 
-    // Dynamic state
-    VkPipelineDynamicStateCreateInfo dynamicState{};
-    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dynamicState.dynamicStateCount = 0;
-    pipelineInfo.pDynamicState = &dynamicState;
+    // Pipeline layout
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = 0;
+    pipelineLayoutInfo.pushConstantRangeCount = 0;
+
+    VkPipelineLayout pipelineLayout;
+    if (vkCreatePipelineLayout(g_Device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+        g_logger.Error("Failed to create pipeline layout");
+        vkDestroyShaderModule(g_Device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(g_Device, vertShaderModule, nullptr);
+        return false;
+    }
+
+    // Graphics pipeline
+    VkGraphicsPipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.stageCount = 2;
+    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.pVertexInputState = &vertexInputInfo;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pViewportState = &viewportState;
+    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.layout = pipelineLayout;
+    pipelineInfo.renderPass = g_RenderPass;
+    pipelineInfo.subpass = 0;
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
     if (vkCreateGraphicsPipelines(g_Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &g_GraphicsPipeline) != VK_SUCCESS) {
         g_logger.Error("Failed to create graphics pipeline");
         vkDestroyPipelineLayout(g_Device, pipelineLayout, nullptr);
+        vkDestroyShaderModule(g_Device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(g_Device, vertShaderModule, nullptr);
         return false;
     }
 
+    // Cleanup
+    vkDestroyShaderModule(g_Device, fragShaderModule, nullptr);
+    vkDestroyShaderModule(g_Device, vertShaderModule, nullptr);
     vkDestroyPipelineLayout(g_Device, pipelineLayout, nullptr);
+
     g_logger.Info("Graphics pipeline created successfully");
     return true;
 }
@@ -840,7 +974,8 @@ int main(int argc, char** argv) {
     // Swapchain + draw setup
     if(!createSwapchainAndViews(window)) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     if(!createRenderPassAndFramebuffers()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
-    // if(!createGraphicsPipeline()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
+    if(!createVertexBuffer()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
+    if(!createGraphicsPipeline()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     if(!createCommandPoolAndBuffers()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     if(!createSyncObjects()) { shutdownVulkan(); glfwDestroyWindow(window); glfwTerminate(); return 3; }
     // Initialize performance monitor and GPU timer (best-effort)

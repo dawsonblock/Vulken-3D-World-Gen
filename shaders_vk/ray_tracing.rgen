@@ -1,0 +1,126 @@
+#version 460
+
+// Ray tracing generation shader for realistic reflections
+#extension GL_EXT_ray_tracing : require
+
+// Ray tracing shader binding table
+layout(binding = 0, set = 0, rgba32f) uniform image2D image;
+layout(binding = 1, set = 0) uniform accelerationStructureEXT topLevelAS;
+layout(binding = 2, set = 0) uniform CameraUniforms {
+    mat4 viewInverse;
+    mat4 projInverse;
+    vec3 cameraPos;
+    float time;
+} camera;
+
+// Ray tracing shader binding table
+layout(binding = 3, set = 0) uniform sampler2D environmentMap;
+layout(binding = 4, set = 0) uniform sampler2D diffuseTexture;
+layout(binding = 5, set = 0) uniform sampler2D normalTexture;
+layout(binding = 6, set = 0) uniform sampler2D metallicRoughnessTexture;
+
+// Ray tracing uniforms
+layout(binding = 7, set = 0) uniform RayTracingUniforms {
+    vec3 lightPos;
+    vec3 lightColor;
+    float lightIntensity;
+    int maxBounces;
+    int samplesPerPixel;
+    float roughness;
+    float metallic;
+} rtUniforms;
+
+// Ray payload
+struct RayPayload {
+    vec3 color;
+    float distance;
+    vec3 normal;
+    vec3 albedo;
+    float metallic;
+    float roughness;
+};
+
+// Ray tracing functions
+vec3 calculateReflection(vec3 incident, vec3 normal, float roughness) {
+    // Calculate reflection direction with roughness
+    vec3 reflection = reflect(incident, normal);
+
+    // Add roughness-based random perturbation
+    vec3 random = vec3(
+        fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(gl_FragCoord.xy, vec2(37.719, 15.937))) * 43758.5453),
+        fract(sin(dot(gl_FragCoord.xy, vec2(73.123, 91.456))) * 43758.5453)
+    );
+
+    // Apply roughness to reflection direction
+    vec3 perturbed = normalize(reflection + (random - 0.5) * roughness);
+    return perturbed;
+}
+
+vec3 calculateRefraction(vec3 incident, vec3 normal, float ior) {
+    float cosI = -dot(normal, incident);
+    float sinT2 = ior * ior * (1.0 - cosI * cosI);
+
+    if(sinT2 > 1.0) {
+        // Total internal reflection
+        return reflect(incident, normal);
+    }
+
+    float cosT = sqrt(1.0 - sinT2);
+    return normalize(ior * incident + (ior * cosI - cosT) * normal);
+}
+
+vec3 sampleEnvironment(vec3 direction) {
+    // Convert direction to UV coordinates for environment map
+    vec2 uv = vec2(
+        atan(direction.z, direction.x) / (2.0 * 3.14159) + 0.5,
+        acos(direction.y) / 3.14159
+    );
+
+    return texture(environmentMap, uv).rgb;
+}
+
+void main() {
+    // Get screen coordinates
+    ivec2 pixel = ivec2(gl_LaunchIDEXT.xy);
+    ivec2 size = imageSize(image);
+
+    if(pixel.x >= size.x || pixel.y >= size.y) {
+        return;
+    }
+
+    // Calculate ray direction
+    vec2 uv = (vec2(pixel) + 0.5) / vec2(size);
+    vec4 clipSpace = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
+    vec4 viewSpace = camera.projInverse * clipSpace;
+    viewSpace.xyz /= viewSpace.w;
+    vec3 rayDir = normalize((camera.viewInverse * vec4(viewSpace.xyz, 0.0)).xyz);
+
+    // Initialize ray payload
+    RayPayload payload;
+    payload.color = vec3(0.0);
+    payload.distance = 0.0;
+    payload.normal = vec3(0.0, 1.0, 0.0);
+    payload.albedo = vec3(0.5);
+    payload.metallic = 0.0;
+    payload.roughness = 0.5;
+
+    // Trace primary ray
+    traceRayEXT(
+        topLevelAS,           // acceleration structure
+        gl_RayFlagsOpaqueEXT, // ray flags
+        0xFF,                 // cull mask
+        0,                    // sbt record offset
+        0,                    // sbt record stride
+        0,                    // miss shader index
+        camera.cameraPos,     // ray origin
+        0.001,                // ray tmin
+        rayDir,               // ray direction
+        10000.0,              // ray tmax
+        0,                    // payload location
+        payload               // payload
+    );
+
+    // Store final color
+    imageStore(image, pixel, vec4(payload.color, 1.0));
+}

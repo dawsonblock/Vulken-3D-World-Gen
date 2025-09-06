@@ -1,0 +1,352 @@
+#version 450
+
+// AI and Machine Learning compute shader
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// AI data structures
+struct NeuralNetwork {
+    float weights[256];
+    float biases[64];
+    int layerCount;
+    int neuronsPerLayer[8];
+    float learningRate;
+    float momentum;
+    int activationFunction;
+};
+
+struct TrainingData {
+    vec4 inputData[16];
+    vec4 outputData[16];
+    float error;
+    int isTraining;
+};
+
+// AI buffers
+layout(binding = 0) buffer NeuralNetworkBuffer {
+    NeuralNetwork networks[];
+} nnBuffer;
+
+layout(binding = 1) buffer TrainingDataBuffer {
+    TrainingData trainingData[];
+} trainBuffer;
+
+layout(binding = 2) buffer InferenceBuffer {
+    vec4 inferenceResults[];
+} inferenceBuffer;
+
+// AI uniforms
+layout(binding = 3) uniform AIUniforms {
+    int networkIndex;
+    int trainingMode;
+    int inferenceMode;
+    float learningRate;
+    float momentum;
+    int batchSize;
+    int epochCount;
+    float regularization;
+    float dropoutRate;
+    int useGradientDescent;
+    int useAdamOptimizer;
+    int useBatchNormalization;
+    int useDropout;
+    float time;
+} ai;
+
+// Activation functions
+float sigmoid(float x) {
+    return 1.0 / (1.0 + exp(-x));
+}
+
+float relu(float x) {
+    return max(0.0, x);
+}
+
+float leakyRelu(float x) {
+    return x > 0.0 ? x : 0.01 * x;
+}
+
+float tanhActivation(float x) {
+    return tanh(x);
+}
+
+float swish(float x) {
+    return x * sigmoid(x);
+}
+
+float gelu(float x) {
+    return 0.5 * x * (1.0 + tanh(sqrt(2.0 / 3.14159) * (x + 0.044715 * x * x * x)));
+}
+
+// Apply activation function
+float applyActivation(float x, int function) {
+    if(function == 0) return sigmoid(x);
+    else if(function == 1) return relu(x);
+    else if(function == 2) return leakyRelu(x);
+    else if(function == 3) return tanhActivation(x);
+    else if(function == 4) return swish(x);
+    else if(function == 5) return gelu(x);
+    else return x;
+}
+
+// Forward propagation
+vec4 forwardPropagation(vec4 inputData, int networkIndex) {
+    NeuralNetwork network = nnBuffer.networks[networkIndex];
+    vec4 current = inputData;
+
+    int weightIndex = 0;
+    int biasIndex = 0;
+
+    for(int layer = 0; layer < network.layerCount; ++layer) {
+        vec4 layerOutput = vec4(0.0);
+
+        // Calculate weighted sum
+        for(int i = 0; i < 4; ++i) {
+            float sum = 0.0;
+            for(int j = 0; j < 4; ++j) {
+                sum += current[j] * network.weights[weightIndex];
+                weightIndex++;
+            }
+            sum += network.biases[biasIndex];
+            biasIndex++;
+
+            // Apply activation function
+            layerOutput[i] = applyActivation(sum, network.activationFunction);
+        }
+
+        current = layerOutput;
+    }
+
+    return current;
+}
+
+// Backward propagation
+vec4 backwardPropagation(vec4 inputData, vec4 target, int networkIndex) {
+    NeuralNetwork network = nnBuffer.networks[networkIndex];
+    vec4 error = inputData - target;
+
+    // Calculate gradients
+    vec4 gradients = vec4(0.0);
+
+    for(int i = 0; i < 4; ++i) {
+        gradients[i] = error[i] * 2.0; // Derivative of MSE
+    }
+
+    return gradients;
+}
+
+// Gradient descent
+void gradientDescent(int networkIndex, vec4 gradients) {
+    NeuralNetwork network = nnBuffer.networks[networkIndex];
+
+    // Update weights and biases
+    int weightIndex = 0;
+    int biasIndex = 0;
+
+    for(int layer = 0; layer < network.layerCount; ++layer) {
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                network.weights[weightIndex] -= ai.learningRate * gradients[j];
+                weightIndex++;
+            }
+            network.biases[biasIndex] -= ai.learningRate * gradients[i];
+            biasIndex++;
+        }
+    }
+
+    nnBuffer.networks[networkIndex] = network;
+}
+
+// Adam optimizer
+void adamOptimizer(int networkIndex, vec4 gradients) {
+    NeuralNetwork network = nnBuffer.networks[networkIndex];
+
+    // Adam optimizer parameters
+    float beta1 = 0.9;
+    float beta2 = 0.999;
+    float epsilon = 1e-8;
+
+    // Update weights and biases with Adam
+    int weightIndex = 0;
+    int biasIndex = 0;
+
+    for(int layer = 0; layer < network.layerCount; ++layer) {
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                // Simplified Adam update
+                network.weights[weightIndex] -= ai.learningRate * gradients[j];
+                weightIndex++;
+            }
+            network.biases[biasIndex] -= ai.learningRate * gradients[i];
+            biasIndex++;
+        }
+    }
+
+    nnBuffer.networks[networkIndex] = network;
+}
+
+// Batch normalization
+vec4 batchNormalization(vec4 inputData, int layer) {
+    // Simplified batch normalization
+    float mean = (inputData.r + inputData.g + inputData.b + inputData.a) / 4.0;
+    float variance = 0.0;
+
+    variance += (inputData.r - mean) * (inputData.r - mean);
+    variance += (inputData.g - mean) * (inputData.g - mean);
+    variance += (inputData.b - mean) * (inputData.b - mean);
+    variance += (inputData.a - mean) * (inputData.a - mean);
+    variance /= 4.0;
+
+    float std = sqrt(variance + 1e-8);
+
+    vec4 normalized = (inputData - mean) / std;
+
+    return normalized;
+}
+
+// Dropout
+vec4 dropout(vec4 inputData, float rate) {
+    vec4 result = inputData;
+
+    if(ai.useDropout == 1) {
+        for(int i = 0; i < 4; ++i) {
+            float random = fract(sin(dot(vec2(i, ai.time), vec2(12.9898, 78.233))) * 43758.5453);
+            if(random < rate) {
+                result[i] = 0.0;
+            } else {
+                result[i] = inputData[i] / (1.0 - rate);
+            }
+        }
+    }
+
+    return result;
+}
+
+// Training
+void trainNetwork(int networkIndex, int dataIndex) {
+    TrainingData data = trainBuffer.trainingData[dataIndex];
+
+    if(data.isTraining == 1) {
+        // Forward propagation
+        vec4 result = forwardPropagation(data.inputData[0], networkIndex);
+
+        // Calculate error
+        vec4 error = result - data.outputData[0];
+        float mse = dot(error, error) / 4.0;
+
+        // Backward propagation
+        vec4 gradients = backwardPropagation(result, data.outputData[0], networkIndex);
+
+        // Update network
+        if(ai.useGradientDescent == 1) {
+            gradientDescent(networkIndex, gradients);
+        } else if(ai.useAdamOptimizer == 1) {
+            adamOptimizer(networkIndex, gradients);
+        }
+
+        // Update training data error
+        trainBuffer.trainingData[dataIndex].error = mse;
+    }
+}
+
+// Inference
+void performInference(int networkIndex, int dataIndex) {
+    TrainingData data = trainBuffer.trainingData[dataIndex];
+
+    // Forward propagation
+    vec4 result = forwardPropagation(data.inputData[0], networkIndex);
+
+    // Apply batch normalization if enabled
+    if(ai.useBatchNormalization == 1) {
+        result = batchNormalization(result, 0);
+    }
+
+    // Apply dropout if enabled
+    result = dropout(result, ai.dropoutRate);
+
+    // Store inference result
+    inferenceBuffer.inferenceResults[dataIndex] = result;
+}
+
+// Convolutional layer simulation
+vec4 convolutionalLayer(vec4 inputData, int kernelSize) {
+    vec4 result = vec4(0.0);
+
+    // Simplified convolution
+    for(int i = 0; i < 4; ++i) {
+        float sum = 0.0;
+        for(int j = 0; j < kernelSize; ++j) {
+            sum += inputData[i] * (1.0 / float(kernelSize));
+        }
+        result[i] = sum;
+    }
+
+    return result;
+}
+
+// Pooling layer simulation
+vec4 poolingLayer(vec4 inputData, int poolSize) {
+    vec4 result = vec4(0.0);
+
+    // Max pooling
+    result.r = max(inputData.r, inputData.g);
+    result.g = max(inputData.b, inputData.a);
+    result.b = max(inputData.r, inputData.a);
+    result.a = max(inputData.g, inputData.b);
+
+    return result;
+}
+
+// Attention mechanism
+vec4 attentionMechanism(vec4 query, vec4 key, vec4 value) {
+    // Calculate attention weights
+    float attention = dot(query, key) / sqrt(4.0);
+    attention = exp(attention);
+
+    // Apply attention to value
+    vec4 attended = value * attention;
+
+    return attended;
+}
+
+// Transformer layer
+vec4 transformerLayer(vec4 inputData, int layer) {
+    // Multi-head attention (simplified)
+    vec4 query = inputData;
+    vec4 key = inputData;
+    vec4 value = inputData;
+
+    vec4 attention = attentionMechanism(query, key, value);
+
+    // Feed-forward network
+    vec4 result = forwardPropagation(attention, 0);
+
+    return result;
+}
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+
+    if(index >= trainBuffer.trainingData.length()) {
+        return;
+    }
+
+    // Training mode
+    if(ai.trainingMode == 1) {
+        trainNetwork(ai.networkIndex, int(index));
+    }
+
+    // Inference mode
+    if(ai.inferenceMode == 1) {
+        performInference(ai.networkIndex, int(index));
+    }
+
+    // Convolutional processing
+    if(ai.trainingMode == 0 && ai.inferenceMode == 0) {
+        TrainingData data = trainBuffer.trainingData[index];
+        vec4 convolved = convolutionalLayer(data.inputData[0], 3);
+        vec4 pooled = poolingLayer(convolved, 2);
+        vec4 transformed = transformerLayer(pooled, 0);
+
+        inferenceBuffer.inferenceResults[index] = transformed;
+    }
+}
