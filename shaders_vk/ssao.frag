@@ -20,10 +20,9 @@ layout(binding = 3) uniform SSAOUniforms {
     vec2 screenSize;  // Screen dimensions for resolution-independent noise scale
 } ssao;
 
-// Random rotation vectors - now resolution-independent
-vec2 noiseScale = ssao.screenSize / 4.0;
-
 void main() {
+    // Random rotation vectors - now resolution-independent
+    vec2 noiseScale = ssao.screenSize / 4.0;
     // Get position and normal from textures
     vec3 fragPos = texture(positionTexture, fragTexCoord).xyz;
     vec3 normal = normalize(texture(normalTexture, fragTexCoord).xyz);

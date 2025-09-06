@@ -82,7 +82,24 @@ void main() {
     // Sample and transform normal map
     vec3 normalMap = texture(normalTexture, fragTexCoord).rgb * 2.0 - 1.0;
     float normalStrength = 1.0; // Could be made configurable via uniform
-    vec3 normal = normalize(mix(fragNormal, normalMap, normalStrength));
+
+    // Compute TBN matrix for proper normal mapping
+    vec3 N = normalize(fragNormal);
+    vec3 T = normalize(dFdx(fragPos));
+    vec3 B = normalize(dFdy(fragPos));
+
+    // Orthonormalize tangent with respect to normal (Gram-Schmidt)
+    T = normalize(T - dot(T, N) * N);
+    B = normalize(B - dot(B, N) * N - dot(B, T) * T);
+
+    // Form TBN matrix
+    mat3 TBN = mat3(T, B, N);
+
+    // Transform normal map to world space
+    vec3 worldNormal = normalize(TBN * normalMap);
+
+    // Mix with original normal based on strength
+    vec3 normal = normalize(mix(fragNormal, worldNormal, normalStrength));
 
     // Calculate lighting
     vec3 viewDir = lighting.viewPos - fragPos;

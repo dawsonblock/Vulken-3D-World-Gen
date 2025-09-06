@@ -160,7 +160,7 @@ void demonstrateRenderingConcepts() {
         auto ubo = calculateMVP(time, 800, 600);
 
         g_logger.Info("   Frame {} (t={:.1f}s):", frame, time);
-        g_logger.Info("     Model rotation: {:.1f} degrees", glm::degrees(std::atan2(ubo.model[0][2], ubo.model[0][0])));
+        g_logger.Info("     Model rotation: {:.1f} degrees", glm::degrees(std::atan2(ubo.model[2][0], ubo.model[0][0])));
         g_logger.Info("     Camera position: ({:.1f}, {:.1f}, {:.1f})",
                       g_CameraPos.x, g_CameraPos.y, g_CameraPos.z);
 

@@ -34,8 +34,8 @@ static VkRenderPass g_RenderPass = VK_NULL_HANDLE;
 static std::vector<VkFramebuffer> g_Framebuffers;
 static VkCommandPool g_CommandPool = VK_NULL_HANDLE;
 static std::vector<VkCommandBuffer> g_CommandBuffers;
-static VkSemaphore g_ImageAvailableSemaphore = VK_NULL_HANDLE;
-static VkSemaphore g_RenderFinishedSemaphore = VK_NULL_HANDLE;
+static std::vector<VkSemaphore> g_ImageAvailableSemaphores;
+static std::vector<VkSemaphore> g_RenderFinishedSemaphores;
 static std::vector<VkFence> g_InFlightFences;
 static bool g_FramebufferResized = false;
 
@@ -406,20 +406,45 @@ static bool selectPhysicalDevice() {
 }
 
 static bool createLogicalDevice() {
+    // Query for queue family properties
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(g_PhysicalDevice, &queueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(g_PhysicalDevice, &queueFamilyCount, queueFamilies.data());
+
+    // Find a queue family that supports graphics operations
+    uint32_t graphicsQueueFamilyIndex = UINT32_MAX;
+    for (uint32_t i = 0; i < queueFamilyCount; i++) {
+        if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            graphicsQueueFamilyIndex = i;
+            break;
+        }
+    }
+
+    if (graphicsQueueFamilyIndex == UINT32_MAX) {
+        g_logger.Error("Failed to find a graphics queue family");
+        return false;
+    }
+
     VkDeviceQueueCreateInfo queueCreateInfo{};
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = 0; // Assume graphics queue family is 0
+    queueCreateInfo.queueFamilyIndex = graphicsQueueFamilyIndex;
     queueCreateInfo.queueCount = 1;
 
     float queuePriority = 1.0f;
     queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    // Enable swapchain extension
+    const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pQueueCreateInfos = &queueCreateInfo;
     createInfo.queueCreateInfoCount = 1;
 
-    createInfo.enabledExtensionCount = 0;
+    createInfo.enabledExtensionCount = 1;
+    createInfo.ppEnabledExtensionNames = deviceExtensions;
     createInfo.enabledLayerCount = 0;
 
     if (vkCreateDevice(g_PhysicalDevice, &createInfo, nullptr, &g_Device) != VK_SUCCESS) {
@@ -427,24 +452,99 @@ static bool createLogicalDevice() {
         return false;
     }
 
-    vkGetDeviceQueue(g_Device, 0, 0, &g_GraphicsQueue);
+    vkGetDeviceQueue(g_Device, graphicsQueueFamilyIndex, 0, &g_GraphicsQueue);
     return true;
 }
 
 static bool createSwapchain() {
+    // Query surface capabilities
+    VkSurfaceCapabilitiesKHR capabilities;
+    if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(g_PhysicalDevice, g_Surface, &capabilities) != VK_SUCCESS) {
+        g_logger.Error("Failed to get surface capabilities");
+        return false;
+    }
+
+    // Query surface formats
+    uint32_t formatCount;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(g_PhysicalDevice, g_Surface, &formatCount, nullptr);
+    if (formatCount == 0) {
+        g_logger.Error("No surface formats available");
+        return false;
+    }
+
+    std::vector<VkSurfaceFormatKHR> formats(formatCount);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(g_PhysicalDevice, g_Surface, &formatCount, formats.data());
+
+    // Query present modes
+    uint32_t presentModeCount;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(g_PhysicalDevice, g_Surface, &presentModeCount, nullptr);
+    if (presentModeCount == 0) {
+        g_logger.Error("No present modes available");
+        return false;
+    }
+
+    std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(g_PhysicalDevice, g_Surface, &presentModeCount, presentModes.data());
+
+    // Choose surface format
+    VkSurfaceFormatKHR surfaceFormat = formats[0]; // Default to first format
+    for (const auto& format : formats) {
+        if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+            surfaceFormat = format;
+            break;
+        }
+    }
+
+    // Choose present mode
+    VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR; // Default to FIFO
+    for (const auto& mode : presentModes) {
+        if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+            presentMode = mode;
+            break;
+        }
+    }
+
+    // Choose image count
+    uint32_t imageCount = capabilities.minImageCount + 1;
+    if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount) {
+        imageCount = capabilities.maxImageCount;
+    }
+
+    // Choose extent
+    VkExtent2D extent;
+    if (capabilities.currentExtent.width != UINT32_MAX) {
+        extent = capabilities.currentExtent;
+    } else {
+        extent.width = std::clamp(g_SwapchainExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+        extent.height = std::clamp(g_SwapchainExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+    }
+
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = g_Surface;
-    createInfo.minImageCount = 2;
-    createInfo.imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
-    createInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    createInfo.imageExtent = g_SwapchainExtent;
+    createInfo.minImageCount = imageCount;
+    createInfo.imageFormat = surfaceFormat.format;
+    createInfo.imageColorSpace = surfaceFormat.colorSpace;
+    createInfo.imageExtent = extent;
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    createInfo.preTransform = capabilities.currentTransform;
+
+    // Choose composite alpha
+    VkCompositeAlphaFlagBitsKHR compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    if (capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR) {
+        compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    } else if (capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR) {
+        compositeAlpha = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
+    } else if (capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR) {
+        compositeAlpha = VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR;
+    } else if (capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR) {
+        compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
+    }
+    createInfo.compositeAlpha = compositeAlpha;
+
+    createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
 
     if (vkCreateSwapchainKHR(g_Device, &createInfo, nullptr, &g_Swapchain) != VK_SUCCESS) {
@@ -452,12 +552,12 @@ static bool createSwapchain() {
         return false;
     }
 
-    uint32_t imageCount;
     vkGetSwapchainImagesKHR(g_Device, g_Swapchain, &imageCount, nullptr);
     g_SwapchainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(g_Device, g_Swapchain, &imageCount, g_SwapchainImages.data());
 
-    g_SwapchainImageFormat = VK_FORMAT_B8G8R8A8_SRGB;
+    g_SwapchainImageFormat = surfaceFormat.format;
+    g_SwapchainExtent = extent;
     return true;
 }
 
@@ -781,6 +881,9 @@ static bool createCommandBuffers() {
 }
 
 static bool createSyncObjects() {
+    // Resize vectors to match swapchain image count
+    g_ImageAvailableSemaphores.resize(g_SwapchainImages.size());
+    g_RenderFinishedSemaphores.resize(g_SwapchainImages.size());
     g_InFlightFences.resize(g_SwapchainImages.size());
 
     VkSemaphoreCreateInfo semaphoreInfo{};
@@ -790,13 +893,18 @@ static bool createSyncObjects() {
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-    if (vkCreateSemaphore(g_Device, &semaphoreInfo, nullptr, &g_ImageAvailableSemaphore) != VK_SUCCESS ||
-        vkCreateSemaphore(g_Device, &semaphoreInfo, nullptr, &g_RenderFinishedSemaphore) != VK_SUCCESS) {
-        g_logger.Error("Failed to create semaphores");
-        return false;
-    }
+    // Create per-frame synchronization objects
+    for (size_t i = 0; i < g_SwapchainImages.size(); i++) {
+        if (vkCreateSemaphore(g_Device, &semaphoreInfo, nullptr, &g_ImageAvailableSemaphores[i]) != VK_SUCCESS) {
+            g_logger.Error("Failed to create image available semaphore {}", i);
+            return false;
+        }
 
-    for (size_t i = 0; i < g_InFlightFences.size(); i++) {
+        if (vkCreateSemaphore(g_Device, &semaphoreInfo, nullptr, &g_RenderFinishedSemaphores[i]) != VK_SUCCESS) {
+            g_logger.Error("Failed to create render finished semaphore {}", i);
+            return false;
+        }
+
         if (vkCreateFence(g_Device, &fenceInfo, nullptr, &g_InFlightFences[i]) != VK_SUCCESS) {
             g_logger.Error("Failed to create fence {}", i);
             return false;
@@ -830,13 +938,13 @@ static bool createDescriptorSetLayout() {
 static bool createDescriptorPool() {
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = static_cast<uint32_t>(g_SwapchainImages.size());
+    poolSize.descriptorCount = 1; // Only need one descriptor
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = 1;
     poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = static_cast<uint32_t>(g_SwapchainImages.size());
+    poolInfo.maxSets = 1; // Only need one descriptor set
 
     if (vkCreateDescriptorPool(g_Device, &poolInfo, nullptr, &g_DescriptorPool) != VK_SUCCESS) {
         g_logger.Error("Failed to create descriptor pool");
@@ -847,38 +955,33 @@ static bool createDescriptorPool() {
 }
 
 static bool createDescriptorSets() {
-    std::vector<VkDescriptorSetLayout> layouts(g_SwapchainImages.size(), g_DescriptorSetLayout);
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = g_DescriptorPool;
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(g_SwapchainImages.size());
-    allocInfo.pSetLayouts = layouts.data();
+    allocInfo.descriptorSetCount = 1;
+    allocInfo.pSetLayouts = &g_DescriptorSetLayout;
 
-    std::vector<VkDescriptorSet> descriptorSets(g_SwapchainImages.size());
-    if (vkAllocateDescriptorSets(g_Device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
-        g_logger.Error("Failed to allocate descriptor sets");
+    if (vkAllocateDescriptorSets(g_Device, &allocInfo, &g_DescriptorSet) != VK_SUCCESS) {
+        g_logger.Error("Failed to allocate descriptor set");
         return false;
     }
 
-    g_DescriptorSet = descriptorSets[0]; // Use first descriptor set
+    // Update the single descriptor set
+    VkDescriptorBufferInfo bufferInfo{};
+    bufferInfo.buffer = g_UniformBuffer;
+    bufferInfo.offset = 0;
+    bufferInfo.range = sizeof(UniformBufferObject);
 
-    for (size_t i = 0; i < g_SwapchainImages.size(); i++) {
-        VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = g_UniformBuffer;
-        bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UniformBufferObject);
+    VkWriteDescriptorSet descriptorWrite{};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = g_DescriptorSet;
+    descriptorWrite.dstBinding = 0;
+    descriptorWrite.dstArrayElement = 0;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pBufferInfo = &bufferInfo;
 
-        VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = descriptorSets[i];
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
-
-        vkUpdateDescriptorSets(g_Device, 1, &descriptorWrite, 0, nullptr);
-    }
+    vkUpdateDescriptorSets(g_Device, 1, &descriptorWrite, 0, nullptr);
 
     return true;
 }
@@ -978,15 +1081,19 @@ static void cleanupVulkan() {
         }
         g_InFlightFences.clear();
 
-        if (g_ImageAvailableSemaphore != VK_NULL_HANDLE) {
-            vkDestroySemaphore(g_Device, g_ImageAvailableSemaphore, nullptr);
-            g_ImageAvailableSemaphore = VK_NULL_HANDLE;
+        for (auto semaphore : g_ImageAvailableSemaphores) {
+            if (semaphore != VK_NULL_HANDLE) {
+                vkDestroySemaphore(g_Device, semaphore, nullptr);
+            }
         }
+        g_ImageAvailableSemaphores.clear();
 
-        if (g_RenderFinishedSemaphore != VK_NULL_HANDLE) {
-            vkDestroySemaphore(g_Device, g_RenderFinishedSemaphore, nullptr);
-            g_RenderFinishedSemaphore = VK_NULL_HANDLE;
+        for (auto semaphore : g_RenderFinishedSemaphores) {
+            if (semaphore != VK_NULL_HANDLE) {
+                vkDestroySemaphore(g_Device, semaphore, nullptr);
+            }
         }
+        g_RenderFinishedSemaphores.clear();
 
         vkDestroyDevice(g_Device, nullptr);
         g_Device = VK_NULL_HANDLE;
@@ -1001,6 +1108,115 @@ static void cleanupVulkan() {
         vkDestroyInstance(g_Instance, nullptr);
         g_Instance = VK_NULL_HANDLE;
     }
+}
+
+// RAII scope guard for Vulkan initialization cleanup
+class VulkanInitGuard {
+public:
+    ~VulkanInitGuard() {
+        cleanupVulkan();
+        if (g_Window) {
+            glfwDestroyWindow(g_Window);
+            g_Window = nullptr;
+        }
+        glfwTerminate();
+    }
+};
+
+static bool initializeVulkan() {
+    g_logger.Info("Initializing Vulkan...");
+
+    if (!createInstance()) {
+        g_logger.Error("Failed to create Vulkan instance");
+        return false;
+    }
+
+    if (!createSurface()) {
+        g_logger.Error("Failed to create window surface");
+        return false;
+    }
+
+    if (!selectPhysicalDevice()) {
+        g_logger.Error("Failed to select physical device");
+        return false;
+    }
+
+    if (!createLogicalDevice()) {
+        g_logger.Error("Failed to create logical device");
+        return false;
+    }
+
+    if (!createSwapchain()) {
+        g_logger.Error("Failed to create swapchain");
+        return false;
+    }
+
+    if (!createImageViews()) {
+        g_logger.Error("Failed to create image views");
+        return false;
+    }
+
+    if (!createRenderPass()) {
+        g_logger.Error("Failed to create render pass");
+        return false;
+    }
+
+    if (!createDescriptorSetLayout()) {
+        g_logger.Error("Failed to create descriptor set layout");
+        return false;
+    }
+
+    if (!createGraphicsPipeline()) {
+        g_logger.Error("Failed to create graphics pipeline");
+        return false;
+    }
+
+    if (!createFramebuffers()) {
+        g_logger.Error("Failed to create framebuffers");
+        return false;
+    }
+
+    if (!createCommandPool()) {
+        g_logger.Error("Failed to create command pool");
+        return false;
+    }
+
+    if (!createVertexBuffer()) {
+        g_logger.Error("Failed to create vertex buffer");
+        return false;
+    }
+
+    if (!createIndexBuffer()) {
+        g_logger.Error("Failed to create index buffer");
+        return false;
+    }
+
+    if (!createUniformBuffer()) {
+        g_logger.Error("Failed to create uniform buffer");
+        return false;
+    }
+
+    if (!createDescriptorPool()) {
+        g_logger.Error("Failed to create descriptor pool");
+        return false;
+    }
+
+    if (!createDescriptorSets()) {
+        g_logger.Error("Failed to create descriptor sets");
+        return false;
+    }
+
+    if (!createCommandBuffers()) {
+        g_logger.Error("Failed to create command buffers");
+        return false;
+    }
+
+    if (!createSyncObjects()) {
+        g_logger.Error("Failed to create sync objects");
+        return false;
+    }
+
+    return true;
 }
 
 int main() {
@@ -1027,150 +1243,12 @@ int main() {
     glfwSetFramebufferSizeCallback(g_Window, framebuffer_resize_callback);
     glfwSetKeyCallback(g_Window, key_callback);
 
+    // Use RAII guard for automatic cleanup
+    VulkanInitGuard guard;
+
     // Initialize Vulkan
-    g_logger.Info("Initializing Vulkan...");
-
-    if (!createInstance()) {
-        g_logger.Error("Failed to create Vulkan instance");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createSurface()) {
-        g_logger.Error("Failed to create window surface");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!selectPhysicalDevice()) {
-        g_logger.Error("Failed to select physical device");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createLogicalDevice()) {
-        g_logger.Error("Failed to create logical device");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createSwapchain()) {
-        g_logger.Error("Failed to create swapchain");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createImageViews()) {
-        g_logger.Error("Failed to create image views");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createRenderPass()) {
-        g_logger.Error("Failed to create render pass");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createDescriptorSetLayout()) {
-        g_logger.Error("Failed to create descriptor set layout");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createGraphicsPipeline()) {
-        g_logger.Error("Failed to create graphics pipeline");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createFramebuffers()) {
-        g_logger.Error("Failed to create framebuffers");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createCommandPool()) {
-        g_logger.Error("Failed to create command pool");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createVertexBuffer()) {
-        g_logger.Error("Failed to create vertex buffer");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createIndexBuffer()) {
-        g_logger.Error("Failed to create index buffer");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createUniformBuffer()) {
-        g_logger.Error("Failed to create uniform buffer");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createDescriptorPool()) {
-        g_logger.Error("Failed to create descriptor pool");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createDescriptorSets()) {
-        g_logger.Error("Failed to create descriptor sets");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createCommandBuffers()) {
-        g_logger.Error("Failed to create command buffers");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!createSyncObjects()) {
-        g_logger.Error("Failed to create sync objects");
-        cleanupVulkan();
-        glfwDestroyWindow(g_Window);
-        glfwTerminate();
+    if (!initializeVulkan()) {
+        g_logger.Error("Failed to initialize Vulkan");
         return -1;
     }
 
@@ -1210,10 +1288,6 @@ int main() {
 
     g_logger.Info("Demo completed successfully!");
 
-    // Cleanup
-    cleanupVulkan();
-    glfwDestroyWindow(g_Window);
-    glfwTerminate();
-
+    // Cleanup is handled automatically by the VulkanInitGuard destructor
     return 0;
 }

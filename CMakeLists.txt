@@ -410,27 +410,16 @@ if(VOXELVK_ENABLE_P2_PERFORMANCE)
 
   # P2 concepts demo (simplified) - gated behind BUILD_EXTRAS
   if(NOT VOXELVK_HEADLESS_ONLY AND BUILD_EXTRAS)
-    add_executable(p2_concepts_validator apps/p2_concepts_validator.cpp ${WEATHER_SRC} src/core/logger.cpp)
-    target_include_directories(p2_concepts_validator PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(p2_concepts_validator PRIVATE Threads::Threads)
 
     if(WEATHER_YAML_LIB)
-      target_link_libraries(p2_concepts_validator PRIVATE ${WEATHER_YAML_LIB})
-      target_compile_definitions(p2_concepts_validator PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
 
-    target_compile_definitions(p2_concepts_validator PRIVATE
       VOXELVK_ENABLE_P2_PERFORMANCE=1
     )
 
     # P2 120 FPS target validator
-    add_executable(p2_target_validator apps/p2_target_validator.cpp ${WEATHER_SRC} src/core/logger.cpp)
-    target_include_directories(p2_target_validator PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(p2_target_validator PRIVATE Threads::Threads)
 
     if(WEATHER_YAML_LIB)
-      target_link_libraries(p2_target_validator PRIVATE ${WEATHER_YAML_LIB})
-      target_compile_definitions(p2_target_validator PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
   endif()
 endif()
@@ -477,16 +466,10 @@ if(VOXELVK_ENABLE_P1_MEMORY)
 
     # P1 concepts demo (simplified) - gated behind BUILD_EXTRAS
     if(NOT VOXELVK_HEADLESS_ONLY AND BUILD_EXTRAS)
-      add_executable(p1_concepts_simple apps/p1_concepts_simple.cpp ${WEATHER_SRC} src/core/logger.cpp)
-      target_include_directories(p1_concepts_simple PRIVATE ${CMAKE_SOURCE_DIR}/src)
-      target_link_libraries(p1_concepts_simple PRIVATE Threads::Threads)
 
       if(WEATHER_YAML_LIB)
-        target_link_libraries(p1_concepts_simple PRIVATE ${WEATHER_YAML_LIB})
-        target_compile_definitions(p1_concepts_simple PRIVATE VOXELVK_ENABLE_WEATHER=1)
       endif()
 
-      target_compile_definitions(p1_concepts_simple PRIVATE
         VOXELVK_ENABLE_P1_MEMORY=1
       )
     endif()
@@ -509,16 +492,10 @@ if(VOXELVK_ENABLE_P0_RELIABILITY)
 
   # P0 demo application (simplified) - gated behind BUILD_EXTRAS
   if(NOT VOXELVK_HEADLESS_ONLY AND BUILD_EXTRAS)
-    add_executable(p0_reliability_test apps/p0_reliability_test.cpp ${WEATHER_SRC} src/core/logger.cpp)
-    target_include_directories(p0_reliability_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(p0_reliability_test PRIVATE Threads::Threads)
 
     if(WEATHER_YAML_LIB)
-      target_link_libraries(p0_reliability_test PRIVATE ${WEATHER_YAML_LIB})
-      target_compile_definitions(p0_reliability_test PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
 
-    target_compile_definitions(p0_reliability_test PRIVATE
       VOXELVK_ENABLE_P0_RELIABILITY=1
     )
   endif()
@@ -557,32 +534,20 @@ endif()
 
 # --- Targets ---
 # Minimal smoke target always available
-add_executable(smoke_headless apps/smoke_headless.cpp)
 if(NOT VOXELVK_HEADLESS_ONLY)
-  add_dependencies(smoke_headless ShaderSPV)
-  target_include_directories(smoke_headless PRIVATE ${CMAKE_SOURCE_DIR}/src)
-  target_link_libraries(smoke_headless PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
-  target_compile_definitions(smoke_headless PRIVATE
     $<$<BOOL:${ENABLE_VALIDATION_LAYERS}>:ENABLE_VALIDATION_LAYERS=1>
     $<$<BOOL:${ENABLE_IMGUI_OVERLAY}>:ENABLE_IMGUI_OVERLAY=1>)
 else()
   # Headless-only: no Vulkan/GLFW linkage required
-  target_link_libraries(smoke_headless PRIVATE Threads::Threads)
 endif()
 
 if(NOT VOXELVK_HEADLESS_ONLY)
-  add_executable(smoke_graphics_headless apps/smoke_graphics_headless.cpp)
-  add_dependencies(smoke_graphics_headless ShaderSPV)
-  target_include_directories(smoke_graphics_headless PRIVATE ${CMAKE_SOURCE_DIR}/src)
-  target_link_libraries(smoke_graphics_headless PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
-  target_compile_definitions(smoke_graphics_headless PRIVATE
     $<$<BOOL:${ENABLE_VALIDATION_LAYERS}>:ENABLE_VALIDATION_LAYERS=1>
     $<$<BOOL:${ENABLE_IMGUI_OVERLAY}>:ENABLE_IMGUI_OVERLAY=1>)
 endif()
 
 # CUDA/TRT guards if you later add GPU/AI targets
 if(NOT VOXELVK_HEADLESS_ONLY)
-  target_compile_definitions(smoke_headless PRIVATE
     $<$<BOOL:${VOXELVK_ENABLE_CUDA}>:VOXELVK_ENABLE_CUDA=1>
     $<$<BOOL:${VOXELVK_ENABLE_TENSORRT}>:VOXELVK_ENABLE_TENSORRT=1>)
 endif()
@@ -611,7 +576,6 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   endif()
 
   if(NOT TARGET VoxelVK_Elite_ALL)
-  add_executable(VoxelVK_Elite_ALL apps/smoke_headless.cpp ${VOXELVK_ELITE_SOURCES} src/core/logger.cpp src/core/thread_pool.cpp src/core/nvtx_profiler.cpp)
     add_dependencies(VoxelVK_Elite_ALL ShaderSPV)
     target_include_directories(VoxelVK_Elite_ALL PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(VoxelVK_Elite_ALL PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
@@ -648,26 +612,14 @@ if(NOT VOXELVK_HEADLESS_ONLY)
 
   # Weather system demo and integration test (extras)
   if(BUILD_EXTRAS AND VOXELVK_ENABLE_WEATHER)
-    add_executable(weather_demo apps/weather_demo.cpp ${WEATHER_SRC})
-    target_include_directories(weather_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(weather_demo PRIVATE Threads::Threads)
     if(JSON_LIB)
-      target_link_libraries(weather_demo PRIVATE ${JSON_LIB})
     endif()
     if(WEATHER_YAML_LIB)
-      target_link_libraries(weather_demo PRIVATE ${WEATHER_YAML_LIB})
-      target_compile_definitions(weather_demo PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
 
-    add_executable(weather_integration_test apps/weather_integration_test.cpp ${WEATHER_SRC})
-    target_include_directories(weather_integration_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(weather_integration_test PRIVATE Threads::Threads)
     if(JSON_LIB)
-      target_link_libraries(weather_integration_test PRIVATE ${JSON_LIB})
     endif()
     if(WEATHER_YAML_LIB)
-      target_link_libraries(weather_integration_test PRIVATE ${WEATHER_YAML_LIB})
-      target_compile_definitions(weather_integration_test PRIVATE VOXELVK_ENABLE_WEATHER=1)
     endif()
   endif()
 
@@ -709,12 +661,8 @@ endif() # NOT VOXELVK_HEADLESS_ONLY
     # Minimal X11 visual GUI (no GL/Vulkan)
     find_package(X11)
     if(X11_FOUND AND BUILD_EXTRAS)
-      add_executable(x11_basic_demo apps/x11_basic_demo.cpp)
-      target_include_directories(x11_basic_demo PRIVATE ${X11_INCLUDE_DIR})
-      target_link_libraries(x11_basic_demo PRIVATE ${X11_LIBRARIES})
     endif()
   endif()
-
 
     if(TARGET gui_fullscreen_demo)
       message(STATUS "Linking ImGui to gui_fullscreen_demo")
@@ -741,7 +689,6 @@ endif() # NOT VOXELVK_HEADLESS_ONLY
 add_subdirectory(src/engine)
 
 # Link into selected apps if they exist
-foreach(tgt IN ITEMS p0_reliability_test p1_concepts_simple p2_concepts_validator weather_integration_test weather_demo)
   if(TARGET ${tgt})
     target_link_libraries(${tgt} PRIVATE vulken_engine)
   endif()
@@ -757,9 +704,6 @@ if(ENABLE_TESTS)
   add_dependencies(test_shaders_compile ShaderSPV)
   add_test(NAME test_shaders_compile COMMAND test_shaders_compile)
   set_tests_properties(test_shaders_compile PROPERTIES TIMEOUT 30)
-
-  add_test(NAME test_smoke_headless COMMAND smoke_headless)
-  set_tests_properties(test_smoke_headless PROPERTIES TIMEOUT 10)
 
   # Weather system tests
   if(VOXELVK_ENABLE_WEATHER AND (GLM_FOUND OR glm_FOUND))
@@ -882,8 +826,6 @@ if(VOXELVK_ENABLE_REDIS AND REDISPLUSPLUS_INCLUDE_DIR AND REDISPLUSPLUS_LIBRARY 
   if(TARGET vulkan_fullscreen_demo)
     target_link_libraries(vulkan_fullscreen_demo PRIVATE redis_assets)
   endif()
-  if(TARGET smoke_graphics_headless)
-    target_link_libraries(smoke_graphics_headless PRIVATE redis_assets)
   endif()
 endif()
 
@@ -898,11 +840,8 @@ if(VOXELVK_DEMO_WERROR)
 
   # Default set kept lightweight to preserve green builds
   set(_DEFAULT_WERROR_TARGETS
-    smoke_headless
-    smoke_graphics_headless
     vulkan_fullscreen_demo
     gui_fullscreen_demo
-    x11_basic_demo)
 
   # Allow callers to expand/override via VOXELVK_WERROR_TARGETS (semicolon-separated list)
   set(_WERROR_TARGETS ${_DEFAULT_WERROR_TARGETS})
@@ -976,7 +915,6 @@ set(CPACK_SOURCE_GENERATOR "TGZ")
 # Include documentation and assets in package
 set(CPACK_PACKAGE_EXECUTABLES
   "main_imgui_vulkan;VoxelVK Main Demo"
-  "operator_console;Operator Console"
 )
 
 # Install rules for packaging (only install targets that exist)
@@ -987,8 +925,6 @@ if(TARGET main_imgui_vulkan)
   )
 endif()
 
-if(TARGET operator_console)
-  install(TARGETS operator_console
     DESTINATION bin
     COMPONENT Runtime
   )

@@ -54,6 +54,9 @@ vec3 calculateVolumetricLighting(vec3 rayStart, vec3 rayEnd, vec3 lightPos, vec3
         // Calculate per-sample distance to light
         float lightDistance = length(lightPos - samplePos);
 
+        // Calculate per-sample light direction
+        vec3 lightDir = normalize(lightPos - samplePos);
+
         // Calculate light attenuation
         float lightAttenuation = 1.0 / (1.0 + 0.09 * lightDistance + 0.032 * lightDistance * lightDistance);
 
