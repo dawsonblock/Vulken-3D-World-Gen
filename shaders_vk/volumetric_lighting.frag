@@ -1,5 +1,7 @@
 #version 450
 
+const float PI = 3.141592653589793;
+
 // Volumetric lighting and fog fragment shader
 layout(location = 0) in vec3 fragPos;
 layout(location = 1) in vec3 fragNormal;
@@ -41,7 +43,6 @@ vec3 calculateVolumetricLighting(vec3 rayStart, vec3 rayEnd, vec3 lightPos, vec3
     float rayLength = length(rayEnd - rayStart);
 
     vec3 lightDir = normalize(lightPos - rayStart);
-    float lightDistance = length(lightPos - rayStart);
 
     vec3 volumetricColor = vec3(0.0);
     float stepSize = rayLength / float(volUniforms.sampleCount);
@@ -49,6 +50,9 @@ vec3 calculateVolumetricLighting(vec3 rayStart, vec3 rayEnd, vec3 lightPos, vec3
     for(int i = 0; i < volUniforms.sampleCount; ++i) {
         float t = (float(i) + 0.5) * stepSize;
         vec3 samplePos = rayStart + rayDir * t;
+
+        // Calculate per-sample distance to light
+        float lightDistance = length(lightPos - samplePos);
 
         // Calculate light attenuation
         float lightAttenuation = 1.0 / (1.0 + 0.09 * lightDistance + 0.032 * lightDistance * lightDistance);
@@ -59,11 +63,12 @@ vec3 calculateVolumetricLighting(vec3 rayStart, vec3 rayEnd, vec3 lightPos, vec3
         // Calculate absorption
         float absorption = volUniforms.absorptionCoeff * t;
 
-        // Calculate phase function (Henyey-Greenstein)
+        // Calculate phase function (Henyey-Greenstein) with proper normalization
         float cosTheta = dot(rayDir, lightDir);
         float phase = (1.0 - volUniforms.phaseFunction * volUniforms.phaseFunction) /
                      pow(1.0 + volUniforms.phaseFunction * volUniforms.phaseFunction -
                          2.0 * volUniforms.phaseFunction * cosTheta, 1.5);
+        phase = phase / (4.0 * PI);  // Normalize by 1/(4π)
 
         // Sample noise for volumetric variation
         vec3 noiseSample = texture(noiseTexture, samplePos.xz * volUniforms.noiseScale + volUniforms.time).rgb;
@@ -170,9 +175,18 @@ void main() {
     // Sample scene texture
     vec3 sceneColor = texture(sceneTexture, fragTexCoord).rgb;
 
-    // Calculate world position from depth
+    // Reconstruct world position from depth buffer
     float depth = texture(depthTexture, fragTexCoord).r;
-    vec3 worldPos = fragPos;
+    vec3 worldPos = fragPos; // Use fragment position as fallback
+
+    // TODO: Implement proper world position reconstruction from depth
+    // This would require inverse projection and view matrices
+    // vec2 ndc = fragTexCoord * 2.0 - 1.0;
+    // vec4 clipPos = vec4(ndc, depth, 1.0);
+    // vec4 viewPos = inverseProjection * clipPos;
+    // viewPos /= viewPos.w;
+    // vec4 worldPos4 = inverseView * viewPos;
+    // worldPos = worldPos4.xyz;
 
     // Calculate volumetric lighting
     vec3 volumetricLighting = calculateVolumetricLighting(

@@ -160,7 +160,7 @@ void demonstrateRenderingConcepts() {
         auto ubo = calculateMVP(time, 800, 600);
 
         g_logger.Info("   Frame {} (t={:.1f}s):", frame, time);
-        g_logger.Info("     Model rotation: {:.1f} degrees", glm::degrees(std::atan2(ubo.model[0][0], ubo.model[0][2])));
+        g_logger.Info("     Model rotation: {:.1f} degrees", glm::degrees(std::atan2(ubo.model[0][2], ubo.model[0][0])));
         g_logger.Info("     Camera position: ({:.1f}, {:.1f}, {:.1f})",
                       g_CameraPos.x, g_CameraPos.y, g_CameraPos.z);
 
@@ -188,8 +188,15 @@ void demonstrateRenderingConcepts() {
                   indices.size(), indices.size() / 3);
     g_logger.Info("   - With indices: {} unique vertices, {} indices",
                   vertices.size(), indices.size());
-    g_logger.Info("   - Memory savings: {:.1f}%",
-                  (1.0f - (float)vertices.size() / (float)indices.size()) * 100.0f);
+
+    // Calculate actual memory usage
+    size_t memoryWithoutIndex = indices.size() * sizeof(Vertex);
+    size_t memoryWithIndex = vertices.size() * sizeof(Vertex) + indices.size() * sizeof(uint16_t);
+    float savings = (1.0f - (float)memoryWithIndex / (float)memoryWithoutIndex) * 100.0f;
+
+    g_logger.Info("   - Memory without indexing: {} bytes", memoryWithoutIndex);
+    g_logger.Info("   - Memory with indexing: {} bytes", memoryWithIndex);
+    g_logger.Info("   - Memory savings: {:.1f}%", savings);
 
     // 6. Demonstrate uniform buffer usage
     g_logger.Info("✅ Uniform buffer usage:");

@@ -16,6 +16,7 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
     mat4 view;
     mat4 proj;
+    mat3 normalMatrix;  // Precomputed normal matrix (inverse-transpose of model)
 } ubo;
 
 void main() {
@@ -24,7 +25,7 @@ void main() {
     gl_Position = ubo.proj * ubo.view * worldPos;
 
     fragColor = inColor;
-    fragNormal = mat3(transpose(inverse(ubo.model))) * inNormal;
+    fragNormal = ubo.normalMatrix * inNormal;
     fragPos = worldPos.xyz;
     fragTexCoord = inTexCoord;
 }

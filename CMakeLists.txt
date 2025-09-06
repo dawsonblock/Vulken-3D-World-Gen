@@ -308,9 +308,16 @@ if(NOT VOXELVK_HEADLESS_ONLY)
     target_include_directories(advanced_rendering_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_include_directories(future_enhancements_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_include_directories(next_generation_demo PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(advanced_vulkan_demo PRIVATE ${VULKAN_LIBRARIES} glfw)
+    # Link all demo targets to Vulkan and GLFW consistently
+    target_link_libraries(advanced_vulkan_demo PRIVATE Vulkan::Vulkan ${GLFW_LIB})
     target_link_libraries(3d_rendering_demo PRIVATE Vulkan::Vulkan ${GLFW_LIB})
-    if(GLM_LIB)
+    target_link_libraries(rendering_concepts_demo PRIVATE Vulkan::Vulkan ${GLFW_LIB})
+    target_link_libraries(advanced_rendering_demo PRIVATE Vulkan::Vulkan ${GLFW_LIB})
+    target_link_libraries(future_enhancements_demo PRIVATE Vulkan::Vulkan ${GLFW_LIB})
+    target_link_libraries(next_generation_demo PRIVATE Vulkan::Vulkan ${GLFW_LIB})
+
+    # Link GLM if available and valid
+    if(GLM_LIB AND (TARGET ${GLM_LIB} OR (EXISTS ${GLM_LIB})))
       target_link_libraries(advanced_vulkan_demo PRIVATE ${GLM_LIB})
       target_link_libraries(3d_rendering_demo PRIVATE ${GLM_LIB})
       target_link_libraries(rendering_concepts_demo PRIVATE ${GLM_LIB})

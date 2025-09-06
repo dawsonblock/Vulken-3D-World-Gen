@@ -1,9 +1,13 @@
 #version 450
 
+const float PI = 3.141592653589793;
+
 // Advanced lighting models fragment shader
 layout(location = 0) in vec3 fragPos;
 layout(location = 1) in vec3 fragNormal;
 layout(location = 2) in vec2 fragTexCoord;
+layout(location = 3) in vec3 fragTangent;
+layout(location = 4) in vec3 fragBitangent;
 
 layout(location = 0) out vec4 outColor;
 
@@ -31,6 +35,7 @@ layout(binding = 5) uniform AdvancedLightingUniforms {
     int shadowType; // 0 = none, 1 = hard, 2 = soft, 3 = PCF
     float shadowBias;
     float shadowSoftness;
+    mat4 lightSpaceMatrix;  // Light view-projection matrix for shadow mapping
 } lighting;
 
 // Shadow map
@@ -71,7 +76,7 @@ vec3 calculateCookTorrance(vec3 albedo, vec3 normal, vec3 viewDir, vec3 lightDir
     float alpha = roughness * roughness;
     float alpha2 = alpha * alpha;
     float denom = NdotH * NdotH * (alpha2 - 1.0) + 1.0;
-    float D = alpha2 / (3.14159 * denom * denom);
+    float D = alpha2 / (PI * denom * denom);
 
     // Geometry Function (Smith)
     float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
@@ -116,7 +121,7 @@ float calculateShadow(vec3 fragPos, vec3 lightPos, vec3 lightDir) {
     }
 
     // Transform to light space
-    vec4 lightSpacePos = vec4(fragPos, 1.0);
+    vec4 lightSpacePos = lighting.lightSpaceMatrix * vec4(fragPos, 1.0);
     vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
     projCoords = projCoords * 0.5 + 0.5;
 
@@ -184,7 +189,7 @@ vec3 calculateIBL(vec3 normal, vec3 viewDir, vec3 albedo, float metallic, float 
 void main() {
     // Sample material textures
     vec3 albedo = texture(albedoMap, fragTexCoord).rgb;
-    vec3 normalMap = texture(normalMap, fragTexCoord).rgb * 2.0 - 1.0;
+    vec3 tangentNormal = texture(normalMap, fragTexCoord).rgb * 2.0 - 1.0;
     vec3 metallicRoughness = texture(metallicRoughnessMap, fragTexCoord).rgb;
     vec3 emissive = texture(emissiveMap, fragTexCoord).rgb;
     float occlusion = texture(occlusionMap, fragTexCoord).r;
@@ -193,8 +198,9 @@ void main() {
     float metallic = metallicRoughness.b;
     float roughness = metallicRoughness.g;
 
-    // Calculate lighting
-    vec3 normal = normalize(fragNormal + normalMap * 0.1);
+    // Transform normal from tangent space to world space
+    mat3 TBN = mat3(normalize(fragTangent), normalize(fragBitangent), normalize(fragNormal));
+    vec3 normal = normalize(TBN * tangentNormal);
     vec3 viewDir = normalize(lighting.cameraPos - fragPos);
     vec3 lightDir = normalize(lighting.lightPos - fragPos);
 

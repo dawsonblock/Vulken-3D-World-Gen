@@ -1,5 +1,7 @@
 #version 450
 
+const float PI = 3.14159265359;
+
 // Textured cube fragment shader with PBR lighting
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec3 fragNormal;
@@ -49,7 +51,7 @@ vec3 calculatePBR(vec3 albedo, vec3 normal, vec3 viewDir, vec3 lightDir, vec3 li
     float alpha = roughness * roughness;
     float alpha2 = alpha * alpha;
     float denom = NdotH * NdotH * (alpha2 - 1.0) + 1.0;
-    float D = alpha2 / (3.14159 * denom * denom);
+    float D = alpha2 / (PI * denom * denom);
 
     // Geometry Function (Smith's method)
     float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
@@ -67,7 +69,7 @@ vec3 calculatePBR(vec3 albedo, vec3 normal, vec3 viewDir, vec3 lightDir, vec3 li
     vec3 kD = (1.0 - kS) * (1.0 - metallic);
 
     // Diffuse and specular
-    vec3 diffuse = kD * albedo / 3.14159;
+    vec3 diffuse = kD * albedo / PI;
     vec3 radiance = lightColor * NdotL;
 
     return (diffuse + specular) * radiance;
@@ -76,7 +78,11 @@ vec3 calculatePBR(vec3 albedo, vec3 normal, vec3 viewDir, vec3 lightDir, vec3 li
 void main() {
     // Sample textures
     vec3 albedo = texture(diffuseTexture, fragTexCoord).rgb * fragColor;
-    vec3 normal = normalize(fragNormal + (texture(normalTexture, fragTexCoord).rgb * 2.0 - 1.0));
+
+    // Sample and transform normal map
+    vec3 normalMap = texture(normalTexture, fragTexCoord).rgb * 2.0 - 1.0;
+    float normalStrength = 1.0; // Could be made configurable via uniform
+    vec3 normal = normalize(mix(fragNormal, normalMap, normalStrength));
 
     // Calculate lighting
     vec3 viewDir = lighting.viewPos - fragPos;

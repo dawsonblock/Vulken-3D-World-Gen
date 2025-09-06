@@ -26,6 +26,7 @@ layout(binding = 6) uniform GlobalIlluminationUniforms {
     float exposure;
     int lightProbeCount;
     float probeRadius;
+    float prefilterMaxMipLevel;  // Maximum mip level for prefiltered environment map
 } giUniforms;
 
 // Light probe data
@@ -85,7 +86,7 @@ vec3 sampleIrradiance(vec3 normal, vec3 worldPos) {
 // Sample prefiltered environment map
 vec3 samplePrefilteredEnvironment(vec3 reflectionDir, float roughness) {
     // Calculate mip level based on roughness
-    float mipLevel = roughness * 4.0; // Assuming 5 mip levels (0-4)
+    float mipLevel = roughness * giUniforms.prefilterMaxMipLevel; // Use actual max mip level
 
     // Sample prefiltered environment map
     vec3 prefilteredColor = textureLod(prefilterMap, reflectionDir, mipLevel).rgb;

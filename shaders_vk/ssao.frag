@@ -17,10 +17,11 @@ layout(binding = 3) uniform SSAOUniforms {
     float radius;
     float bias;
     int kernelSize;
+    vec2 screenSize;  // Screen dimensions for resolution-independent noise scale
 } ssao;
 
-// Random rotation vectors
-const vec2 noiseScale = vec2(800.0/4.0, 600.0/4.0);
+// Random rotation vectors - now resolution-independent
+vec2 noiseScale = ssao.screenSize / 4.0;
 
 void main() {
     // Get position and normal from textures
