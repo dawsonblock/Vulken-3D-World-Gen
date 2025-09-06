@@ -1,6 +1,8 @@
 
 #pragma once
+#ifndef VOXELVK_HEADLESS_ONLY
 #include <vulkan/vulkan.h>
+#endif
 
 namespace voxelvk {
 void PrintBuildInfoOnce();             // prints to stdout and logs to file once

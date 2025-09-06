@@ -17,7 +17,7 @@ layout(binding = 2) buffer VisibleObjects {
     uint visibleIndices[];
 } visible;
 
-layout(binding = 3) writeonly buffer DrawCount {
+layout(binding = 3) buffer DrawCount {
     uint drawCount;
 } count;
 
@@ -71,9 +71,9 @@ void main() {
     vec3 worldPos = (transform * vec4(objectPos, 1.0)).xyz;
 
     // Test against frustum
-    bool visible = sphereInFrustum(worldPos, frustum.boundingRadius);
+    bool isVisible = sphereInFrustum(worldPos, frustum.boundingRadius);
 
-    if(visible) {
+    if(isVisible) {
         // Use atomic counter to get unique index
         uint visibleIndex = atomicAdd(count.drawCount, 1);
         visible.visibleIndices[visibleIndex] = index;

@@ -541,8 +541,12 @@ std::string PipelineCacheManager::getCacheFilePath() const {
 
 std::string PipelineCacheManager::buildCacheFileName() const {
     // Get device properties for cache keying
-    VkPhysicalDeviceIDProperties idProps{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES};
-    VkPhysicalDeviceProperties2 props2{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
+    VkPhysicalDeviceIDProperties idProps{};
+    idProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES;
+    idProps.pNext = nullptr;
+
+    VkPhysicalDeviceProperties2 props2{};
+    props2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
     props2.pNext = &idProps;
     vkGetPhysicalDeviceProperties2(physicalDevice_, &props2);
 
@@ -552,7 +556,7 @@ std::string PipelineCacheManager::buildCacheFileName() const {
     char deviceUuidHex[VK_UUID_SIZE * 2 + 1] = {0};
     char pipelineCacheUuidHex[VK_UUID_SIZE * 2 + 1] = {0};
 
-    for (int i = 0; i < VK_UUID_SIZE; i++) {
+    for (size_t i = 0; i < VK_UUID_SIZE; i++) {
         snprintf(&deviceUuidHex[i * 2], 3, "%02x", idProps.deviceUUID[i]);
         snprintf(&pipelineCacheUuidHex[i * 2], 3, "%02x", deviceProps.pipelineCacheUUID[i]);
     }
@@ -612,7 +616,7 @@ std::vector<uint32_t> SPIRVLoader::loadFromFile(const std::string& filePath) {
     }
 
     file.seekg(0, std::ios::end);
-    size_t fileSize = file.tellg();
+    auto fileSize = static_cast<size_t>(file.tellg());
     file.seekg(0, std::ios::beg);
 
     if (fileSize % sizeof(uint32_t) != 0) {
@@ -621,7 +625,7 @@ std::vector<uint32_t> SPIRVLoader::loadFromFile(const std::string& filePath) {
     }
 
     std::vector<uint32_t> spirv(fileSize / sizeof(uint32_t));
-    file.read(reinterpret_cast<char*>(spirv.data()), fileSize);
+    file.read(reinterpret_cast<char*>(spirv.data()), static_cast<std::streamsize>(fileSize));
 
     if (!file.good()) {
         s_lastValidationError = "Failed to read SPIR-V file: " + filePath;

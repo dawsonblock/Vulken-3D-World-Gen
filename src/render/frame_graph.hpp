@@ -1,5 +1,54 @@
 #pragma once
+#ifndef VOXELVK_HEADLESS_ONLY
 #include <vulkan/vulkan.h>
+#else
+typedef struct VkDevice_T* VkDevice;
+typedef struct VkCommandBuffer_T* VkCommandBuffer;
+typedef struct VkImage_T* VkImage;
+typedef struct VkBuffer_T* VkBuffer;
+typedef struct VkSampler_T* VkSampler;
+typedef struct VkRenderPass_T* VkRenderPass;
+typedef struct VkFramebuffer_T* VkFramebuffer;
+typedef struct VkPipeline_T* VkPipeline;
+typedef struct VkDescriptorSet_T* VkDescriptorSet;
+typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
+typedef struct VkPipelineLayout_T* VkPipelineLayout;
+typedef struct VkShaderModule_T* VkShaderModule;
+typedef struct VkQueue_T* VkQueue;
+typedef struct VkFence_T* VkFence;
+typedef struct VkSemaphore_T* VkSemaphore;
+typedef struct VkEvent_T* VkEvent;
+typedef struct VkQueryPool_T* VkQueryPool;
+typedef struct VkCommandPool_T* VkCommandPool;
+typedef struct VkDescriptorPool_T* VkDescriptorPool;
+typedef struct VkSwapchainKHR_T* VkSwapchainKHR;
+typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
+typedef struct VkInstance_T* VkInstance;
+typedef struct VkPhysicalDevice_T* VkPhysicalDevice;
+typedef struct VkDeviceMemory_T* VkDeviceMemory;
+typedef struct VkImage_T* VkImage;
+typedef struct VkBuffer_T* VkBuffer;
+typedef struct VkSampler_T* VkSampler;
+typedef struct VkRenderPass_T* VkRenderPass;
+typedef struct VkFramebuffer_T* VkFramebuffer;
+typedef struct VkPipeline_T* VkPipeline;
+typedef struct VkDescriptorSet_T* VkDescriptorSet;
+typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
+typedef struct VkPipelineLayout_T* VkPipelineLayout;
+typedef struct VkShaderModule_T* VkShaderModule;
+typedef struct VkQueue_T* VkQueue;
+typedef struct VkFence_T* VkFence;
+typedef struct VkSemaphore_T* VkSemaphore;
+typedef struct VkEvent_T* VkEvent;
+typedef struct VkQueryPool_T* VkQueryPool;
+typedef struct VkCommandPool_T* VkCommandPool;
+typedef struct VkDescriptorPool_T* VkDescriptorPool;
+typedef struct VkSwapchainKHR_T* VkSwapchainKHR;
+typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
+typedef struct VkInstance_T* VkInstance;
+typedef struct VkPhysicalDevice_T* VkPhysicalDevice;
+typedef struct VkDeviceMemory_T* VkDeviceMemory;
+#endif
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -40,9 +89,9 @@ struct ResourceHandle {
     uint32_t id = 0;
     ResourceType type = ResourceType::BUFFER;
     std::string name;
-    
+
     bool isValid() const { return id != 0; }
-    
+
     static ResourceHandle invalid() { return {}; }
 };
 
@@ -66,12 +115,12 @@ namespace voxelvk {
 struct ResourceDesc {
     ResourceType type;
     std::string name;
-    
+
     // Buffer description
     VkDeviceSize bufferSize = 0;
     VkBufferUsageFlags bufferUsage = 0;
-    
-    // Image description  
+
+    // Image description
     uint32_t width = 0;
     uint32_t height = 0;
     uint32_t depth = 1;
@@ -79,7 +128,7 @@ struct ResourceDesc {
     VkFormat format = VK_FORMAT_UNDEFINED;
     VkImageUsageFlags imageUsage = 0;
     VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-    
+
     // Persistence (external resources)
     bool isExternal = false;
     VkBuffer externalBuffer = VK_NULL_HANDLE;
@@ -95,7 +144,7 @@ struct PassResourceAccess {
     VkPipelineStageFlags2 stage;
     VkAccessFlags2 accessMask;
     VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
-    
+
     // For images with subresource access
     VkImageSubresourceRange subresourceRange{};
 };
@@ -105,14 +154,14 @@ struct PassResourceAccess {
  */
 class FrameGraphPass {
 public:
-    FrameGraphPass(const std::string& name, uint32_t passID) 
+    FrameGraphPass(const std::string& name, uint32_t passID)
         : name_(name), passID_(passID) {}
-    
+
     // Resource access declaration
     ResourceHandle read(ResourceHandle resource, VkPipelineStageFlags2 stage = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT);
     ResourceHandle write(ResourceHandle resource, VkPipelineStageFlags2 stage = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
     ResourceHandle create(const ResourceDesc& desc);
-    
+
     // Execution callback
     // Execution callback receives resolved resource maps keyed by internal resource ID
     using ExecuteCallback = std::function<void(
@@ -120,19 +169,19 @@ public:
         const std::unordered_map<uint32_t, VkBuffer>&,
         const std::unordered_map<uint32_t, VkImage>&)>;
     void setExecuteCallback(ExecuteCallback callback) { executeCallback_ = callback; }
-    
+
     // Getters
     const std::string& getName() const { return name_; }
     uint32_t getPassID() const { return passID_; }
     const std::vector<PassResourceAccess>& getResourceAccesses() const { return resourceAccesses_; }
     const ExecuteCallback& getExecuteCallback() const { return executeCallback_; }
-    
+
 private:
     std::string name_;
     uint32_t passID_;
     std::vector<PassResourceAccess> resourceAccesses_;
     ExecuteCallback executeCallback_;
-    
+
     void addResourceAccess(ResourceHandle resource, ResourceAccess access, VkPipelineStageFlags2 stage);
 };
 
@@ -143,29 +192,29 @@ class FrameGraph {
 public:
     FrameGraph(VkDevice device, const DeviceCaps& deviceCaps);
     ~FrameGraph();
-    
+
     // Setup
     bool initialize(uint32_t framesInFlight = 3);
     void shutdown();
-    
+
     // Frame management
     void beginFrame(uint32_t frameIndex);
     void endFrame();
-    
+
     // Pass building
     FrameGraphPass& addPass(const std::string& name);
     ResourceHandle createResource(const ResourceDesc& desc);
     ResourceHandle importResource(const std::string& name, VkBuffer buffer);
     ResourceHandle importResource(const std::string& name, VkImage image);
-    
+
     // Execution
     void compile(); // Build dependency graph and barriers
     void execute(VkCommandBuffer commandBuffer);
-    
+
     // Resource access
     VkBuffer getBuffer(ResourceHandle handle) const;
     VkImage getImage(ResourceHandle handle) const;
-    
+
     // Statistics and debugging
     struct Stats {
         uint32_t totalPasses = 0;
@@ -174,30 +223,30 @@ public:
         double compileTime = 0.0;
         double executeTime = 0.0;
     };
-    
+
     const Stats& getStats() const { return stats_; }
     void logStats() const;
     void dumpDependencyGraph(const std::string& filename) const;
-    
+
     // Performance monitoring
     void enableGPUTiming(bool enable) { gpuTimingEnabled_ = enable; }
     void setPerformanceBudget(double maxFrameTimeMs) { maxFrameTimeMs_ = maxFrameTimeMs; }
     bool isWithinPerformanceBudget() const;
-    
+
 private:
     VkDevice device_;
     const DeviceCaps& deviceCaps_;
-    
+
     std::vector<std::unique_ptr<FrameGraphPass>> passes_;
     std::unordered_map<uint32_t, ResourceDesc> resources_;
     std::unordered_map<uint32_t, VkBuffer> buffers_;
     std::unordered_map<uint32_t, VkImage> images_;
-    
+
     uint32_t nextResourceID_ = 1;
     uint32_t nextPassID_ = 1;
     uint32_t currentFrameIndex_ = 0;
     uint32_t framesInFlight_ = 3;
-    
+
     // Compiled execution data
     struct CompiledPass {
         FrameGraphPass* pass;
@@ -206,28 +255,28 @@ private:
         std::vector<VkImageMemoryBarrier2> imageBarriers;
         VkDependencyInfo dependencyInfo;
     };
-    
+
     std::vector<CompiledPass> compiledPasses_;
     bool isCompiled_ = false;
-    
+
     // GPU timing
     bool gpuTimingEnabled_ = false;
     double maxFrameTimeMs_ = 8.33; // 120 FPS target
     std::vector<VkQueryPool> timestampPools_;
     std::vector<double> passTimings_;
-    
+
     // Statistics
     mutable Stats stats_{};
-    
+
     // Internal methods
     void compileDependencies();
     void generateBarriers();
     bool hasSynchronization2() const { return deviceCaps_.hasSynchronization2; }
-    
+
     VkPipelineStageFlags2 accessToStage(ResourceAccess access) const;
     VkAccessFlags2 accessToFlags(ResourceAccess access) const;
     VkImageLayout accessToLayout(ResourceAccess access) const;
-    
+
     bool createGPUTimingResources();
     void beginPassTiming(VkCommandBuffer cmd, uint32_t passIndex);
     void endPassTiming(VkCommandBuffer cmd, uint32_t passIndex);
@@ -240,7 +289,7 @@ private:
 class FrameGraphBuilder {
 public:
     FrameGraphBuilder(FrameGraph& frameGraph) : frameGraph_(frameGraph) {}
-    
+
     // Weather system integration
     FrameGraphPass& addWeatherUpdatePass();
     FrameGraphPass& addSkyRenderPass(ResourceHandle colorTarget, ResourceHandle depthTarget);
@@ -248,19 +297,19 @@ public:
     FrameGraphPass& addPrecipitationPass(ResourceHandle colorTarget, ResourceHandle depthTarget);
     FrameGraphPass& addTemporalAccumulationPass(ResourceHandle current, ResourceHandle history, ResourceHandle output);
     FrameGraphPass& addHeightFogPass(ResourceHandle sceneColor, ResourceHandle depth, ResourceHandle output);
-    
+
     // Standard rendering passes
     FrameGraphPass& addGBufferPass(ResourceHandle albedo, ResourceHandle normal, ResourceHandle depth);
     FrameGraphPass& addLightingPass(ResourceHandle gbuffers, ResourceHandle output);
     FrameGraphPass& addPostProcessPass(ResourceHandle input, ResourceHandle output);
-    
+
     // TAA integration
     FrameGraphPass& addTAAResolvePass(ResourceHandle current, ResourceHandle history, ResourceHandle motion, ResourceHandle output);
-    
+
     // Screen space effects
     FrameGraphPass& addSSAOPass(ResourceHandle depth, ResourceHandle normal, ResourceHandle output);
     FrameGraphPass& addSSRPass(ResourceHandle gbuffers, ResourceHandle output);
-    
+
 private:
     FrameGraph& frameGraph_;
 };

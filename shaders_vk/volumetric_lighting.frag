@@ -55,7 +55,7 @@ vec3 calculateVolumetricLighting(vec3 rayStart, vec3 rayEnd, vec3 lightPos, vec3
         float lightDistance = length(lightPos - samplePos);
 
         // Calculate per-sample light direction
-        vec3 lightDir = normalize(lightPos - samplePos);
+        vec3 sampleLightDir = normalize(lightPos - samplePos);
 
         // Calculate light attenuation
         float lightAttenuation = 1.0 / (1.0 + 0.09 * lightDistance + 0.032 * lightDistance * lightDistance);
@@ -67,7 +67,7 @@ vec3 calculateVolumetricLighting(vec3 rayStart, vec3 rayEnd, vec3 lightPos, vec3
         float absorption = volUniforms.absorptionCoeff * t;
 
         // Calculate phase function (Henyey-Greenstein) with proper normalization
-        float cosTheta = dot(rayDir, lightDir);
+        float cosTheta = dot(-rayDir, sampleLightDir);
         float phase = (1.0 - volUniforms.phaseFunction * volUniforms.phaseFunction) /
                      pow(1.0 + volUniforms.phaseFunction * volUniforms.phaseFunction -
                          2.0 * volUniforms.phaseFunction * cosTheta, 1.5);
@@ -124,7 +124,7 @@ vec3 calculateGodRays(vec3 rayStart, vec3 rayEnd, vec3 lightPos, vec3 lightColor
         float scattering = volUniforms.scatteringCoeff * lightAttenuation;
 
         // Calculate phase function for god rays
-        float cosTheta = dot(rayDir, lightDir);
+        float cosTheta = dot(-rayDir, lightDir);
         float phase = (1.0 - volUniforms.phaseFunction * volUniforms.phaseFunction) /
                      pow(1.0 + volUniforms.phaseFunction * volUniforms.phaseFunction -
                          2.0 * volUniforms.phaseFunction * cosTheta, 1.5);
@@ -161,7 +161,7 @@ vec3 calculateAtmosphericScattering(vec3 rayStart, vec3 rayEnd, vec3 sunDir, vec
         float scattering = volUniforms.scatteringCoeff * density;
 
         // Calculate phase function for atmospheric scattering
-        float cosTheta = dot(rayDir, sunDir);
+        float cosTheta = dot(-rayDir, sunDir);
         float phase = (1.0 - volUniforms.phaseFunction * volUniforms.phaseFunction) /
                      pow(1.0 + volUniforms.phaseFunction * volUniforms.phaseFunction -
                          2.0 * volUniforms.phaseFunction * cosTheta, 1.5);

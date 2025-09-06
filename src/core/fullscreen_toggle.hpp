@@ -1,5 +1,7 @@
 #pragma once
+#ifndef VOXELVK_HEADLESS_ONLY
 #include <GLFW/glfw3.h>
+#endif
 #include <functional>
 #include <algorithm>
 
@@ -21,6 +23,8 @@ inline void SetFullscreenHandler(FullscreenToggleHandler handler){ _FullscreenHa
 inline void SetOnFullscreenChanged(std::function<void(bool)> cb){ _OnChanged() = std::move(cb); }
 inline void RequestFullscreen(bool on){ _FullscreenState() = on; auto& h=_FullscreenHandler(); if(h) h(on); auto& cb=_OnChanged(); if(cb) cb(on); }
 inline bool IsFullscreen(){ return _FullscreenState(); }
+
+#ifndef VOXELVK_HEADLESS_ONLY
 
 // Find the monitor with the largest overlap with the current window
 inline GLFWmonitor* GetNearestMonitor(GLFWwindow* window){
@@ -70,5 +74,16 @@ inline void SetFullscreenWindow(GLFWwindow* window){
     static WindowedState s;
     SetFullscreenHandler([window](bool on){ ToggleFullscreen(window, on, s); });
 }
+
+#else
+
+// Headless mode stubs
+inline void* GetNearestMonitor(void* window) { (void)window; return nullptr; }
+inline void ToggleFullscreen(void* window, bool fullscreen, WindowedState& state) {
+    (void)window; (void)fullscreen; (void)state;
+}
+inline void SetFullscreenWindow(void* window) { (void)window; }
+
+#endif
 
 } // namespace voxelvk

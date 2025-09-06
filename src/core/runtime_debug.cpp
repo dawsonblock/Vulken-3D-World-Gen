@@ -7,6 +7,8 @@
 
 namespace voxelvk {
 
+#ifndef VOXELVK_HEADLESS_ONLY
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL cb_debug(
     VkDebugUtilsMessageSeverityFlagBitsEXT       severity,
     VkDebugUtilsMessageTypeFlagsEXT              types,
@@ -66,6 +68,23 @@ void DebugRuntime_Shutdown(DebugRuntime& dr){
         dr.messenger = VK_NULL_HANDLE;
     }
 }
+
+#else
+
+// Headless mode stubs
+void DebugRuntime_AttachIfAvailable(DebugRuntime& dr){
+    (void)dr; // Suppress unused parameter warning
+}
+
+void DebugRuntime_Init(DebugRuntime& dr, VkInstance instance){
+    (void)dr; (void)instance; // Suppress unused parameter warnings
+}
+
+void DebugRuntime_Shutdown(DebugRuntime& dr){
+    (void)dr; // Suppress unused parameter warning
+}
+
+#endif
 
 void DebugRuntime_SetEnabled(DebugRuntime& dr, bool on){
     dr.enabled.store(on);

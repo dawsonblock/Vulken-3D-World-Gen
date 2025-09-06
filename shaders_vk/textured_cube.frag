@@ -79,24 +79,44 @@ void main() {
     // Sample textures
     vec3 albedo = texture(diffuseTexture, fragTexCoord).rgb * fragColor;
 
-    // Sample and transform normal map
-    vec3 normalMap = texture(normalTexture, fragTexCoord).rgb * 2.0 - 1.0;
+    // Sample normal map
+    vec3 normalMap = texture(normalTexture, fragTexCoord).rgb;
     float normalStrength = 1.0; // Could be made configurable via uniform
 
-    // Compute TBN matrix for proper normal mapping
+    // Compute TBN matrix for proper normal mapping using cotangent frame
     vec3 N = normalize(fragNormal);
-    vec3 T = normalize(dFdx(fragPos));
-    vec3 B = normalize(dFdy(fragPos));
 
-    // Orthonormalize tangent with respect to normal (Gram-Schmidt)
+    // Calculate position and UV derivatives
+    vec3 dp1 = dFdx(fragPos);
+    vec3 dp2 = dFdy(fragPos);
+    vec2 duv1 = dFdx(fragTexCoord);
+    vec2 duv2 = dFdy(fragTexCoord);
+
+    // Check for degenerate UV derivatives
+    float det = duv1.s * duv2.t - duv2.s * duv1.t;
+    vec3 T, B;
+
+    if (abs(det) > 1e-8) {
+        // Compute tangent and bitangent using cotangent frame
+        float invDet = 1.0 / det;
+        T = normalize((duv2.t * dp1 - duv1.t * dp2) * invDet);
+        B = normalize((duv1.s * dp2 - duv2.s * dp1) * invDet);
+    } else {
+        // Fallback: use position derivatives and orthonormalize
+        T = normalize(dp1);
+        B = normalize(dp2);
+    }
+
+    // Orthonormalize against the normal using Gram-Schmidt
     T = normalize(T - dot(T, N) * N);
     B = normalize(B - dot(B, N) * N - dot(B, T) * T);
 
     // Form TBN matrix
     mat3 TBN = mat3(T, B, N);
 
-    // Transform normal map to world space
-    vec3 worldNormal = normalize(TBN * normalMap);
+    // Transform normal map from [0,1] to [-1,1] and apply TBN
+    vec3 normalMapScaled = normalMap * 2.0 - 1.0;
+    vec3 worldNormal = normalize(TBN * normalMapScaled);
 
     // Mix with original normal based on strength
     vec3 normal = normalize(mix(fragNormal, worldNormal, normalStrength));
