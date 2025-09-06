@@ -684,6 +684,25 @@ endif() # NOT VOXELVK_HEADLESS_ONLY
       target_include_directories(x11_basic_demo PRIVATE ${X11_INCLUDE_DIR})
       target_link_libraries(x11_basic_demo PRIVATE ${X11_LIBRARIES})
     endif()
+
+    # Advanced rendering demos
+    if(BUILD_EXTRAS)
+      add_executable(3d_rendering_demo apps/3d_rendering_demo.cpp)
+      target_link_libraries(3d_rendering_demo PRIVATE Vulkan::Vulkan ${GLFW_LIB})
+      add_dependencies(3d_rendering_demo ShaderSPV)
+
+      add_executable(advanced_vulkan_demo apps/advanced_vulkan_demo.cpp)
+      target_link_libraries(advanced_vulkan_demo PRIVATE Vulkan::Vulkan ${GLFW_LIB})
+      add_dependencies(advanced_vulkan_demo ShaderSPV)
+
+      add_executable(rendering_concepts_demo apps/rendering_concepts_demo.cpp)
+      target_link_libraries(rendering_concepts_demo PRIVATE Vulkan::Vulkan ${GLFW_LIB})
+      add_dependencies(rendering_concepts_demo ShaderSPV)
+
+      add_executable(advanced_rendering_demo apps/advanced_rendering_demo.cpp)
+      target_link_libraries(advanced_rendering_demo PRIVATE Vulkan::Vulkan ${GLFW_LIB})
+      add_dependencies(advanced_rendering_demo ShaderSPV)
+    endif()
   endif()
 
 
