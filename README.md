@@ -15,20 +15,21 @@
 ### 🌍 **Procedural World Generation**
 ```bash
 # Generate 1M+ voxel worlds in <1 second
-./world_generator
+./build/world_generator
 # Output: 1,048,576 voxels with realistic terrain distribution
 
 # Create interactive visualizations  
-./world_visualizer
+./build/world_visualizer
 # Output: ASCII maps + HTML viewers with color-coded terrain
 
 # Watch animated world creation
-./animation_demo.sh
+./scripts/animation_demo.sh
 ```
 
 ### 🤖 **AI Navigation Training**
 ```bash
 # Train neural network navigation
+./build/rl_nav_demo
 ./build_minimal/rl_nav_demo
 # Output: 33,797-parameter MinimalMLP with convergent learning
 ```
@@ -438,7 +439,64 @@ Formatting and static analysis configs live at the repo root:
 - `.clang-format` and `.clang-tidy`
 - `.editorconfig`
 
-## 📄 License
+## � Repository Structure
+
+The repository follows a clean, production-ready layout:
+
+```
+├── src/                    # Core library sources
+│   ├── *.cpp              # Main world generation components
+│   └── core/              # Engine core (logger, timer, etc.)
+├── examples/              # Demo applications
+│   ├── 3d_rendering_demo.cpp
+│   ├── advanced_vulkan_demo.cpp
+│   └── *.cpp              # All demo executables
+├── web/                   # HTML viewers and web interfaces
+│   ├── world_viewer.html
+│   └── simple_world_demo.html
+├── scripts/               # Build and utility scripts
+│   ├── animation_demo.sh
+│   ├── glslc_wrapper.sh
+│   └── demo_server.py
+├── shaders/               # GLSL shader sources
+│   ├── *.vert|*.frag|*.comp
+│   └── (builds to *.spv in build/)
+├── assets/                # Game assets and data
+│   └── world_map.txt
+├── tests/                 # Unit and integration tests
+└── .github/               # CI workflows and scripts
+```
+
+### Build System & Shader Pipeline
+
+- **Core Library**: `vulken_core` provides shared functionality
+- **Examples**: Each demo builds as a separate executable
+- **Shader Compilation**: GLSL → SPIR-V via `glslc` in build tree
+- **CI Integration**: Automated builds, tests, and shader validation
+
+## 🎨 Assets & Resources
+
+### Free Asset Sources
+Get high-quality assets for your voxel worlds:
+- **[Poly Haven](https://polyhaven.com/)** - HDRIs, textures, 3D models (CC0)
+- **[Kenney Assets](https://kenney.nl/)** - Game art, sounds, UI elements
+- **[BlenderKit](https://www.blenderkit.com/)** - Materials and models
+- **[Sketchfab](https://sketchfab.com/)** - 3D models (CC-BY licensed)
+- **Minecraft Worlds** - Convert Anvil exports → mesh (custom tools)
+
+### Asset Integration
+Place assets in the `assets/` directory:
+```bash
+assets/
+├── textures/          # PNG, JPG textures
+├── models/            # GLB, OBJ 3D models  
+├── skyboxes/          # Cubemap textures
+└── world_map.txt      # Voxel data
+```
+
+*Note: Large binary assets (>100MB) use Git LFS automatically*
+
+## �📄 License
 
 Licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 

@@ -12,6 +12,10 @@ if(NOT GTest_FOUND)
   message(WARNING "GTest not found - tests will be disabled")
   return()
 endif()
+
+# Include GoogleTest module for gtest_discover_tests
+include(GoogleTest)
+
 find_package(yaml-cpp CONFIG QUIET)
 find_package(glm CONFIG QUIET)
 

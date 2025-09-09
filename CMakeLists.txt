@@ -734,9 +734,18 @@ endif() # NOT VOXELVK_HEADLESS_ONLY
 
 # --- Core library
 file(GLOB VULKEN_CORE_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
+# Remove files with external dependencies that might not be available
+list(REMOVE_ITEM VULKEN_CORE_SOURCES "${CMAKE_SOURCE_DIR}/src/redis_asset_store.cpp")
+# Add essential core sources (only logger and timer, basic ones)
+list(APPEND VULKEN_CORE_SOURCES 
+    "${CMAKE_SOURCE_DIR}/src/core/logger.cpp"
+    "${CMAKE_SOURCE_DIR}/src/core/timer.cpp"
+    "${CMAKE_SOURCE_DIR}/src/core/thread_pool.cpp"
+)
 add_library(vulken_core ${VULKEN_CORE_SOURCES})
 target_include_directories(vulken_core PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
 target_compile_features(vulken_core PUBLIC cxx_std_20)
+target_link_libraries(vulken_core PUBLIC Threads::Threads)
 
 # --- Examples
 file(GLOB EXAMPLE_SOURCES "${CMAKE_SOURCE_DIR}/examples/*.cpp")
@@ -750,23 +759,25 @@ foreach(example_src ${EXAMPLE_SOURCES})
     endif()
 endforeach()
 
-# --- Shaders (GLSL → SPV)
-set(SHADER_DIR "${CMAKE_SOURCE_DIR}/shaders")
-file(GLOB SHADERS "${SHADER_DIR}/*.*")
-foreach(shader ${SHADERS})
-    get_filename_component(fname ${shader} NAME)
-    set(out "${CMAKE_BINARY_DIR}/shaders/${fname}.spv")
-    add_custom_command(
-        OUTPUT ${out}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/shaders
-        COMMAND glslc ${shader} -o ${out}
-        DEPENDS ${shader}
-        COMMENT "Compiling shader ${fname} -> ${out}"
-        VERBATIM
-    )
-    list(APPEND SPV_OUTS ${out})
-endforeach()
-add_custom_target(compile_shaders ALL DEPENDS ${SPV_OUTS})
+# --- Shaders (GLSL → SPV) - only if not already defined by Python pipeline
+if(NOT TARGET compile_shaders)
+    set(SHADER_DIR "${CMAKE_SOURCE_DIR}/shaders")
+    file(GLOB SHADERS "${SHADER_DIR}/*.*")
+    foreach(shader ${SHADERS})
+        get_filename_component(fname ${shader} NAME)
+        set(out "${CMAKE_BINARY_DIR}/shaders/${fname}.spv")
+        add_custom_command(
+            OUTPUT ${out}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/shaders
+            COMMAND glslc ${shader} -o ${out}
+            DEPENDS ${shader}
+            COMMENT "Compiling shader ${fname} -> ${out}"
+            VERBATIM
+        )
+        list(APPEND SPV_OUTS ${out})
+    endforeach()
+    add_custom_target(compile_shaders ALL DEPENDS ${SPV_OUTS})
+endif()
 
 # Add engine sublibrary
 add_subdirectory(src/engine)
