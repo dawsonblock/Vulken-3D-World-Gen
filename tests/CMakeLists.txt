@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 
 enable_testing()
+
+# Add smoke engine test as specified in the plan
+add_executable(test_smoke_engine test_smoke_engine.cpp)
+target_link_libraries(test_smoke_engine PRIVATE vulken_core)
+add_test(NAME smoke_engine COMMAND test_smoke_engine)
+
 find_package(GTest CONFIG QUIET)
 if(NOT GTest_FOUND)
   message(WARNING "GTest not found - tests will be disabled")

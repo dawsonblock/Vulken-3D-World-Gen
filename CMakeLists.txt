@@ -732,6 +732,42 @@ endif() # NOT VOXELVK_HEADLESS_ONLY
     endif()
   endif()
 
+# --- Core library
+file(GLOB VULKEN_CORE_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
+add_library(vulken_core ${VULKEN_CORE_SOURCES})
+target_include_directories(vulken_core PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+target_compile_features(vulken_core PUBLIC cxx_std_20)
+
+# --- Examples
+file(GLOB EXAMPLE_SOURCES "${CMAKE_SOURCE_DIR}/examples/*.cpp")
+foreach(example_src ${EXAMPLE_SOURCES})
+    get_filename_component(exe_name ${example_src} NAME_WE)
+    add_executable(${exe_name} ${example_src})
+    target_link_libraries(${exe_name} PRIVATE vulken_core)
+    target_include_directories(${exe_name} PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    if(NOT VOXELVK_HEADLESS_ONLY)
+        target_link_libraries(${exe_name} PRIVATE Vulkan::Vulkan ${GLFW_LIB})
+    endif()
+endforeach()
+
+# --- Shaders (GLSL → SPV)
+set(SHADER_DIR "${CMAKE_SOURCE_DIR}/shaders")
+file(GLOB SHADERS "${SHADER_DIR}/*.*")
+foreach(shader ${SHADERS})
+    get_filename_component(fname ${shader} NAME)
+    set(out "${CMAKE_BINARY_DIR}/shaders/${fname}.spv")
+    add_custom_command(
+        OUTPUT ${out}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/shaders
+        COMMAND glslc ${shader} -o ${out}
+        DEPENDS ${shader}
+        COMMENT "Compiling shader ${fname} -> ${out}"
+        VERBATIM
+    )
+    list(APPEND SPV_OUTS ${out})
+endforeach()
+add_custom_target(compile_shaders ALL DEPENDS ${SPV_OUTS})
+
 # Add engine sublibrary
 add_subdirectory(src/engine)
 
