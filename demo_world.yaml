@@ -1,0 +1,66 @@
+world:
+  name: "VoxelVK Demo World"
+  seed: 12345
+  size: [256, 64, 256]  # width, height, depth
+  
+terrain:
+  type: "procedural"
+  heightmap:
+    algorithm: "perlin"
+    octaves: 4
+    frequency: 0.01
+    amplitude: 32.0
+  
+biomes:
+  - name: "grassland"
+    color: [0.4, 0.8, 0.2]
+    height_range: [0, 30]
+    temperature: 0.7
+    humidity: 0.6
+    
+  - name: "mountain"
+    color: [0.6, 0.6, 0.6]
+    height_range: [30, 60]
+    temperature: 0.3
+    humidity: 0.4
+    
+  - name: "water"
+    color: [0.2, 0.4, 0.8]
+    height_range: [-10, 5]
+    temperature: 0.5
+    humidity: 1.0
+
+weather:
+  current_state: "clear"
+  states:
+    - clear
+    - cloudy
+    - rain
+    - snow
+    - storm
+    - fog
+  
+objects:
+  trees:
+    density: 0.1
+    types: ["oak", "pine", "birch"]
+    height_range: [3, 8]
+    
+  rocks:
+    density: 0.05
+    size_range: [1, 3]
+    
+camera:
+  position: [128, 40, 128]
+  look_at: [128, 20, 100]
+  fov: 60.0
+  
+lighting:
+  sun:
+    direction: [-0.5, -0.8, -0.3]
+    color: [1.0, 0.9, 0.8]
+    intensity: 1.2
+    
+  ambient:
+    color: [0.3, 0.4, 0.5]
+    intensity: 0.4
