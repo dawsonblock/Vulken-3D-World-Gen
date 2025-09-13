@@ -155,6 +155,7 @@
             <button class="btn" onclick="generateNewWorld()">🔄 Generate New World</button>
             <button class="btn" onclick="showFullMap()">🗺️ View Full Map</button>
             <button class="btn" onclick="runAIDemo()">🤖 Run AI Demo</button>
+            <button class="btn" onclick="openWebGL()">🧊 View 3D WebGL</button>
         </div>
         
         <div style="text-align: center; margin-top: 30px; color: #666;">
@@ -224,6 +225,10 @@
         
         function runAIDemo() {
             alert('🤖 Running AI Demo...\nRun: build_minimal/rl_nav_demo');
+        }
+        
+        function openWebGL() {
+            window.open('webgl_world_viewer.html', '_blank');
         }
         
         // Load map when page loads

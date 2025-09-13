@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VoxelVK • 3D World Viewer (WebGL)</title>
+  <style>
+    :root { --bg:#0f1115; --fg:#dfe5ee; --muted:#94a3b8; --accent:#00ff88; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+    .toolbar {
+      position: fixed; top: 12px; left: 12px; right: 12px;
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      background: rgba(11, 13, 18, 0.85); backdrop-filter: blur(6px);
+      border: 1px solid #1f2937; border-radius: 12px; padding: 10px 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    }
+    .toolbar h1 { font-size: 16px; margin: 0; color: var(--accent); }
+    .spacer { flex: 1 1 auto; }
+    .row { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+    input[type=range] { width: 220px; }
+    .hint { color: var(--muted); font-size: 12px; }
+    #app { position: absolute; inset: 0; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <h1>VoxelVK • 3D World Viewer</h1>
+    <div class="row">
+      <label>Height Scale</label>
+      <input id="heightScale" type="range" min="0.2" max="5" step="0.1" value="1.5" />
+      <span id="heightScaleVal" class="hint">1.5×</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="row hint">Drag = Orbit • Shift+Drag = Pan • Wheel/Pinch = Zoom</div>
+  </div>
+  <div id="app"></div>
+
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.159/build/three.module.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.159/examples/jsm/controls/OrbitControls.js';
+
+    const app = document.getElementById('app');
+    const heightScaleEl = document.getElementById('heightScale');
+    const heightScaleVal = document.getElementById('heightScaleVal');
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    app.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#0b0d12');
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
+    camera.position.set(120, 140, 120);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.target.set(0, 0, 0);
+    controls.screenSpacePanning = true;
+
+    // Lights
+    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+    scene.add(ambient);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+    dir.position.set(200, 400, 200);
+    scene.add(dir);
+
+    // Ground grid (optional)
+    const grid = new THREE.GridHelper(1000, 100, 0x224466, 0x223344);
+    grid.material.opacity = 0.25; grid.material.transparent = true;
+    scene.add(grid);
+
+    // Color palette aligned with 2D viewer
+    const COLORS = [
+      new THREE.Color('#111111'), // Air
+      new THREE.Color('#888888'), // Stone
+      new THREE.Color('#3ddc84'), // Grass
+      new THREE.Color('#3ec0ff'), // Water
+      new THREE.Color('#e88020'), // Tree
+    ];
+
+    function buildMesh(data, heightScale) {
+      const W = data.width;
+      const D = data.depth;
+      const heights = data.heights; // length W*D implied by our writer (flat lines with commas)
+      const types = data.types;
+
+      // Build geometry as a grid on XZ plane with Y as up
+      const nx = W; // vertices along x
+      const nz = D; // vertices along z
+      const geom = new THREE.BufferGeometry();
+
+      const positions = new Float32Array(nx * nz * 3);
+      const colors = new Float32Array(nx * nz * 3);
+      const indices = new Uint32Array((nx - 1) * (nz - 1) * 6);
+
+      let minH = 1e9, maxH = -1e9;
+      // First pass find min/max height (for potential shading)
+      for (let zi = 0; zi < nz; zi++) {
+        for (let xi = 0; xi < nx; xi++) {
+          const idx = zi * nx + xi;
+          const h = heights[idx] || 0;
+          if (h < minH) minH = h;
+          if (h > maxH) maxH = h;
+        }
+      }
+      const hRange = Math.max(1, maxH - minH);
+
+      // Fill vertex data
+      let p = 0, c = 0;
+      for (let zi = 0; zi < nz; zi++) {
+        for (let xi = 0; xi < nx; xi++) {
+          const idx = zi * nx + xi;
+          const h = heights[idx] || 0;
+          const t = types[idx] || 0;
+          const y = (h - minH) / hRange * 50 * heightScale; // scale elevation
+
+          positions[p++] = xi;   // x
+          positions[p++] = y;    // y (up)
+          positions[p++] = zi;   // z
+
+          const base = COLORS[t] || COLORS[0];
+          const shade = 0.5 + 0.5 * (h - minH) / hRange; // slight elevation shading
+          colors[c++] = Math.min(1, base.r * shade);
+          colors[c++] = Math.min(1, base.g * shade);
+          colors[c++] = Math.min(1, base.b * shade);
+        }
+      }
+
+      // Indices (two triangles per cell)
+      let k = 0;
+      for (let zi = 0; zi < nz - 1; zi++) {
+        for (let xi = 0; xi < nx - 1; xi++) {
+          const a = zi * nx + xi;
+          const b = zi * nx + (xi + 1);
+          const c1 = (zi + 1) * nx + xi;
+          const d = (zi + 1) * nx + (xi + 1);
+          indices[k++] = a; indices[k++] = c1; indices[k++] = b;
+          indices[k++] = b; indices[k++] = c1; indices[k++] = d;
+        }
+      }
+
+      geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geom.setIndex(new THREE.BufferAttribute(indices, 1));
+      geom.computeVertexNormals();
+
+      // Center mesh around origin
+      geom.translate(-(nx - 1) / 2, 0, -(nz - 1) / 2);
+
+      const mat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.receiveShadow = true; mesh.castShadow = true;
+      return mesh;
+    }
+
+    let terrainMesh = null;
+
+    async function load() {
+      const res = await fetch('world_surface.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to load world_surface.json');
+      const data = await res.json();
+      // Flatten arrays if they are written with newlines; our writer outputs flat arrays separated by commas per line
+      data.heights = data.heights; // already flat by writer
+      data.types = data.types;
+
+      // Initial mesh
+      terrainMesh = buildMesh(data, parseFloat(heightScaleEl.value));
+      scene.add(terrainMesh);
+
+      // Frame camera to mesh
+      const box = new THREE.Box3().setFromObject(terrainMesh);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      controls.target.copy(center);
+      camera.position.set(center.x + size.x * 0.8, size.y * 1.6 + 40, center.z + size.z * 0.8);
+      controls.update();
+    }
+
+    heightScaleEl.addEventListener('input', () => {
+      heightScaleVal.textContent = `${parseFloat(heightScaleEl.value).toFixed(1)}×`;
+      if (!terrainMesh) return;
+      // Rebuild geometry with new height scale
+      const geom = terrainMesh.geometry;
+      const pos = geom.getAttribute('position');
+      // We can't recompute without the original heights, so reload JSON and rebuild
+      scene.remove(terrainMesh);
+      load().catch(err => console.error(err));
+    });
+
+    // Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Main loop
+    renderer.setAnimationLoop(() => {
+      controls.update();
+      renderer.render(scene, camera);
+    });
+
+    load().catch(err => {
+      console.error(err);
+      const div = document.createElement('div');
+      div.className = 'hint';
+      div.style.position = 'fixed';
+      div.style.bottom = '12px';
+      div.style.left = '12px';
+      div.textContent = 'Could not load world_surface.json - run ./world_visualizer first';
+      document.body.appendChild(div);
+    });
+  </script>
+</body>
+</html>

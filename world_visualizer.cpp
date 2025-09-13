@@ -110,115 +110,253 @@ void generateASCIIMap(const VoxelWorld& world, const std::string& filename) {
     file << "Total voxels: " << world.width * world.height * world.depth << "\n";
 }
 
-// Generate a simple HTML viewer
+// Export surface (top voxel) heights and types as JSON for WebGL viewer
+void generateSurfaceJSON(const VoxelWorld& world, const std::string& filename) {
+    std::ofstream out(filename);
+    if (!out.is_open()) {
+        std::cerr << "Failed to open " << filename << " for writing" << std::endl;
+        return;
+    }
+
+    out << "{\n";
+    out << "  \"width\": " << world.width << ",\n";
+    out << "  \"depth\": " << world.depth << ",\n";
+    out << "  \"maxHeight\": " << (world.height - 1) << ",\n";
+
+    // Heights
+    out << "  \"heights\": [\n";
+    for (int z = 0; z < world.depth; ++z) {
+        out << "    ";
+        for (int x = 0; x < world.width; ++x) {
+            int topY = 0;
+            for (int y = world.height - 1; y >= 0; --y) {
+                if (world.voxels[x][y][z].type != VoxelType::AIR) { topY = y; break; }
+            }
+            out << topY;
+            if (!(z == world.depth - 1 && x == world.width - 1)) out << ",";
+        }
+        out << "\n";
+    }
+    out << "  ],\n";
+
+    // Types
+    out << "  \"types\": [\n";
+    for (int z = 0; z < world.depth; ++z) {
+        out << "    ";
+        for (int x = 0; x < world.width; ++x) {
+            int code = 0; // Air
+            for (int y = world.height - 1; y >= 0; --y) {
+                auto t = world.voxels[x][y][z].type;
+                if (t != VoxelType::AIR) {
+                    switch (t) {
+                        case VoxelType::STONE: code = 1; break;
+                        case VoxelType::GRASS: code = 2; break;
+                        case VoxelType::WATER: code = 3; break;
+                        case VoxelType::TREE:  code = 4; break;
+                        default: code = 0; break;
+                    }
+                    break;
+                }
+            }
+            out << code;
+            if (!(z == world.depth - 1 && x == world.width - 1)) out << ",";
+        }
+        out << "\n";
+    }
+    out << "  ]\n";
+    out << "}\n";
+}
+
+// Generate a modern canvas-based HTML viewer with zoom
 void generateHTMLViewer(const VoxelWorld& world, const std::string& filename) {
     std::ofstream file(filename);
     file << R"(<!DOCTYPE html>
 <html>
 <head>
-    <title>VoxelVK 3D World Demo</title>
-    <style>
-        body { 
-            font-family: 'Courier New', monospace; 
-            background: #1a1a1a; 
-            color: #00ff00; 
-            margin: 20px; 
-        }
-        .world-container { 
-            background: #000; 
-            padding: 20px; 
-            border: 2px solid #00ff00; 
-            border-radius: 10px; 
-            margin: 20px 0; 
-        }
-        .world-map { 
-            font-size: 8px; 
-            line-height: 8px; 
-            letter-spacing: 1px; 
-            white-space: pre; 
-            overflow-x: auto; 
-        }
-        .stats { 
-            margin-top: 20px; 
-            font-size: 14px; 
-        }
-        h1, h2 { color: #00ff00; text-align: center; }
-        .legend { color: #ffff00; margin-bottom: 10px; }
-    </style>
+  <meta charset=\"utf-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+  <title>VoxelVK 3D World - Canvas Viewer</title>
+  <style>
+    :root { --accent: #00ff88; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #0f1115; color: #dfe5ee; margin: 0; padding: 24px;
+    }
+    h1 { color: var(--accent); text-align: center; margin: 0 0 8px 0; }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 16px; }
+    .panel {
+      background: #0b0d12; border: 1px solid #1f2937; border-radius: 12px;
+      padding: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); max-width: 1000px; margin: 16px auto;
+    }
+    .controls { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+    label { color:#a3b3c3; font-size:14px; }
+    input[type=range] { width: 240px; }
+    .canvas-wrap { display:flex; justify-content:center; overflow:auto; border: 1px solid #1f2937; border-radius: 10px; background:#0a0c10; padding: 12px;}
+    canvas { image-rendering: pixelated; image-rendering: crisp-edges; cursor: grab; }
+    .legend { text-align:center; margin-top: 12px; color:#a3b3c3; font-size:14px; }
+    .legend .sw { display:inline-block; width:12px; height:12px; border-radius:2px; margin:0 6px -1px 12px; }
+  </style>
 </head>
 <body>
-    <h1>🌍 VoxelVK 3D World Generation Demo</h1>
-    <h2>Generated Procedural World - Top View</h2>
-    
-    <div class="legend">
-        <strong>Legend:</strong> 
-        <span style="color: #666;">. = Air/Water</span> | 
-        <span style="color: #888;"># = Stone</span> | 
-        <span style="color: #0f0;">^ = Grass</span> | 
-        <span style="color: #0ff;">~ = Water</span> | 
-        <span style="color: #f80;">T = Tree</span>
+  <h1>🌍 VoxelVK World Viewer</h1>
+  <div class=\"subtitle\">Interactive top-down map with zoom</div>
+  <div class=\"panel\">
+    <div class=\"controls\">
+      <label>Zoom
+        <input id=\"zoom\" type=\"range\" min=\"4\" max=\"16\" step=\"1\" value=\"8\" />
+      </label>
     </div>
-    
-    <div class="world-container">
-        <div class="world-map">)";
+    <div class=\"canvas-wrap\">
+      <canvas id=\"mapCanvas\" width=\"256\" height=\"256\"></canvas>
+    </div>
+    <div class=\"legend\">
+      <span class=\"sw\" style=\"background:#111\"></span> Air
+      <span class=\"sw\" style=\"background:#888\"></span> Stone
+      <span class=\"sw\" style=\"background:#3ddc84\"></span> Grass
+      <span class=\"sw\" style=\"background:#3ec0ff\"></span> Water
+      <span class=\"sw\" style=\"background:#e88020\"></span> Tree
+    </div>
+  </div>
+  <script>\n)";
 
-    // Generate the map
-    for (int z = 0; z < world.depth; z += 2) {
-        for (int x = 0; x < world.width; x += 2) {
-            char symbol = '.';
-            std::string color = "#666";
-            
-            // Find highest non-air voxel
-            for (int y = world.height - 1; y >= 0; y--) {
+    // Emit compact map data: top-down type per (x,z). 0=Air,1=Stone,2=Grass,3=Water,4=Tree
+    file << "const MAPW = " << world.width << ";\n";
+    file << "const MAPH = " << world.depth << ";\n";
+    file << "const MAP = [\n";
+    for (int z = 0; z < world.depth; ++z) {
+        file << "  ";
+        for (int x = 0; x < world.width; ++x) {
+            int code = 0; // default Air
+            int topY = -1;
+            for (int y = world.height - 1; y >= 0; --y) {
                 VoxelType::Type type = world.voxels[x][y][z].type;
                 if (type != VoxelType::AIR) {
                     switch (type) {
-                        case VoxelType::STONE: symbol = '#'; color = "#888"; break;
-                        case VoxelType::GRASS: symbol = '^'; color = "#0f0"; break;
-                        case VoxelType::WATER: symbol = '~'; color = "#0ff"; break;
-                        case VoxelType::TREE: symbol = 'T'; color = "#f80"; break;
-                        default: symbol = '.'; color = "#666"; break;
+                        case VoxelType::STONE: code = 1; break;
+                        case VoxelType::GRASS: code = 2; break;
+                        case VoxelType::WATER: code = 3; break;
+                        case VoxelType::TREE:  code = 4; break;
+                        default: code = 0; break;
                     }
+                    topY = y;
                     break;
                 }
             }
-            file << "<span style=\"color:" << color << "\">" << symbol << "</span>";
+            file << code;
+            if (!(z == world.depth - 1 && x == world.width - 1)) file << ",";
         }
         file << "\n";
     }
-    
-    file << R"(        </div>
-    </div>
-    
-    <div class="stats">
-        <h2>World Statistics</h2>)";
-    
-    // Calculate statistics
-    int counts[5] = {0};
-    for (int x = 0; x < world.width; x++) {
-        for (int y = 0; y < world.height; y++) {
-            for (int z = 0; z < world.depth; z++) {
-                counts[world.voxels[x][y][z].type]++;
+    file << "];\n";
+
+    // Emit elevation (0..255) based on top voxel height for shading
+    file << "const ELEV = [\n";
+    for (int z = 0; z < world.depth; ++z) {
+        file << "  ";
+        for (int x = 0; x < world.width; ++x) {
+            int topY = 0;
+            for (int y = world.height - 1; y >= 0; --y) {
+                if (world.voxels[x][y][z].type != VoxelType::AIR) { topY = y; break; }
             }
+            int elev = static_cast<int>(std::round(255.0 * (double(topY) / std::max(1, world.height - 1))));
+            if (elev < 0) elev = 0; if (elev > 255) elev = 255;
+            file << elev;
+            if (!(z == world.depth - 1 && x == world.width - 1)) file << ",";
         }
+        file << "\n";
     }
-    
-    file << "<p><strong>World Size:</strong> " << world.width << " × " << world.height << " × " << world.depth << " voxels</p>\n";
-    file << "<p><strong>Air Voxels:</strong> " << counts[VoxelType::AIR] << "</p>\n";
-    file << "<p><strong>Stone Voxels:</strong> " << counts[VoxelType::STONE] << "</p>\n";
-    file << "<p><strong>Grass Voxels:</strong> " << counts[VoxelType::GRASS] << "</p>\n";
-    file << "<p><strong>Water Voxels:</strong> " << counts[VoxelType::WATER] << "</p>\n";
-    file << "<p><strong>Tree Voxels:</strong> " << counts[VoxelType::TREE] << "</p>\n";
-    file << "<p><strong>Total Voxels:</strong> " << world.width * world.height * world.depth << "</p>\n";
-    
-    file << R"(    </div>
-    
-    <div style="text-align: center; margin-top: 30px; color: #888;">
-        <p>Generated by VoxelVK 3D World Generation Engine</p>
-        <p>Procedural terrain with Perlin noise, biomes, and object placement</p>
-    </div>
-</body>
-</html>)";
+    file << "];\n";
+
+    // Viewer script
+    file << R"(const COLORS = ["#111","#888","#3ddc84","#3ec0ff","#e88020"];
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+const zoom = document.getElementById('zoom');
+
+let offsetX = 0;
+let offsetY = 0;
+let isDragging = false;
+let lastX = 0;
+let lastY = 0;
+
+function render() {
+  const scale = parseInt(zoom.value, 10);
+  canvas.width = Math.min(MAPW * scale, 1024);
+  canvas.height = Math.min(MAPH * scale, 1024);
+  ctx.imageSmoothingEnabled = false;
+
+  // Clear
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#0a0c10';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Apply pan offset
+  ctx.setTransform(1, 0, 0, 1, offsetX, offsetY);
+
+  // Draw tiles
+  const scaleVal = parseInt(zoom.value, 10);
+  let i = 0;
+  for (let y = 0; y < MAPH; y++) {
+    for (let x = 0; x < MAPW; x++) {
+      const v = MAP[i];
+      const h = ELEV[i] / 255; // 0..1
+      i++;
+      // Shade color by elevation (higher = brighter)
+      const base = COLORS[v];
+      const shade = 0.4 + 0.6 * h; // 0.4..1.0
+      const r = parseInt(base.slice(1,3),16);
+      const g = parseInt(base.slice(3,5),16);
+      const b = parseInt(base.slice(5,7),16);
+      const rr = Math.min(255, Math.round(r * shade));
+      const gg = Math.min(255, Math.round(g * shade));
+      const bb = Math.min(255, Math.round(b * shade));
+      ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
+      ctx.fillRect(x * scaleVal, y * scaleVal, scaleVal, scaleVal);
+    }
+  }
+}
+
+function clampOffsets() {
+  const scaleVal = parseInt(zoom.value, 10);
+  const maxX = 0;
+  const maxY = 0;
+  const minX = canvas.width - MAPW * scaleVal;
+  const minY = canvas.height - MAPH * scaleVal;
+  offsetX = Math.min(maxX, Math.max(minX, offsetX));
+  offsetY = Math.min(maxY, Math.max(minY, offsetY));
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  canvas.style.cursor = 'grabbing';
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  offsetX += dx;
+  offsetY += dy;
+  clampOffsets();
+  render();
+});
+
+['mouseup','mouseleave'].forEach(type => canvas.addEventListener(type, () => {
+  isDragging = false;
+  canvas.style.cursor = 'grab';
+}));
+
+zoom.addEventListener('input', () => { clampOffsets(); render(); });
+render();
+)";
+    file << R"(
+</script>
+)";
+    file << "</body>\n</html>\n";
 }
 
 int main() {
@@ -233,6 +371,9 @@ int main() {
     
     std::cout << "Creating HTML viewer...\n";
     generateHTMLViewer(world, "world_viewer.html");
+
+    std::cout << "Exporting 3D surface JSON...\n";
+    generateSurfaceJSON(world, "world_surface.json");
     
     std::cout << "\n✅ World generation complete!\n";
     std::cout << "📄 View ASCII map: cat world_map.txt\n";

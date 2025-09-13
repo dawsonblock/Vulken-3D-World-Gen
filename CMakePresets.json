@@ -195,6 +195,50 @@
       }
     },
     {
+      "name": "macos-default",
+      "displayName": "macOS Default Build",
+      "description": "Default configuration on macOS with GUI extras (MoltenVK)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-macos",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ENABLE_IMGUI_OVERLAY": true,
+        "ENABLE_VALIDATION_LAYERS": true,
+        "ENABLE_VK_DEBUG_MARKERS": true,
+        "ENABLE_TESTS": true,
+        "BUILD_EXTRAS": true,
+        "VOXELVK_DEMO_WERROR": false,
+        "VOXELVK_ENABLE_CUDA": false,
+        "VOXELVK_ENABLE_TENSORRT": false,
+        "VCPKG_TARGET_TRIPLET": "x64-osx",
+        "VCPKG_HOST_TRIPLET": "x64-osx",
+        "VCPKG_VERBOSE": true
+      }
+    },
+    {
+      "name": "macos-debug",
+      "displayName": "macOS Debug Build",
+      "description": "Debug configuration on macOS with GUI extras (MoltenVK)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-macos-debug",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_IMGUI_OVERLAY": true,
+        "ENABLE_VALIDATION_LAYERS": true,
+        "ENABLE_VK_DEBUG_MARKERS": true,
+        "ENABLE_TESTS": true,
+        "BUILD_EXTRAS": true,
+        "VOXELVK_DEMO_WERROR": false,
+        "VOXELVK_ENABLE_CUDA": false,
+        "VOXELVK_ENABLE_TENSORRT": false,
+        "VCPKG_TARGET_TRIPLET": "x64-osx",
+        "VCPKG_HOST_TRIPLET": "x64-osx",
+        "VCPKG_VERBOSE": true
+      }
+    },
+    {
       "name": "ci-linux",
       "inherits": "default",
       "binaryDir": "build/ci-linux",
@@ -217,15 +261,17 @@
   ],
   "buildPresets": [
     { "name": "default", "configurePreset": "default" },
-  { "name": "werror-demos-rl", "configurePreset": "werror-demos-rl" },
+    { "name": "werror-demos-rl", "configurePreset": "werror-demos-rl" },
     { "name": "debug",   "configurePreset": "debug"   },
     { "name": "release", "configurePreset": "release" },
     { "name": "headless", "configurePreset": "headless" },
     { "name": "headless-prod", "configurePreset": "headless-prod" },
     { "name": "windows-default", "configurePreset": "windows-default" },
     { "name": "windows-debug", "configurePreset": "windows-debug" },
-    {"name": "build-ci-linux", "configurePreset": "ci-linux"},
-    {"name": "build-ci-windows", "configurePreset": "ci-windows"}
+    { "name": "macos-default", "configurePreset": "macos-default" },
+    { "name": "macos-debug", "configurePreset": "macos-debug" },
+    { "name": "build-ci-linux", "configurePreset": "ci-linux"},
+    { "name": "build-ci-windows", "configurePreset": "ci-windows"}
   ],
   "testPresets": [
     { "name": "default", "configurePreset": "default", "output": {"outputOnFailure": true} },
@@ -236,6 +282,8 @@
     { "name": "headless", "configurePreset": "headless", "output": {"outputOnFailure": true} },
     { "name": "windows-default", "configurePreset": "windows-default", "output": {"outputOnFailure": true} },
     { "name": "windows-debug", "configurePreset": "windows-debug", "output": {"outputOnFailure": true} },
+    { "name": "macos-default", "configurePreset": "macos-default", "output": {"outputOnFailure": true} },
+    { "name": "macos-debug", "configurePreset": "macos-debug", "output": {"outputOnFailure": true} },
     {"name": "test-ci-linux", "configurePreset": "ci-linux"},
     {"name": "test-ci-windows", "configurePreset": "ci-windows"}
   ]
