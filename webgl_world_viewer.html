@@ -21,6 +21,12 @@
     .hint { color: var(--muted); font-size: 12px; }
     #app { position: absolute; inset: 0; }
     canvas { display: block; }
+    .hud {
+      position: fixed; left: 12px; bottom: 12px; min-width: 220px;
+      background: rgba(11,13,18,0.85); border: 1px solid #1f2937;
+      border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--muted);
+    }
+    .hud strong { color: var(--fg); }
   </style>
 </head>
 <body>
@@ -31,10 +37,19 @@
       <input id="heightScale" type="range" min="0.2" max="5" step="0.1" value="1.5" />
       <span id="heightScaleVal" class="hint">1.5×</span>
     </div>
+    <div class="row">
+      <label><input id="toggleFog" type="checkbox" checked /> Fog</label>
+      <label><input id="toggleGrid" type="checkbox" checked /> Grid</label>
+      <label><input id="toggleWater" type="checkbox" checked /> Water</label>
+    </div>
+    <div class="row">
+      <button id="resetCamera" title="Frame terrain">Reset Camera</button>
+    </div>
     <div class="spacer"></div>
     <div class="row hint">Drag = Orbit • Shift+Drag = Pan • Wheel/Pinch = Zoom</div>
   </div>
   <div id="app"></div>
+  <div id="hud" class="hud">Click terrain to inspect</div>
 
   <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.159/build/three.module.js';
@@ -43,6 +58,10 @@
     const app = document.getElementById('app');
     const heightScaleEl = document.getElementById('heightScale');
     const heightScaleVal = document.getElementById('heightScaleVal');
+    const toggleFogEl = document.getElementById('toggleFog');
+    const toggleGridEl = document.getElementById('toggleGrid');
+    const toggleWaterEl = document.getElementById('toggleWater');
+    const resetCameraEl = document.getElementById('resetCamera');
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -52,6 +71,8 @@
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#0b0d12');
+    const defaultFog = new THREE.Fog(scene.background, 120, 800);
+    scene.fog = defaultFog;
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
     camera.position.set(120, 140, 120);
@@ -63,10 +84,11 @@
     controls.screenSpacePanning = true;
 
     // Lights
-    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
-    scene.add(ambient);
+    const hemi = new THREE.HemisphereLight(0xddeeff, 0x223344, 0.6);
+    scene.add(hemi);
     const dir = new THREE.DirectionalLight(0xffffff, 0.9);
     dir.position.set(200, 400, 200);
+    dir.castShadow = false;
     scene.add(dir);
 
     // Ground grid (optional)
@@ -83,82 +105,232 @@
       new THREE.Color('#e88020'), // Tree
     ];
 
-    function buildMesh(data, heightScale) {
+    // Terrain building with chunking and water overlay
+    const TILE = 64; // chunk size
+    let terrainChunks = [];
+    let waterMesh = null;
+    let waterUniforms = null;
+    let worldData = null;
+    let lastMinH = 0, lastHRange = 1;
+
+    function buildTerrain(data, heightScale) {
       const W = data.width;
       const D = data.depth;
-      const heights = data.heights; // length W*D implied by our writer (flat lines with commas)
+      const heights = data.heights;
       const types = data.types;
 
-      // Build geometry as a grid on XZ plane with Y as up
-      const nx = W; // vertices along x
-      const nz = D; // vertices along z
-      const geom = new THREE.BufferGeometry();
-
-      const positions = new Float32Array(nx * nz * 3);
-      const colors = new Float32Array(nx * nz * 3);
-      const indices = new Uint32Array((nx - 1) * (nz - 1) * 6);
-
-      let minH = 1e9, maxH = -1e9;
-      // First pass find min/max height (for potential shading)
-      for (let zi = 0; zi < nz; zi++) {
-        for (let xi = 0; xi < nx; xi++) {
-          const idx = zi * nx + xi;
-          const h = heights[idx] || 0;
-          if (h < minH) minH = h;
-          if (h > maxH) maxH = h;
-        }
+      // Compute min/max height
+      let minH = Infinity, maxH = -Infinity;
+      for (let i = 0; i < heights.length; i++) {
+        const h = heights[i] || 0;
+        if (h < minH) minH = h;
+        if (h > maxH) maxH = h;
       }
       const hRange = Math.max(1, maxH - minH);
 
-      // Fill vertex data
-      let p = 0, c = 0;
-      for (let zi = 0; zi < nz; zi++) {
-        for (let xi = 0; xi < nx; xi++) {
-          const idx = zi * nx + xi;
-          const h = heights[idx] || 0;
-          const t = types[idx] || 0;
-          const y = (h - minH) / hRange * 50 * heightScale; // scale elevation
+      // Helper to compute world-space Y from height sample
+      const hToY = (h) => ((h - minH) / hRange) * 50 * heightScale;
 
-          positions[p++] = xi;   // x
-          positions[p++] = y;    // y (up)
-          positions[p++] = zi;   // z
+      // Build chunk meshes
+      const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0.0, side: THREE.DoubleSide });
+      const halfX = (W - 1) / 2;
+      const halfZ = (D - 1) / 2;
+      const chunks = [];
 
-          const base = COLORS[t] || COLORS[0];
-          const shade = 0.5 + 0.5 * (h - minH) / hRange; // slight elevation shading
-          colors[c++] = Math.min(1, base.r * shade);
-          colors[c++] = Math.min(1, base.g * shade);
-          colors[c++] = Math.min(1, base.b * shade);
+      for (let z0 = 0; z0 < D; z0 += TILE) {
+        for (let x0 = 0; x0 < W; x0 += TILE) {
+          const cw = Math.min(TILE, W - x0);
+          const cd = Math.min(TILE, D - z0);
+
+          const positions = new Float32Array(cw * cd * 3);
+          const indices = new Uint32Array((cw - 1) * (cd - 1) * 6);
+          const hbuf = new Float32Array(cw * cd);
+          const tbuf = new Uint8Array(cw * cd);
+
+          let p = 0;
+          for (let lz = 0; lz < cd; lz++) {
+            for (let lx = 0; lx < cw; lx++) {
+              const gx = x0 + lx;
+              const gz = z0 + lz;
+              const idx = gz * W + gx;
+              const h = heights[idx] || 0;
+              const t = types[idx] || 0;
+              const y = hToY(h);
+
+              const wx = gx - halfX;
+              const wz = gz - halfZ;
+              positions[p++] = wx;
+              positions[p++] = y;
+              positions[p++] = wz;
+
+              const vi = lz * cw + lx;
+              hbuf[vi] = h;
+              tbuf[vi] = t;
+            }
+          }
+
+          let k = 0;
+          for (let lz = 0; lz < cd - 1; lz++) {
+            for (let lx = 0; lx < cw - 1; lx++) {
+              const a = lz * cw + lx;
+              const b = lz * cw + (lx + 1);
+              const c1 = (lz + 1) * cw + lx;
+              const d = (lz + 1) * cw + (lx + 1);
+              indices[k++] = a; indices[k++] = c1; indices[k++] = b;
+              indices[k++] = b; indices[k++] = c1; indices[k++] = d;
+            }
+          }
+
+          const geom = new THREE.BufferGeometry();
+          geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          geom.setIndex(new THREE.BufferAttribute(indices, 1));
+          geom.computeVertexNormals();
+          // Compute colors after normals for slope-based blending and subtle noise
+          const normals = geom.getAttribute('normal');
+          const colors = new Float32Array(cw * cd * 3);
+          const smoothstep = (a,b,x) => {
+            const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+            return t * t * (3 - 2 * t);
+          };
+          let cptr = 0;
+          for (let vi = 0; vi < cw * cd; vi++) {
+            const ny = Math.max(0, Math.min(1, normals.getY(vi)));
+            const slope = 1.0 - ny; // 0 flat, 1 steep
+            const t = tbuf[vi] | 0;
+            const h = hbuf[vi];
+            // base colors
+            let col = COLORS[t] || COLORS[0];
+            // Blend grass->stone on steep slopes
+            if (t === 2 /* GRASS */ || t === 1 /* STONE */) {
+              const g = COLORS[2];
+              const s = COLORS[1];
+              const w = smoothstep(0.25, 0.9, slope);
+              col = new THREE.Color(
+                g.r * (1 - w) + s.r * w,
+                g.g * (1 - w) + s.g * w,
+                g.b * (1 - w) + s.b * w
+              );
+            }
+            // Subtle color noise by world position proxy via height value
+            const n = 0.06 * Math.sin(h * 0.35) + 0.04 * Math.cos(h * 0.21);
+            colors[cptr++] = Math.min(1, Math.max(0, col.r + n));
+            colors[cptr++] = Math.min(1, Math.max(0, col.g + n));
+            colors[cptr++] = Math.min(1, Math.max(0, col.b + n));
+          }
+          geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+          geom.computeBoundingSphere();
+
+          const mesh = new THREE.Mesh(geom, mat);
+          mesh.receiveShadow = true;
+          mesh.castShadow = false;
+          chunks.push(mesh);
         }
       }
 
-      // Indices (two triangles per cell)
-      let k = 0;
-      for (let zi = 0; zi < nz - 1; zi++) {
-        for (let xi = 0; xi < nx - 1; xi++) {
-          const a = zi * nx + xi;
-          const b = zi * nx + (xi + 1);
-          const c1 = (zi + 1) * nx + xi;
-          const d = (zi + 1) * nx + (xi + 1);
-          indices[k++] = a; indices[k++] = c1; indices[k++] = b;
-          indices[k++] = b; indices[k++] = c1; indices[k++] = d;
+      // Build water overlay as instanced quads
+      const waterPositions = [];
+      for (let gz = 0; gz < D; gz++) {
+        for (let gx = 0; gx < W; gx++) {
+          const i = gz * W + gx;
+          if (types[i] === 3) { // Water
+            const y = hToY(heights[i]) + 0.02; // slight offset to avoid z-fight
+            waterPositions.push(gx - halfX, y, gz - halfZ);
+          }
+        }
+      }
+      let waterIMesh = null;
+      if (waterPositions.length > 0) {
+        const count = waterPositions.length / 3;
+        const plane = new THREE.PlaneGeometry(1, 1);
+        const wmat = new THREE.MeshPhysicalMaterial({
+          color: COLORS[3], transparent: true, opacity: 0.45,
+          roughness: 0.2, metalness: 0.0, reflectivity: 0.5, side: THREE.DoubleSide,
+        });
+        // Inject simple ripple displacement via shader uniform time
+        wmat.onBeforeCompile = (shader) => {
+          shader.uniforms.uTime = { value: 0 };
+          waterUniforms = shader.uniforms;
+          shader.vertexShader = shader.vertexShader.replace(
+            '#include <begin_vertex>',
+            `#include <begin_vertex>\ntransformed.z += 0.05 * sin(2.5 * position.x + uTime*1.2) * cos(2.0 * position.y + uTime*0.8);`
+          );
+        };
+        waterIMesh = new THREE.InstancedMesh(plane, wmat, count);
+        const m4 = new THREE.Matrix4();
+        const q = new THREE.Quaternion();
+        q.setFromAxisAngle(new THREE.Vector3(1,0,0), -Math.PI/2);
+        for (let i = 0; i < count; i++) {
+          const x = waterPositions[i*3+0];
+          const y = waterPositions[i*3+1];
+          const z = waterPositions[i*3+2];
+          m4.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(1,1,1));
+          waterIMesh.setMatrixAt(i, m4);
         }
       }
 
-      geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      geom.setIndex(new THREE.BufferAttribute(indices, 1));
-      geom.computeVertexNormals();
-
-      // Center mesh around origin
-      geom.translate(-(nx - 1) / 2, 0, -(nz - 1) / 2);
-
-      const mat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
-      const mesh = new THREE.Mesh(geom, mat);
-      mesh.receiveShadow = true; mesh.castShadow = true;
-      return mesh;
+      return { chunks, water: waterIMesh, minH, maxH, hRange };
     }
 
-    let terrainMesh = null;
+    function clearTerrain() {
+      for (const m of terrainChunks) { scene.remove(m); m.geometry.dispose(); }
+      terrainChunks = [];
+      if (waterMesh) { scene.remove(waterMesh); waterMesh.geometry.dispose(); waterMesh = null; }
+    }
+
+    function rebuildTerrain(scale) {
+      clearTerrain();
+      const built = buildTerrain(worldData, scale);
+      lastMinH = built.minH; lastHRange = built.hRange;
+      terrainChunks = built.chunks;
+      for (const m of terrainChunks) scene.add(m);
+      waterMesh = built.water; if (waterMesh) scene.add(waterMesh);
+      applyToggles();
+    }
+
+    // Raycaster for click-to-inspect
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const hud = document.getElementById('hud');
+    // Selection marker
+    const marker = new THREE.Mesh(
+      new THREE.SphereGeometry(0.35, 16, 16),
+      new THREE.MeshBasicMaterial({ color: '#ffffff' })
+    );
+    marker.visible = false;
+    scene.add(marker);
+
+    function inspectAt(x, y) {
+      mouse.x = (x / renderer.domElement.clientWidth) * 2 - 1;
+      mouse.y = -(y / renderer.domElement.clientHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const targets = [...terrainChunks];
+      if (waterMesh) targets.push(waterMesh);
+      const hits = raycaster.intersectObjects(targets, false);
+      if (!hits.length) return;
+      const pt = hits[0].point;
+      // Map world x,z -> grid
+      const gx = Math.round(pt.x + (worldData.width - 1) / 2);
+      const gz = Math.round(pt.z + (worldData.depth - 1) / 2);
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+      const X = clamp(gx, 0, worldData.width - 1);
+      const Z = clamp(gz, 0, worldData.depth - 1);
+      const idx = Z * worldData.width + X;
+      const h = worldData.heights[idx];
+      const t = worldData.types[idx];
+      const names = ['Air','Stone','Grass','Water','Tree'];
+      hud.innerHTML = `<strong>Inspect</strong><br/>x: ${X}, z: ${Z}<br/>height: ${h}<br/>type: ${names[t]||'Unknown'}`;
+
+      const scale = parseFloat(heightScaleEl.value);
+      const yWorld = ((h - lastMinH) / Math.max(1, lastHRange)) * 50 * scale + 0.35;
+      const halfX = (worldData.width - 1) / 2;
+      const halfZ = (worldData.depth - 1) / 2;
+      marker.position.set(X - halfX, yWorld, Z - halfZ);
+      marker.visible = true;
+    }
+
+    renderer.domElement.addEventListener('click', (e) => {
+      inspectAt(e.offsetX, e.offsetY);
+    });
 
     async function load() {
       const res = await fetch('world_surface.json', { cache: 'no-store' });
@@ -168,12 +340,12 @@
       data.heights = data.heights; // already flat by writer
       data.types = data.types;
 
-      // Initial mesh
-      terrainMesh = buildMesh(data, parseFloat(heightScaleEl.value));
-      scene.add(terrainMesh);
+      worldData = data;
+      rebuildTerrain(parseFloat(heightScaleEl.value));
 
       // Frame camera to mesh
-      const box = new THREE.Box3().setFromObject(terrainMesh);
+      const box = new THREE.Box3();
+      for (const m of terrainChunks) box.expandByObject(m);
       const size = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
       controls.target.copy(center);
@@ -183,14 +355,34 @@
 
     heightScaleEl.addEventListener('input', () => {
       heightScaleVal.textContent = `${parseFloat(heightScaleEl.value).toFixed(1)}×`;
-      if (!terrainMesh) return;
-      // Rebuild geometry with new height scale
-      const geom = terrainMesh.geometry;
-      const pos = geom.getAttribute('position');
-      // We can't recompute without the original heights, so reload JSON and rebuild
-      scene.remove(terrainMesh);
-      load().catch(err => console.error(err));
+      if (!worldData) return;
+      rebuildTerrain(parseFloat(heightScaleEl.value));
     });
+
+    function frameCameraToTerrain() {
+      const box = new THREE.Box3();
+      for (const m of terrainChunks) box.expandByObject(m);
+      if (waterMesh) box.expandByObject(waterMesh);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      controls.target.copy(center);
+      camera.position.set(center.x + size.x * 0.8, size.y * 1.6 + 40, center.z + size.z * 0.8);
+      controls.update();
+    }
+
+    function applyToggles() {
+      // Fog
+      scene.fog = toggleFogEl.checked ? defaultFog : null;
+      // Grid
+      grid.visible = toggleGridEl.checked;
+      // Water
+      if (waterMesh) waterMesh.visible = toggleWaterEl.checked;
+    }
+
+    toggleFogEl.addEventListener('change', applyToggles);
+    toggleGridEl.addEventListener('change', applyToggles);
+    toggleWaterEl.addEventListener('change', applyToggles);
+    resetCameraEl.addEventListener('click', frameCameraToTerrain);
 
     // Resize
     window.addEventListener('resize', () => {
@@ -202,6 +394,7 @@
     // Main loop
     renderer.setAnimationLoop(() => {
       controls.update();
+      if (waterUniforms) waterUniforms.uTime.value = performance.now() / 1000;
       renderer.render(scene, camera);
     });
 
