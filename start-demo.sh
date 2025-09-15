@@ -43,10 +43,10 @@ start_node() {
   grep -qE '"next"' package.json 2>/dev/null && open_when_ready "http://localhost:3000"
   grep -qE '"react-scripts"' package.json 2>/dev/null && open_when_ready "http://localhost:3000"
 
-  if grep -qE '"dev"\s*:' package.json; then
+  if grep -qE '"dev"[[:space:]]*:' package.json; then
     log "Running: npm run dev"
     exec npm run dev
-  elif grep -qE '"start"\s*:' package.json; then
+  elif grep -qE '"start"[[:space:]]*:' package.json; then
     log "Running: npm start"
     exec npm start
   elif grep -qE '"vite"' package.json; then

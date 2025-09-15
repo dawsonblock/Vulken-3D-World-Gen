@@ -29,7 +29,42 @@ done
 
 if [[ ! -x "$BIN" ]]; then
   echo "Binary not found, building..."
-  "$PROJECT_ROOT/scripts/build.sh"
+  if [[ -x "$PROJECT_ROOT/scripts/build.sh" ]]; then
+    # build.sh uses CMake presets (logs show Generator: Ninja); ensure no cache conflict
+    if [[ -f "$PROJECT_ROOT/build/CMakeCache.txt" ]]; then
+      cache_gen="$(awk -F= '/^CMAKE_GENERATOR:/{print $2; exit}' "$PROJECT_ROOT/build/CMakeCache.txt" || true)"
+      if [[ -n "${cache_gen:-}" && "$cache_gen" != "Ninja" ]]; then
+        echo "Clearing build directory due to generator mismatch ($cache_gen != Ninja)"
+        rm -rf "$PROJECT_ROOT/build"
+      fi
+    fi
+    "$PROJECT_ROOT/scripts/build.sh"
+  else
+    # Fallback: keep or choose a compatible generator, and clean if mismatched
+    desired_gen=""
+    if [[ -f "$PROJECT_ROOT/build/CMakeCache.txt" ]]; then
+      desired_gen="$(awk -F= '/^CMAKE_GENERATOR:/{print $2; exit}' "$PROJECT_ROOT/build/CMakeCache.txt" || true)"
+    fi
+    if [[ -z "$desired_gen" ]]; then
+      if command -v ninja >/dev/null 2>&1; then desired_gen="Ninja"; else desired_gen="Unix Makefiles"; fi
+    fi
+    if [[ -f "$PROJECT_ROOT/build/CMakeCache.txt" ]]; then
+      cache_gen="$(awk -F= '/^CMAKE_GENERATOR:/{print $2; exit}' "$PROJECT_ROOT/build/CMakeCache.txt" || true)"
+      if [[ -n "${cache_gen:-}" && "$cache_gen" != "$desired_gen" ]]; then
+        echo "Clearing build directory due to generator mismatch ($cache_gen != $desired_gen)"
+        rm -rf "$PROJECT_ROOT/build"
+      fi
+    fi
+    cmake -S "$PROJECT_ROOT" -B "$PROJECT_ROOT/build" -G "$desired_gen"
+    cmake --build "$PROJECT_ROOT/build" -j"$(nproc 2>/dev/null || echo 4)"
+  fi
+fi
+
+# Verify binary after build
+if [[ ! -x "$BIN" ]]; then
+  echo "Error: build finished but binary missing: $BIN"
+  echo "Tip: run with: bash scripts/run.sh --headless"
+  exit 1
 fi
 
 if [[ -n "$SAVE_VIEW" ]]; then
