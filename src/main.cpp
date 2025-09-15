@@ -118,10 +118,12 @@ private:
 
     void createInstance() {
         bool enableValidation = isValidationEnabled();
+#ifndef NDEBUG
         if (enableValidation && !checkValidationLayerSupport()) {
             std::cerr << "Warning: Validation layers requested but not available. Continuing without." << std::endl;
             enableValidation = false;
         }
+#endif
 
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;

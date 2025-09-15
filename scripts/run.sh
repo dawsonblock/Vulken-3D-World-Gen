@@ -44,11 +44,13 @@ if [[ $ALL -eq 1 ]]; then
   echo "Launching Vulkan viewer in background..."
   "$BIN" &
   VK_PID=$!
+  trap 'kill "$VK_PID" >/dev/null 2>&1 || true' EXIT INT TERM
   echo "Generating heightmap and opening Python viewer..."
   python3 "$PROJECT_ROOT/python/worldgen/heightmap.py" --out "$OUT_IMG"
   python3 "$PROJECT_ROOT/python/viewer.py" --image "$OUT_IMG" --hist
   echo "Waiting for Vulkan viewer to exit (pid=$VK_PID)..."
   wait "$VK_PID"
+  trap - EXIT INT TERM
   exit 0
 fi
 

@@ -51,7 +51,7 @@ def perlin_heightmap(w: int, h: int, scale: float = 100.0, octaves: int = 6, per
 
 def save_png(heightmap: np.ndarray, path: str):
     img = (np.clip(heightmap, 0.0, 1.0) * 255.0).astype(np.uint8)
-    Image.fromarray(img, mode="L").save(path)
+    Image.fromarray(img).save(path)
 
 def main():
     ap = argparse.ArgumentParser()

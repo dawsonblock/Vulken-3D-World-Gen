@@ -2,6 +2,9 @@
 #include <chrono>
 #include <functional>
 #include <mutex>
+#include <algorithm>   // std::min, std::max
+#include <limits>      // std::numeric_limits
+#include <utility>     // std::pair
 #include <string>
 #include <unordered_map>
 #include <vector>

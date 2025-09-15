@@ -2,6 +2,10 @@ import argparse
 import os
 from PIL import Image
 import numpy as np
+import matplotlib
+# Use non-interactive backend when no display is available
+if not os.environ.get("DISPLAY") and not os.environ.get("MPLBACKEND"):
+    matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 def main():
@@ -15,8 +19,12 @@ def main():
 
     if not os.path.exists(args.image):
         raise SystemExit(f"Not found: {args.image}")
-    img = Image.open(args.image).convert("L")
-    arr = np.array(img, dtype=np.float32) / 255.0
+    try:
+        with Image.open(args.image) as img:
+            img = img.convert("L")
+            arr = np.array(img, dtype=np.float32) / 255.0
+    except Exception as e:
+        raise SystemExit(f"Failed to read image '{args.image}': {e}")
 
     main_fig = None
     hist_fig = None
@@ -29,7 +37,8 @@ def main():
         X, Y = np.meshgrid(xs, ys)
         fig = plt.figure("Heightmap Surface")
         ax = fig.add_subplot(111, projection="3d")
-        ax.plot_surface(X, Y, arr, cmap=args.cmap, linewidth=0, antialiased=True)
+        surf = ax.plot_surface(X, Y, arr, cmap=args.cmap, linewidth=0, antialiased=True)
+        fig.colorbar(surf, ax=ax, shrink=0.6, label="elevation")
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.set_zlabel("elevation")
@@ -37,7 +46,7 @@ def main():
         main_fig = fig
     else:
         fig = plt.figure("Heightmap Viewer")
-        plt.imshow(arr, cmap=args.cmap)
+        plt.imshow(arr, cmap=args.cmap, extent=[0, 1, 0, 1], origin="upper")
         plt.colorbar(label="elevation")
         plt.axis("off")
         plt.tight_layout()
@@ -53,10 +62,17 @@ def main():
     if args.save:
         base, ext = os.path.splitext(args.save)
         out_main = args.save if ext else f"{args.save}.png"
+        out_dir = os.path.dirname(out_main)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
         main_fig.savefig(out_main, dpi=150)
         if args.hist and hist_fig is not None:
             out_hist = f"{base}_hist{ext or '.png'}"
+            hist_out_dir = os.path.dirname(out_hist)
+            if hist_out_dir:
+                os.makedirs(hist_out_dir, exist_ok=True)
             hist_fig.savefig(out_hist, dpi=150)
+        plt.close("all")
         return
 
     plt.show()
