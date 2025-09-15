@@ -299,6 +299,15 @@
     marker.visible = false;
     scene.add(marker);
 
+    // Ring marker (flat on terrain)
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.6, 0.8, 32),
+      new THREE.MeshBasicMaterial({ color: '#00ff88', transparent: true, opacity: 0.8, side: THREE.DoubleSide })
+    );
+    ring.rotation.x = -Math.PI / 2; // lay flat on XZ
+    ring.visible = false;
+    scene.add(ring);
+
     function inspectAt(x, y) {
       mouse.x = (x / renderer.domElement.clientWidth) * 2 - 1;
       mouse.y = -(y / renderer.domElement.clientHeight) * 2 + 1;
@@ -326,6 +335,8 @@
       const halfZ = (worldData.depth - 1) / 2;
       marker.position.set(X - halfX, yWorld, Z - halfZ);
       marker.visible = true;
+      ring.position.set(X - halfX, yWorld - 0.2, Z - halfZ);
+      ring.visible = true;
     }
 
     renderer.domElement.addEventListener('click', (e) => {
@@ -357,6 +368,32 @@
       heightScaleVal.textContent = `${parseFloat(heightScaleEl.value).toFixed(1)}×`;
       if (!worldData) return;
       rebuildTerrain(parseFloat(heightScaleEl.value));
+    });
+
+    // Keyboard navigation (WASD / Arrow keys) pans camera target relative to view
+    function panBy(dx, dz) {
+      // Compute right and forward vectors in XZ plane from camera
+      const toTarget = new THREE.Vector3().subVectors(controls.target, camera.position).setY(0).normalize();
+      if (toTarget.lengthSq() === 0) toTarget.set(0,0,-1);
+      const right = new THREE.Vector3().crossVectors(toTarget, new THREE.Vector3(0,1,0)).normalize();
+      const move = new THREE.Vector3();
+      move.addScaledVector(right, dx);
+      move.addScaledVector(toTarget, dz);
+      controls.target.add(move);
+      camera.position.add(move);
+      controls.update();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      const fast = e.shiftKey ? 4 : 1;
+      const step = 0.8 * fast;
+      switch (e.key) {
+        case 'ArrowLeft': case 'a': case 'A': panBy(-step, 0); break;
+        case 'ArrowRight': case 'd': case 'D': panBy(step, 0); break;
+        case 'ArrowUp': case 'w': case 'W': panBy(0, -step); break;
+        case 'ArrowDown': case 's': case 'S': panBy(0, step); break;
+        default: break;
+      }
     });
 
     function frameCameraToTerrain() {
