@@ -24,7 +24,8 @@ include(FetchContent)
 FetchContent_Declare(
   tracy
   GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-  GIT_TAG v0.11
+  GIT_TAG v0.11.1
+  GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(tracy)
 

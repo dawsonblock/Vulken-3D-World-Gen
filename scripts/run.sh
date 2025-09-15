@@ -29,32 +29,48 @@ done
 
 if [[ ! -x "$BIN" ]]; then
   echo "Binary not found, building..."
-  if [[ -x "$PROJECT_ROOT/scripts/build.sh" ]]; then
-    # build.sh uses CMake presets (logs show Generator: Ninja); ensure no cache conflict
-    if [[ -f "$PROJECT_ROOT/build/CMakeCache.txt" ]]; then
-      cache_gen="$(awk -F= '/^CMAKE_GENERATOR:/{print $2; exit}' "$PROJECT_ROOT/build/CMakeCache.txt" || true)"
-      if [[ -n "${cache_gen:-}" && "$cache_gen" != "Ninja" ]]; then
-        echo "Clearing build directory due to generator mismatch ($cache_gen != Ninja)"
-        rm -rf "$PROJECT_ROOT/build"
-      fi
+
+  # Clean build dir if cache pins a missing toolchain or mismatched generator
+  if [[ -f "$PROJECT_ROOT/build/CMakeCache.txt" ]]; then
+    cache_gen="$(awk -F= '/^CMAKE_GENERATOR:/{print $2; exit}' "$PROJECT_ROOT/build/CMakeCache.txt" || true)"
+    cache_tc="$(awk -F= '/^CMAKE_TOOLCHAIN_FILE:FILEPATH=/{print $2; exit}' "$PROJECT_ROOT/build/CMakeCache.txt" || true)"
+    if [[ -n "${cache_tc:-}" && ! -f "$cache_tc" ]]; then
+      echo "Clearing build directory due to missing toolchain file ($cache_tc)"
+      rm -rf "$PROJECT_ROOT/build"
     fi
+    if [[ -n "${cache_gen:-}" && "$cache_gen" != "Ninja" && -x "$PROJECT_ROOT/scripts/build.sh" ]]; then
+      echo "Clearing build directory due to generator mismatch ($cache_gen != Ninja)"
+      rm -rf "$PROJECT_ROOT/build"
+    fi
+  fi
+
+  use_presets=0
+  if [[ -x "$PROJECT_ROOT/scripts/build.sh" ]]; then
+    # Only use presets if Ninja is available and the expected toolchain file exists
+    if command -v ninja >/dev/null 2>&1 && [[ -f "/scripts/buildsystems/vcpkg.cmake" ]]; then
+      use_presets=1
+    fi
+  fi
+
+  if [[ $use_presets -eq 1 ]]; then
     "$PROJECT_ROOT/scripts/build.sh"
   else
-    # Fallback: keep or choose a compatible generator, and clean if mismatched
+    # Fallback: select a compatible generator and ensure no cache conflicts
     desired_gen=""
-    if [[ -f "$PROJECT_ROOT/build/CMakeCache.txt" ]]; then
-      desired_gen="$(awk -F= '/^CMAKE_GENERATOR:/{print $2; exit}' "$PROJECT_ROOT/build/CMakeCache.txt" || true)"
-    fi
-    if [[ -z "$desired_gen" ]]; then
-      if command -v ninja >/dev/null 2>&1; then desired_gen="Ninja"; else desired_gen="Unix Makefiles"; fi
-    fi
+    if command -v ninja >/dev/null 2>&1; then desired_gen="Ninja"; else desired_gen="Unix Makefiles"; fi
+
     if [[ -f "$PROJECT_ROOT/build/CMakeCache.txt" ]]; then
       cache_gen="$(awk -F= '/^CMAKE_GENERATOR:/{print $2; exit}' "$PROJECT_ROOT/build/CMakeCache.txt" || true)"
+      cache_tc="$(awk -F= '/^CMAKE_TOOLCHAIN_FILE:FILEPATH=/{print $2; exit}' "$PROJECT_ROOT/build/CMakeCache.txt" || true)"
       if [[ -n "${cache_gen:-}" && "$cache_gen" != "$desired_gen" ]]; then
         echo "Clearing build directory due to generator mismatch ($cache_gen != $desired_gen)"
         rm -rf "$PROJECT_ROOT/build"
+      elif [[ -n "${cache_tc:-}" && ! -f "$cache_tc" ]]; then
+        echo "Clearing build directory due to missing toolchain file ($cache_tc)"
+        rm -rf "$PROJECT_ROOT/build"
       fi
     fi
+
     cmake -S "$PROJECT_ROOT" -B "$PROJECT_ROOT/build" -G "$desired_gen"
     cmake --build "$PROJECT_ROOT/build" -j"$(nproc 2>/dev/null || echo 4)"
   fi
