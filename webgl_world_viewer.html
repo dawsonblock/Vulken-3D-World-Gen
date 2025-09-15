@@ -974,33 +974,33 @@
         const geom = m.geometry;
         const normals = geom.getAttribute('normal');
         const colors = geom.getAttribute('color');
-        const cw = m.userData.cw|0, cd = m.userData.cd|0;
         const hbuf = m.userData.hbuf, tbuf = m.userData.tbuf;
         if (!normals || !colors || !hbuf || !tbuf) continue;
+        // Determine vertex count: supports both static (cw*cd) and streaming LOD (NX*NZ)
+        const cw = (m.userData.cw|0) || (m.userData.NX|0);
+        const cd = (m.userData.cd|0) || (m.userData.NZ|0);
+        const vertCount = cw * cd;
+        if (!vertCount) continue;
         const smoothstep = (a,b,x) => {
           const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
           return t * t * (3 - 2 * t);
         };
-        let cptr = 0;
-        for (let vi = 0; vi < cw * cd; vi++) {
+        for (let vi = 0; vi < vertCount; vi++) {
           const ny = Math.max(0, Math.min(1, normals.getY(vi)));
           const slope = 1.0 - ny;
-          const t = tbuf[vi] | 0;
+          const vt = tbuf[vi] | 0;
           const h = hbuf[vi];
-          let col = COLORS[t] || COLORS[0];
+          let col = COLORS[vt] || COLORS[0];
           if (mode === 'slope') {
-            // Map slope 0..1 to yellow->red
             const w = slope;
             col = new THREE.Color(1.0, 1.0 - 0.6*w, 0.2);
           } else if (mode === 'biomes') {
-            // Stronger type tint; grass greener, stone grayer
-            if (t === 2) col = new THREE.Color('#47e18f');
-            else if (t === 1) col = new THREE.Color('#a0a0a0');
-            else if (t === 3) col = new THREE.Color('#46c8ff');
-            else if (t === 4) col = new THREE.Color('#ffaa44');
+            if (vt === 2) col = new THREE.Color('#47e18f');
+            else if (vt === 1) col = new THREE.Color('#a0a0a0');
+            else if (vt === 3) col = new THREE.Color('#46c8ff');
+            else if (vt === 4) col = new THREE.Color('#ffaa44');
           } else {
-            // default blend grass<->stone on slope
-            if (t === 2 || t === 1) {
+            if (vt === 2 || vt === 1) {
               const g = COLORS[2], s = COLORS[1];
               const w = smoothstep(0.25, 0.9, slope);
               col = new THREE.Color(
