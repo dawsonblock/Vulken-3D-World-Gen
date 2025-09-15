@@ -10,6 +10,7 @@
 *.sln
 /.cache/
 /__pycache__/
+/cmake-build-*/
 
 # Shaders (compiled)
 /shaders_vk/**/*.spv
@@ -31,6 +32,7 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
 # Media and screenshots (not source)
 imgui.ini
