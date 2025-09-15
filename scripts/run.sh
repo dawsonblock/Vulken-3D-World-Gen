@@ -92,6 +92,17 @@ if [[ -n "$SAVE_VIEW" ]]; then
   echo "Saved:"
   echo "  $OUT_IMG"
   echo "  $SAVE_VIEW (and histogram alongside)"
+  # Open in host browser if available
+  if [[ -n "${BROWSER:-}" ]]; then
+    MAIN_ABS="$(realpath "$SAVE_VIEW")"
+    "$BROWSER" "file://$MAIN_ABS" >/dev/null 2>&1 || true
+    BASE="${SAVE_VIEW%.*}"; EXT="${SAVE_VIEW##*.}"; [[ "$EXT" == "$SAVE_VIEW" ]] && EXT="png"
+    HIST_PATH="${BASE}_hist.${EXT}"
+    if [[ -f "$HIST_PATH" ]]; then
+      HIST_ABS="$(realpath "$HIST_PATH")"
+      "$BROWSER" "file://$HIST_ABS" >/dev/null 2>&1 || true
+    fi
+  fi
   exit 0
 fi
 
@@ -114,6 +125,17 @@ if [[ $HEADLESS -eq 1 ]]; then
   echo "Saved:"
   echo "  $OUT_IMG"
   echo "  $VIEW_IMG (and histogram alongside)"
+  # Open in host browser if available
+  if [[ -n "${BROWSER:-}" ]]; then
+    MAIN_ABS="$(realpath "$VIEW_IMG")"
+    "$BROWSER" "file://$MAIN_ABS" >/dev/null 2>&1 || true
+    BASE="${VIEW_IMG%.*}"; EXT="${VIEW_IMG##*.}"; [[ "$EXT" == "$VIEW_IMG" ]] && EXT="png"
+    HIST_PATH="${BASE}_hist.${EXT}"
+    if [[ -f "$HIST_PATH" ]]; then
+      HIST_ABS="$(realpath "$HIST_PATH")"
+      "$BROWSER" "file://$HIST_ABS" >/dev/null 2>&1 || true
+    fi
+  fi
   exit 0
 fi
 

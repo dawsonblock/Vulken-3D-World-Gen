@@ -55,7 +55,6 @@ else()
   target_link_libraries(vulken_viewer PRIVATE PkgConfig::GLFW3)
 endif()
 
-# On Linux/X11 we need pthread and dl occasionally; link if available
 find_package(Threads)
 if (Threads_FOUND)
   target_link_libraries(vulken_viewer PRIVATE Threads::Threads dl)

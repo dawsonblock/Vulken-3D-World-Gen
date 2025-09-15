@@ -1,8 +1,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+// Remove Vulkan part; keep CPU profiling only
 #include <tracy/Tracy.hpp>
-#include <tracy/TracyVulkan.hpp>
 
 #include <cstdlib>
 #include <cstring>
@@ -76,32 +76,6 @@ struct QueueFamilyIndices {
 
 static void glfwErrorCallback(int code, const char* desc) {
     std::cerr << "GLFW error " << code << ": " << (desc ? desc : "") << std::endl;
-}
-
-struct TracyVkState {
-    TracyVkCtx ctx = nullptr;
-};
-
-static TracyVkState g_tracyVk;
-
-void InitTracyVulkan(VkPhysicalDevice phys, VkDevice device, VkQueue queue, uint32_t queueFamilyIndex) {
-    g_tracyVk.ctx = TracyVkContext(phys, device, queue, queueFamilyIndex);
-}
-
-void ShutdownTracyVulkan() {
-    if (g_tracyVk.ctx) {
-        TracyVkDestroy(g_tracyVk.ctx);
-        g_tracyVk.ctx = nullptr;
-    }
-}
-
-void RecordPass(VkCommandBuffer cmd) {
-    ZoneScopedN("RecordPass");
-    TracyVkZone(g_tracyVk.ctx, cmd, "Render Pass", true);
-}
-
-void CollectTracy(VkCommandBuffer cmd) {
-    TracyVkCollect(g_tracyVk.ctx, cmd);
 }
 
 class App {
@@ -296,24 +270,18 @@ private:
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
-
-        // Initialize Tracy Vulkan context
-        InitTracyVulkan(physicalDevice, device, graphicsQueue, findQueueFamilies(physicalDevice).graphicsFamily.value());
     }
 
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
+            ZoneScopedN("MainLoopPoll"); // optional CPU zone
             glfwPollEvents();
-            // No rendering yet; extend here with swapchain + rendering if needed.
         }
         vkDeviceWaitIdle(device);
     }
 
     void cleanup() {
         if (device) vkDeviceWaitIdle(device);
-
-        // Shutdown Tracy Vulkan context
-        ShutdownTracyVulkan();
 
         if (device) vkDestroyDevice(device, nullptr);
         if (surface) vkDestroySurfaceKHR(instance, surface, nullptr);
