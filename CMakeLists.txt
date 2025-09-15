@@ -19,6 +19,15 @@ if (NOT glfw3_FOUND)
   pkg_check_modules(GLFW3 REQUIRED IMPORTED_TARGET glfw3)
 endif()
 
+include(FetchContent)
+
+FetchContent_Declare(
+  tracy
+  GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+  GIT_TAG v0.11
+)
+FetchContent_MakeAvailable(tracy)
+
 add_executable(vulken_viewer
   src/main.cpp
 )
@@ -29,6 +38,14 @@ target_include_directories(vulken_viewer PRIVATE
 
 target_link_libraries(vulken_viewer PRIVATE
   Vulkan::Vulkan
+  TracyClient
+)
+
+target_compile_features(vulken_viewer PRIVATE cxx_std_20)
+
+# Enable Tracy in Debug builds
+target_compile_definitions(vulken_viewer PRIVATE
+  $<$<CONFIG:Debug>:TRACY_ENABLE>
 )
 
 if (glfw3_FOUND)
@@ -40,7 +57,7 @@ endif()
 # On Linux/X11 we need pthread and dl occasionally; link if available
 find_package(Threads)
 if (Threads_FOUND)
-  target_link_libraries(vulken_viewer PRIVATE Threads::Threads)
+  target_link_libraries(vulken_viewer PRIVATE Threads::Threads dl)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
