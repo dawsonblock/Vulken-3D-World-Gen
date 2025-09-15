@@ -12,7 +12,6 @@ mimetypes.add_type('application/javascript', '.js')
 mimetypes.add_type('application/json', '.json')
 
 
-
 class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header(
@@ -22,7 +21,6 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.send_header('Pragma', 'no-cache')
         self.send_header('Expires', '0')
         super().end_headers()
-
 
 
 def main():
@@ -50,7 +48,7 @@ def main():
         except OSError as e:
             # 48 = EADDRINUSE on macOS, 98 on Linux
             if getattr(e, 'errno', None) in (48, 98):
-                print(f"⚠️  Port {port} in use, trying {port + 1}...")
+                print(f"⚠️  Port {port} in use; trying {port + 1}...")
                 port += 1
                 continue
             raise
@@ -59,12 +57,13 @@ def main():
         raise SystemExit("Failed to bind any port after multiple attempts.")
 
     with httpd:
-        print(f"🌐 VoxelVK Demo Server running at http://localhost:{port}")
+        base_url = f"http://localhost:{port}"
+        print(f"🌐 VoxelVK Demo Server running at {base_url}")
         print("📁 Available demos:")
-        print(f"   - http://localhost:{port}/test_viewer.html")
-        print(f"   - http://localhost:{port}/simple_world_demo.html")
-        print(f"   - http://localhost:{port}/world_viewer.html")
-        print(f"   - http://localhost:{port}/webgl_world_viewer.html")
+        print(f"   - {base_url}/test_viewer.html")
+        print(f"   - {base_url}/simple_world_demo.html")
+        print(f"   - {base_url}/world_viewer.html")
+        print(f"   - {base_url}/webgl_world_viewer.html")
         print("🔄 Use Ctrl+C to stop server")
         try:
             httpd.serve_forever()

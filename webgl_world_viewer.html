@@ -217,7 +217,7 @@
       ctx.putImageData(img, 0, 0);
       const tex = new THREE.CanvasTexture(c);
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.colorSpace = THREE.NoColorSpace;
       tex.anisotropy = 4;
       tex.matrixAutoUpdate = true;
       tex.repeat.set(1.5, 1.5);
@@ -603,6 +603,8 @@
             `#include <output_fragment>\nvec3 V = normalize(-vViewPosition);\nfloat fres = pow(1.0 - clamp(dot(normalize(normal), V), 0.0, 1.0), 3.0);\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0), 0.15 * fres);\ngl_FragColor.a = gl_FragColor.a * (0.55 + 0.45 * fres);`
           );
         };
+        wmat.normalMap = WATER_NORM_TEX;
+        wmat.normalScale = new THREE.Vector2(0.7, 0.7);
         waterObj = new THREE.Mesh(waterGeom, wmat);
       } else {
         const count = waterPositions.length / 3;
@@ -616,7 +618,7 @@
           waterUniforms = shader.uniforms;
           shader.vertexShader = shader.vertexShader.replace(
             '#include <begin_vertex>',
-            `#include <begin_vertex>\ntransformed.y += 0.05 * sin(2.5 * position.x + uTime*1.2) * cos(2.0 * position.z + uTime*0.8);\ntransformed.y += 0.05 * sin(2.5 * position.y + uTime*1.2) * cos(2.0 * position.z + uTime*0.8);`
+            `#include <begin_vertex>\ntransformed.y += 0.05 * sin(2.5 * position.x + uTime*1.2) * cos(2.0 * position.z + uTime*0.8);`
           );
           shader.fragmentShader = shader.fragmentShader.replace(
             '#include <output_fragment>',
