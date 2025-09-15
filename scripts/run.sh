@@ -7,14 +7,41 @@ BIN="$PROJECT_ROOT/build/bin/vulken_viewer"
 
 HEADLESS=0
 ALL=0
+SAVE_VIEW=""
+
+# Parse args (supports --save-view <path> or --save-view=path)
+SAVE_VIEW_NEXT=0
 for arg in "$@"; do
-  [[ "$arg" == "--headless" ]] && HEADLESS=1
-  [[ "$arg" == "--all" ]] && ALL=1
+  if [[ $SAVE_VIEW_NEXT -eq 1 ]]; then
+    SAVE_VIEW="$arg"
+    SAVE_VIEW_NEXT=0
+    continue
+  fi
+  case "$arg" in
+    --headless) HEADLESS=1 ;;
+    --all) ALL=1 ;;
+    --save-view) SAVE_VIEW_NEXT=1 ;;
+    --save-view=*)
+      SAVE_VIEW="${arg#--save-view=}"
+      ;;
+  esac
 done
 
 if [[ ! -x "$BIN" ]]; then
   echo "Binary not found, building..."
   "$PROJECT_ROOT/scripts/build.sh"
+fi
+
+if [[ -n "$SAVE_VIEW" ]]; then
+  # Save viewer output (uses Agg backend) and exit
+  OUT_IMG="$PROJECT_ROOT/heightmap.png"
+  echo "Generating heightmap and saving viewer output to: $SAVE_VIEW"
+  python3 "$PROJECT_ROOT/python/worldgen/heightmap.py" --out "$OUT_IMG"
+  MPLBACKEND=Agg python3 "$PROJECT_ROOT/python/viewer.py" --image "$OUT_IMG" --hist --save "$SAVE_VIEW"
+  echo "Saved:"
+  echo "  $OUT_IMG"
+  echo "  $SAVE_VIEW (and histogram alongside)"
+  exit 0
 fi
 
 if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
