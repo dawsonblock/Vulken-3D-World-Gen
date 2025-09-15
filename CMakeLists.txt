@@ -70,3 +70,10 @@ if (ENABLE_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
   include(CTest)
   add_subdirectory(tests)
 endif()
+
+# Convenience target to launch the app
+add_custom_target(run
+  COMMAND "${CMAKE_COMMAND}" -E env BROWSER="$ENV{BROWSER}" bash "${CMAKE_SOURCE_DIR}/scripts/run.sh"
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  USES_TERMINAL
+)
