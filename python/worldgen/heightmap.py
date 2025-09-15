@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 try:
     from noise import pnoise2
-except Exception:
+except ImportError:
     pnoise2 = None
 
 def perlin_heightmap(w: int, h: int, scale: float = 100.0, octaves: int = 6, persistence: float = 0.5, lacunarity: float = 2.0, seed: int = 0):
@@ -19,7 +19,7 @@ def perlin_heightmap(w: int, h: int, scale: float = 100.0, octaves: int = 6, per
         from scipy.ndimage import gaussian_filter  # optional
         try:
             data = gaussian_filter(base, sigma=scale/50.0)
-        except Exception:
+        except ValueError:  # Catch specific scipy-related exceptions
             data = base
     else:
         for y in range(h):

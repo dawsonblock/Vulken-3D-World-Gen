@@ -73,7 +73,7 @@ start_cmake() {
   have cmake || { log "cmake not found"; return 1; }
   mkdir -p build
   cmake -S . -B build
-  cmake --build build -j"$(nproc)"
+  cmake --build build -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
   local bin
   bin="$(find build -type f -perm -111 -exec file {} \; | grep -E 'ELF .* executable' | cut -d: -f1 | head -n1 || true)"
   if [ -n "$bin" ]; then

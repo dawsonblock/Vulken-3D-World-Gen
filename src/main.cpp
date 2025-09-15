@@ -17,7 +17,9 @@ static const uint32_t HEIGHT = 720;
 #ifdef NDEBUG
 static const bool kEnableValidation = false;
 #else
-static bool kEnableValidation = std::getenv("VULKAN_VALIDATION") != nullptr;
+static bool isValidationEnabled() {
+    return std::getenv("VULKAN_VALIDATION") != nullptr;
+}
 #endif
 
 static const std::vector<const char*> kValidationLayers = {
@@ -104,16 +106,17 @@ private:
         if (!exts || count == 0) throw std::runtime_error("GLFW did not return required Vulkan instance extensions");
 
         std::vector<const char*> extensions(exts, exts + count);
-        if (kEnableValidation) {
+        if (isValidationEnabled()) {
             // Add debug utils extension for validation messages
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
         return extensions;
     }
-
-    void createInstance() {
-        if (kEnableValidation && !checkValidationLayerSupport()) {
+        bool enableValidation = kEnableValidation;
+        if (enableValidation && !checkValidationLayerSupport()) {
             std::cerr << "Warning: Validation layers requested but not available. Continuing without." << std::endl;
+            enableValidation = false;
+        }
             kEnableValidation = false;
         }
 
@@ -132,9 +135,7 @@ private:
         ci.pApplicationInfo = &appInfo;
         ci.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         ci.ppEnabledExtensionNames = extensions.data();
-
-        VkDebugUtilsMessengerCreateInfoEXT debugCI{};
-        if (kEnableValidation) {
+        if (enableValidation) {
             ci.enabledLayerCount = static_cast<uint32_t>(kValidationLayers.size());
             ci.ppEnabledLayerNames = kValidationLayers.data();
             populateDebugCreateInfo(debugCI);
@@ -144,17 +145,19 @@ private:
             ci.ppEnabledLayerNames = nullptr;
             ci.pNext = nullptr;
         }
+            ci.pNext = nullptr;
+        }
 
         if (vkCreateInstance(&ci, nullptr, &instance) != VK_SUCCESS) {
             throw std::runtime_error("Failed to create Vulkan instance");
         }
     }
-
-    static PFN_vkCreateDebugUtilsMessengerEXT fpCreateDebug;
+    static PFN_vkCreateDebugUtilsMessengerEXT fpCreateDebug = nullptr;
+    static PFN_vkDestroyDebugUtilsMessengerEXT fpDestroyDebug = nullptr;
     static PFN_vkDestroyDebugUtilsMessengerEXT fpDestroyDebug;
 
     void setupDebugMessenger() {
-        if (!kEnableValidation) return;
+        if (!isValidationEnabled()) return;
         fpCreateDebug = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
             vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
         fpDestroyDebug = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
@@ -283,8 +286,8 @@ private:
     }
 };
 
-PFN_vkCreateDebugUtilsMessengerEXT App::fpCreateDebug = nullptr;
-PFN_vkDestroyDebugUtilsMessengerEXT App::fpDestroyDebug = nullptr;
+PFN_vkCreateDebugUtilsMessengerEXT App::fpCreateDebug = nullptr; // Explicitly initialized to nullptr
+PFN_vkDestroyDebugUtilsMessengerEXT App::fpDestroyDebug = nullptr; // Explicitly initialized to nullptr
 
 int main() {
     try {
