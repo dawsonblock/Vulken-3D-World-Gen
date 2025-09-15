@@ -95,6 +95,7 @@ private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
     VkQueue graphicsQueue = VK_NULL_HANDLE;
+    bool m_validationEnabled = false; // effective state
 
     void initWindow() {
         glfwSetErrorCallback(glfwErrorCallback);
@@ -106,13 +107,13 @@ private:
         if (!window) throw std::runtime_error("Failed to create GLFW window");
     }
 
-    std::vector<const char*> getRequiredExtensions() {
+    std::vector<const char*> getRequiredExtensions(bool enableDebug) {
         uint32_t count = 0;
         const char** exts = glfwGetRequiredInstanceExtensions(&count);
         if (!exts || count == 0) throw std::runtime_error("GLFW did not return required Vulkan instance extensions");
 
         std::vector<const char*> extensions(exts, exts + count);
-        if (isValidationEnabled()) {
+        if (enableDebug) {
             // Add debug utils extension for validation messages
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
@@ -127,6 +128,7 @@ private:
             enableValidation = false;
         }
 #endif
+        m_validationEnabled = enableValidation;
 
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -136,7 +138,7 @@ private:
         appInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
         appInfo.apiVersion = VK_API_VERSION_1_2;
 
-        std::vector<const char*> extensions = getRequiredExtensions();
+        std::vector<const char*> extensions = getRequiredExtensions(m_validationEnabled);
 
         VkInstanceCreateInfo ci{};
         ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -145,7 +147,7 @@ private:
         ci.ppEnabledExtensionNames = extensions.data();
 
         VkDebugUtilsMessengerCreateInfoEXT debugCI{};
-        if (enableValidation) {
+        if (m_validationEnabled) {
             ci.enabledLayerCount = static_cast<uint32_t>(kValidationLayers.size());
             ci.ppEnabledLayerNames = kValidationLayers.data();
             populateDebugCreateInfo(debugCI);
@@ -165,7 +167,7 @@ private:
     static PFN_vkDestroyDebugUtilsMessengerEXT fpDestroyDebug;
 
     void setupDebugMessenger() {
-        if (!isValidationEnabled()) return;
+        if (!m_validationEnabled) return;
         fpCreateDebug = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
             vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
         fpDestroyDebug = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(

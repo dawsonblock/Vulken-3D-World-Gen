@@ -62,7 +62,8 @@ if [[ $NEED_BIN -eq 1 && ! -x "$BIN" ]]; then
 
   use_presets=0
   if [[ -x "$PROJECT_ROOT/scripts/build.sh" ]]; then
-    if command -v ninja >/dev/null 2>&1 && [[ -f "/scripts/buildsystems/vcpkg.cmake" ]]; then
+    # Only use presets if Ninja is available and the expected toolchain file exists
+    if command -v ninja >/dev/null 2>&1 && [[ -f "$PROJECT_ROOT/scripts/buildsystems/vcpkg.cmake" ]]; then
       use_presets=1
     fi
   fi
@@ -86,7 +87,7 @@ if [[ $NEED_BIN -eq 1 && ! -x "$BIN" ]]; then
     fi
 
     cmake -S "$PROJECT_ROOT" -B "$PROJECT_ROOT/build" -G "$desired_gen"
-    cmake --build "$PROJECT_ROOT/build" -j"$(nproc 2>/dev/null || echo 4)"
+    cmake --build "$PROJECT_ROOT/build" -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
   fi
 fi
 

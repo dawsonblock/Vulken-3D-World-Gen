@@ -55,10 +55,15 @@ def save_png(heightmap: np.ndarray, path: str):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--width", type=int, default=512)
-    ap.add_argument("--height", type=int, default=512)
+    def _pos_int(s: str) -> int:
+        v = int(s)
+        if v <= 0:
+            raise argparse.ArgumentTypeError("must be > 0")
+        return v
+    ap.add_argument("--width", type=_pos_int, default=512)
+    ap.add_argument("--height", type=_pos_int, default=512)
     ap.add_argument("--scale", type=float, default=150.0)
-    ap.add_argument("--octaves", type=int, default=6)
+    ap.add_argument("--octaves", type=_pos_int, default=6)
     ap.add_argument("--persistence", type=float, default=0.5)
     ap.add_argument("--lacunarity", type=float, default=2.0)
     ap.add_argument("--seed", type=int, default=0)

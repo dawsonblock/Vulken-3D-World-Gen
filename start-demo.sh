@@ -82,7 +82,7 @@ start_cmake() {
   fi
 
   local bin
-  bin="$(find build -type f -perm -111 -exec file {} \; | grep -E 'ELF .* executable' | cut -d: -f1 | head -n1 || true)"
+  bin="$(find build -type f -perm -111 -exec file {} \; | grep -E 'ELF .* executable|Mach-O .* executable|PE32(\+)? .* executable' | cut -d: -f1 | head -n1 || true)"
   if [ -n "$bin" ]; then
     log "Running: $bin"
     exec "$bin"
@@ -114,6 +114,10 @@ start_python() {
   elif [ -f app.py ]; then
     log "Running: python app.py"
     exec python app.py
+  elif [ -f python/viewer.py ]; then
+    # Repo-specific fallback: run automated viewer pipeline
+    log "Detected repo viewer; delegating to scripts/run.sh --auto"
+    exec bash "$ROOT_DIR/scripts/run.sh" --auto=2
   else
     log "No runnable entry point found (main.py/app.py)."
     exit 1
