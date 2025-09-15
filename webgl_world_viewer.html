@@ -42,6 +42,7 @@
       <label><input id="toggleGrid" type="checkbox" checked /> Grid</label>
       <label><input id="toggleWater" type="checkbox" checked /> Water</label>
       <label><input id="mergedWater" type="checkbox" /> Merged Water</label>
+      <label><input id="toggleStreaming" type="checkbox" /> Streaming</label>
     </div>
     <div class="row">
       <label>Visualization
@@ -75,6 +76,7 @@
     const toggleGridEl = document.getElementById('toggleGrid');
     const toggleWaterEl = document.getElementById('toggleWater');
     const mergedWaterEl = document.getElementById('mergedWater');
+    const toggleStreamingEl = document.getElementById('toggleStreaming');
     const resetCameraEl = document.getElementById('resetCamera');
     const vizModeEl = document.getElementById('vizMode');
     const savePNGEl = document.getElementById('savePNG');
@@ -173,6 +175,56 @@
     const GRASS_TEX = makeProceduralTexture('grass');
     const STONE_TEX = makeProceduralTexture('stone');
 
+    // Procedural normal map for water ripples
+    const WATER_UV_SCALE = 8.0;
+    function makeWaterNormalTexture() {
+      const size = 256;
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const ctx = c.getContext('2d');
+      const img = ctx.createImageData(size, size);
+      const data = img.data;
+      const seed = Math.random() * 1000;
+      // Generate a tileable height field using combined sines
+      function height(x, y) {
+        const nx = (x / size) * Math.PI * 2.0;
+        const ny = (y / size) * Math.PI * 2.0;
+        let h = 0.0;
+        h += 0.6 * Math.sin(2.5 * nx + 1.3 * ny + seed);
+        h += 0.4 * Math.cos(3.7 * nx - 2.1 * ny + seed * 1.3);
+        h += 0.2 * Math.sin(5.1 * nx + 4.2 * ny + seed * 2.1);
+        return h;
+      }
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          // Finite differences for normal
+          const hL = height((x - 1 + size) % size, y);
+          const hR = height((x + 1) % size, y);
+          const hD = height(x, (y - 1 + size) % size);
+          const hU = height(x, (y + 1) % size);
+          const dx = (hR - hL) * 0.5;
+          const dy = (hU - hD) * 0.5;
+          let nx = -dx, ny = -dy, nz = 1.0;
+          const invLen = 1.0 / Math.hypot(nx, ny, nz);
+          nx *= invLen; ny *= invLen; nz *= invLen;
+          const i = (y * size + x) * 4;
+          data[i+0] = Math.round((nx * 0.5 + 0.5) * 255);
+          data[i+1] = Math.round((ny * 0.5 + 0.5) * 255);
+          data[i+2] = Math.round((nz * 0.5 + 0.5) * 255);
+          data[i+3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 4;
+      tex.matrixAutoUpdate = true;
+      tex.repeat.set(1.5, 1.5);
+      return tex;
+    }
+    const WATER_NORM_TEX = makeWaterNormalTexture();
+
     // Lights
     const hemi = new THREE.HemisphereLight(0xddeeff, 0x223344, 0.6);
     scene.add(hemi);
@@ -203,6 +255,18 @@
     let worldData = null;
     let lastMinH = 0, lastHRange = 1;
     let terrainMaterial = null;
+    // Streaming & LOD
+    let streamingEnabled = false; // default off to keep current behavior
+    let chunkMap = new Map(); // key -> { mesh, x0, z0, step }
+    const STREAM_NEAR = 200, STREAM_MID = 500, STREAM_FAR = 900;
+    let currentHeightScale = parseFloat((document.getElementById('heightScale')?.value) || '1.5');
+    let lastStreamCenter = new THREE.Vector3(Infinity, 0, Infinity);
+
+    function stepForDist(d) {
+      if (d < STREAM_NEAR) return 1;
+      if (d < STREAM_MID) return 2;
+      return 4;
+    }
 
     function buildTerrain(data, heightScale) {
       const W = data.width;
@@ -362,7 +426,9 @@
           const waterGeom = new THREE.BufferGeometry();
           const countCells = waterPositions.length / 3;
           const positionsArr = new Float32Array(countCells * 6 * 3); // 2 tris per cell
-          let pi = 0;
+          const uvsArr = new Float32Array(countCells * 6 * 2);
+          const alphas = new Float32Array(countCells * 6);
+          let pi = 0, uvi = 0, ai = 0;
           for (let i = 0; i < countCells; i++) {
             const x = waterPositions[i*3+0];
             const y = waterPositions[i*3+1];
@@ -377,9 +443,34 @@
               x-0.5, y, z+0.5,
             ];
             positionsArr.set(verts, pi);
-            pi += 18;
+            // Planar UVs from world XZ
+            const uvVerts = [
+              (x-0.5)/WATER_UV_SCALE, (z-0.5)/WATER_UV_SCALE,
+              (x+0.5)/WATER_UV_SCALE, (z-0.5)/WATER_UV_SCALE,
+              (x-0.5)/WATER_UV_SCALE, (z+0.5)/WATER_UV_SCALE,
+              (x+0.5)/WATER_UV_SCALE, (z-0.5)/WATER_UV_SCALE,
+              (x+0.5)/WATER_UV_SCALE, (z+0.5)/WATER_UV_SCALE,
+              (x-0.5)/WATER_UV_SCALE, (z+0.5)/WATER_UV_SCALE,
+            ];
+            uvsArr.set(uvVerts, uvi);
+            // Shoreline fade factor per tile (adjacent to land -> lower alpha)
+            const gx = Math.max(0, Math.min(W - 1, Math.round(x + halfX)));
+            const gz = Math.max(0, Math.min(D - 1, Math.round(z + halfZ)));
+            const idx = gz * W + gx;
+            let tileAlpha = 1.0;
+            const neigh = [
+              gx > 0 ? types[idx - 1] : 3,
+              gx < W-1 ? types[idx + 1] : 3,
+              gz > 0 ? types[idx - W] : 3,
+              gz < D-1 ? types[idx + W] : 3,
+            ];
+            if (neigh.some(t => t !== 3)) tileAlpha = 0.65;
+            for (let k = 0; k < 6; k++) alphas[ai + k] = tileAlpha;
+            ai += 6; uvi += 12; pi += 18;
           }
           waterGeom.setAttribute('position', new THREE.BufferAttribute(positionsArr, 3));
+          waterGeom.setAttribute('uv', new THREE.BufferAttribute(uvsArr, 2));
+          waterGeom.setAttribute('alpha', new THREE.BufferAttribute(alphas, 1));
           waterGeom.computeVertexNormals();
           const wmat = new THREE.MeshPhysicalMaterial({
             color: COLORS[3], transparent: true, opacity: 0.45,
@@ -388,15 +479,27 @@
           wmat.onBeforeCompile = (shader) => {
             shader.uniforms.uTime = { value: 0 };
             waterUniforms = shader.uniforms;
+            // Pass per-vertex alpha to fragment
+            shader.vertexShader = shader.vertexShader.replace(
+              '#include <common>',
+              '#include <common>\nattribute float alpha;\nvarying float vAlpha;'
+            );
             shader.vertexShader = shader.vertexShader.replace(
               '#include <begin_vertex>',
-              `#include <begin_vertex>\ntransformed.y += 0.05 * sin(2.5 * position.x + uTime*1.2) * cos(2.0 * position.z + uTime*0.8);`
+              `#include <begin_vertex>\nvAlpha = alpha;\ntransformed.y += 0.05 * sin(2.5 * position.x + uTime*1.2) * cos(2.0 * position.z + uTime*0.8);`
+            );
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <common>',
+              '#include <common>\nvarying float vAlpha;'
             );
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <output_fragment>',
-              `#include <output_fragment>\n// Fresnel post-process\nvec3 V = normalize(-vViewPosition);\nfloat fres = pow(1.0 - clamp(dot(normalize(normal), V), 0.0, 1.0), 3.0);\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0), 0.15 * fres);\ngl_FragColor.a = gl_FragColor.a * (0.55 + 0.45 * fres);`
+              `#include <output_fragment>\n// Fresnel + shoreline alpha\nvec3 V = normalize(-vViewPosition);\nfloat fres = pow(1.0 - clamp(dot(normalize(normal), V), 0.0, 1.0), 3.0);\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0), 0.15 * fres);\ngl_FragColor.a = gl_FragColor.a * vAlpha * (0.55 + 0.45 * fres);`
             );
           };
+          // Apply normal map ripples
+          wmat.normalMap = WATER_NORM_TEX;
+          wmat.normalScale = new THREE.Vector2(0.7, 0.7);
           waterIMesh = new THREE.Mesh(waterGeom, wmat);
         } else {
           // Instanced water quads
@@ -412,9 +515,16 @@
             waterUniforms = shader.uniforms;
             shader.vertexShader = shader.vertexShader.replace(
               '#include <begin_vertex>',
-              `#include <begin_vertex>\ntransformed.z += 0.05 * sin(2.5 * position.x + uTime*1.2) * cos(2.0 * position.y + uTime*0.8);`
+              `#include <begin_vertex>\ntransformed.y += 0.05 * sin(2.5 * position.x + uTime*1.2) * cos(2.0 * position.z + uTime*0.8);`
+            );
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <output_fragment>',
+              `#include <output_fragment>\n// Fresnel post-process\nvec3 V = normalize(-vViewPosition);\nfloat fres = pow(1.0 - clamp(dot(normalize(normal), V), 0.0, 1.0), 3.0);\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0), 0.15 * fres);\ngl_FragColor.a = gl_FragColor.a * (0.55 + 0.45 * fres);`
             );
           };
+          // Apply normal map ripples
+          wmat.normalMap = WATER_NORM_TEX;
+          wmat.normalScale = new THREE.Vector2(0.7, 0.7);
           waterIMesh = new THREE.InstancedMesh(plane, wmat, count);
           const m4 = new THREE.Matrix4();
           const q = new THREE.Quaternion();
@@ -438,7 +548,245 @@
       if (waterMesh) { scene.remove(waterMesh); waterMesh.geometry.dispose(); waterMesh = null; }
     }
 
+    function buildWaterOverlay(scale) {
+      if (!worldData) return null;
+      const W = worldData.width, D = worldData.depth;
+      const heights = worldData.heights, types = worldData.types;
+      const hToY = (h) => ((h - lastMinH) / Math.max(1, lastHRange)) * 50 * scale;
+      const halfX = (W - 1) / 2, halfZ = (D - 1) / 2;
+      const waterPositions = [];
+      for (let gz = 0; gz < D; gz++) {
+        for (let gx = 0; gx < W; gx++) {
+          const i = gz * W + gx;
+          if (types[i] === 3) {
+            const y = hToY(heights[i]) + 0.02;
+            waterPositions.push(gx - halfX, y, gz - halfZ);
+          }
+        }
+      }
+      if (waterPositions.length === 0) return null;
+      let waterObj = null;
+      if (mergedWaterEl && mergedWaterEl.checked) {
+        const countCells = waterPositions.length / 3;
+        const positionsArr = new Float32Array(countCells * 6 * 3);
+        let pi = 0;
+        for (let i = 0; i < countCells; i++) {
+          const x = waterPositions[i*3+0];
+          const y = waterPositions[i*3+1];
+          const z = waterPositions[i*3+2];
+          const verts = [
+            x-0.5, y, z-0.5,
+            x+0.5, y, z-0.5,
+            x-0.5, y, z+0.5,
+            x+0.5, y, z-0.5,
+            x+0.5, y, z+0.5,
+            x-0.5, y, z+0.5,
+          ];
+          positionsArr.set(verts, pi); pi += 18;
+        }
+        const waterGeom = new THREE.BufferGeometry();
+        waterGeom.setAttribute('position', new THREE.BufferAttribute(positionsArr, 3));
+        waterGeom.computeVertexNormals();
+        const wmat = new THREE.MeshPhysicalMaterial({
+          color: COLORS[3], transparent: true, opacity: 0.45,
+          roughness: 0.2, metalness: 0.0, reflectivity: 0.5, side: THREE.DoubleSide,
+        });
+        wmat.onBeforeCompile = (shader) => {
+          shader.uniforms.uTime = { value: 0 };
+          waterUniforms = shader.uniforms;
+          shader.vertexShader = shader.vertexShader.replace(
+            '#include <begin_vertex>',
+            `#include <begin_vertex>\ntransformed.y += 0.05 * sin(2.5 * position.x + uTime*1.2) * cos(2.0 * position.z + uTime*0.8);`
+          );
+          shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <output_fragment>',
+            `#include <output_fragment>\nvec3 V = normalize(-vViewPosition);\nfloat fres = pow(1.0 - clamp(dot(normalize(normal), V), 0.0, 1.0), 3.0);\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0), 0.15 * fres);\ngl_FragColor.a = gl_FragColor.a * (0.55 + 0.45 * fres);`
+          );
+        };
+        waterObj = new THREE.Mesh(waterGeom, wmat);
+      } else {
+        const count = waterPositions.length / 3;
+        const plane = new THREE.PlaneGeometry(1, 1);
+        const wmat = new THREE.MeshPhysicalMaterial({
+          color: COLORS[3], transparent: true, opacity: 0.45,
+          roughness: 0.2, metalness: 0.0, reflectivity: 0.5, side: THREE.DoubleSide,
+        });
+        wmat.onBeforeCompile = (shader) => {
+          shader.uniforms.uTime = { value: 0 };
+          waterUniforms = shader.uniforms;
+          shader.vertexShader = shader.vertexShader.replace(
+            '#include <begin_vertex>',
+            `#include <begin_vertex>\ntransformed.y += 0.05 * sin(2.5 * position.x + uTime*1.2) * cos(2.0 * position.z + uTime*0.8);\ntransformed.y += 0.05 * sin(2.5 * position.y + uTime*1.2) * cos(2.0 * position.z + uTime*0.8);`
+          );
+          shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <output_fragment>',
+            `#include <output_fragment>\nvec3 V = normalize(-vViewPosition);\nfloat fres = pow(1.0 - clamp(dot(normalize(normal), V), 0.0, 1.0), 3.0);\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0), 0.15 * fres);\ngl_FragColor.a = gl_FragColor.a * (0.55 + 0.45 * fres);`
+          );
+        };
+        wmat.normalMap = WATER_NORM_TEX;
+        wmat.normalScale = new THREE.Vector2(0.7, 0.7);
+        const imesh = new THREE.InstancedMesh(plane, wmat, count);
+        const m4 = new THREE.Matrix4();
+        const q = new THREE.Quaternion();
+        q.setFromAxisAngle(new THREE.Vector3(1,0,0), -Math.PI/2);
+        for (let i = 0; i < count; i++) {
+          const x = waterPositions[i*3+0];
+          const y = waterPositions[i*3+1];
+          const z = waterPositions[i*3+2];
+          m4.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(1,1,1));
+          imesh.setMatrixAt(i, m4);
+        }
+        waterObj = imesh;
+      }
+      return waterObj;
+    }
+
+    function buildChunkMeshLOD(x0, z0, step, scale) {
+      const W = worldData.width, D = worldData.depth;
+      const heights = worldData.heights, types = worldData.types;
+      const halfX = (W - 1) / 2, halfZ = (D - 1) / 2;
+      const hToY = (h) => ((h - lastMinH) / Math.max(1, lastHRange)) * 50 * scale;
+      const cw = Math.min(TILE, W - x0);
+      const cd = Math.min(TILE, D - z0);
+      const gxList = [];
+      const gzList = [];
+      for (let gz = z0; gz < z0 + cd; gz += step) gzList.push(gz);
+      for (let gx = x0; gx < x0 + cw; gx += step) gxList.push(gx);
+      const NX = gxList.length, NZ = gzList.length;
+      const positions = new Float32Array(NX * NZ * 3);
+      const uvs = new Float32Array(NX * NZ * 2);
+      const indices = new Uint32Array((NX - 1) * (NZ - 1) * 6);
+      const hbuf = new Float32Array(NX * NZ);
+      const tbuf = new Uint8Array(NX * NZ);
+      let p = 0, uvp = 0;
+      for (let iz = 0; iz < NZ; iz++) {
+        for (let ix = 0; ix < NX; ix++) {
+          const gx = gxList[ix];
+          const gz = gzList[iz];
+          const idx = gz * W + gx;
+          const h = heights[idx] || 0;
+          const t = types[idx] || 0;
+          const y = hToY(h);
+          const wx = gx - halfX;
+          const wz = gz - halfZ;
+          positions[p++] = wx; positions[p++] = y; positions[p++] = wz;
+          uvs[uvp++] = wx / TEX_SCALE; uvs[uvp++] = wz / TEX_SCALE;
+          const vi = iz * NX + ix; hbuf[vi] = h; tbuf[vi] = t;
+        }
+      }
+      let k = 0;
+      for (let iz = 0; iz < NZ - 1; iz++) {
+        for (let ix = 0; ix < NX - 1; ix++) {
+          const a = iz * NX + ix;
+          const b = iz * NX + (ix + 1);
+          const c1 = (iz + 1) * NX + ix;
+          const d = (iz + 1) * NX + (ix + 1);
+          indices[k++] = a; indices[k++] = c1; indices[k++] = b;
+          indices[k++] = b; indices[k++] = c1; indices[k++] = d;
+        }
+      }
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+      geom.setIndex(new THREE.BufferAttribute(indices, 1));
+      geom.computeVertexNormals();
+      // Colors
+      const normals = geom.getAttribute('normal');
+      const colors = new Float32Array(NX * NZ * 3);
+      const smoothstep = (a,b,x) => { const t = Math.min(1, Math.max(0, (x-a)/(b-a))); return t*t*(3-2*t); };
+      let cptr = 0;
+      for (let vi = 0; vi < NX * NZ; vi++) {
+        const ny = Math.max(0, Math.min(1, normals.getY(vi)));
+        const slope = 1.0 - ny;
+        const t = tbuf[vi] | 0;
+        const h = hbuf[vi];
+        let col = COLORS[t] || COLORS[0];
+        if (t === 2 || t === 1) {
+          const g = COLORS[2], s = COLORS[1];
+          const w = smoothstep(0.25, 0.9, slope);
+          col = new THREE.Color(g.r*(1-w)+s.r*w, g.g*(1-w)+s.g*w, g.b*(1-w)+s.b*w);
+        }
+        const n = 0.06 * Math.sin(h * 0.35) + 0.04 * Math.cos(h * 0.21);
+        colors[cptr++] = Math.min(1, Math.max(0, col.r + n));
+        colors[cptr++] = Math.min(1, Math.max(0, col.g + n));
+        colors[cptr++] = Math.min(1, Math.max(0, col.b + n));
+      }
+      geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geom.computeBoundingSphere();
+      const mesh = new THREE.Mesh(geom, terrainMaterial);
+      mesh.receiveShadow = true;
+      mesh.castShadow = false;
+      mesh.userData = { NX, NZ, hbuf, tbuf, x0, z0, step };
+      return mesh;
+    }
+
+    function chunkKey(x0, z0, step) { return `${x0}_${z0}_s${step}`; }
+
+    function resetStreaming(scale) {
+      // Recompute height stats
+      const heights = worldData.heights;
+      let minH = Infinity, maxH = -Infinity;
+      for (let i = 0; i < heights.length; i++) { const h = heights[i]; if (h < minH) minH = h; if (h > maxH) maxH = h; }
+      lastMinH = minH; lastHRange = Math.max(1, maxH - minH);
+      // Clear and rebuild water
+      clearTerrain();
+      waterMesh = buildWaterOverlay(scale);
+      if (waterMesh) { scene.add(waterMesh); applyToggles(); }
+      // Initialize streaming state
+      chunkMap.clear();
+      lastStreamCenter.set(Infinity, 0, Infinity);
+      updateStreaming(true);
+    }
+
+    function updateStreaming(force = false) {
+      if (!streamingEnabled || !worldData) return;
+      const center = controls.target;
+      const moved = center.distanceTo(lastStreamCenter);
+      if (!force && moved < (TILE * 0.25)) return;
+      lastStreamCenter.copy(center);
+
+      const W = worldData.width, D = worldData.depth;
+      const halfX = (W - 1) / 2, halfZ = (D - 1) / 2;
+      const needed = new Set();
+      for (let z0 = 0; z0 < D; z0 += TILE) {
+        for (let x0 = 0; x0 < W; x0 += TILE) {
+          const cx = (x0 + Math.min(TILE, W - x0) * 0.5) - halfX;
+          const cz = (z0 + Math.min(TILE, D - z0) * 0.5) - halfZ;
+          const dist = Math.hypot(cx - center.x, cz - center.z);
+          if (dist > STREAM_FAR * 1.5) continue; // outside far radius
+          const step = stepForDist(dist);
+          const key = chunkKey(x0, z0, step);
+          needed.add(key);
+          // If a different LOD chunk exists for same region, remove it
+          for (const k of chunkMap.keys()) {
+            if (k.startsWith(`${x0}_${z0}_`) && k !== key) {
+              const obj = chunkMap.get(k);
+              scene.remove(obj.mesh); obj.mesh.geometry.dispose();
+              const idx = terrainChunks.indexOf(obj.mesh); if (idx >= 0) terrainChunks.splice(idx, 1);
+              chunkMap.delete(k);
+            }
+          }
+          if (!chunkMap.has(key)) {
+            const mesh = buildChunkMeshLOD(x0, z0, step, currentHeightScale);
+            scene.add(mesh);
+            terrainChunks.push(mesh);
+            chunkMap.set(key, { mesh, x0, z0, step });
+          }
+        }
+      }
+      // Remove chunks no longer needed
+      for (const [k, obj] of Array.from(chunkMap.entries())) {
+        if (!needed.has(k)) {
+          scene.remove(obj.mesh); obj.mesh.geometry.dispose();
+          const idx = terrainChunks.indexOf(obj.mesh); if (idx >= 0) terrainChunks.splice(idx, 1);
+          chunkMap.delete(k);
+        }
+      }
+      updateChunkVisibility();
+    }
+
     function rebuildTerrain(scale) {
+      if (streamingEnabled) { resetStreaming(scale); return; }
       clearTerrain();
       const built = buildTerrain(worldData, scale);
       lastMinH = built.minH; lastHRange = built.hRange;
@@ -526,9 +874,11 @@
     }
 
     heightScaleEl.addEventListener('input', () => {
-      heightScaleVal.textContent = `${parseFloat(heightScaleEl.value).toFixed(1)}×`;
+      const v = parseFloat(heightScaleEl.value);
+      heightScaleVal.textContent = `${v.toFixed(1)}×`;
+      currentHeightScale = v;
       if (!worldData) return;
-      rebuildTerrain(parseFloat(heightScaleEl.value));
+      if (streamingEnabled) resetStreaming(v); else rebuildTerrain(v);
     });
 
     // Keyboard navigation (WASD / Arrow keys) pans camera target relative to view
@@ -596,9 +946,17 @@
     toggleWaterEl.addEventListener('change', applyToggles);
     mergedWaterEl.addEventListener('change', () => {
       if (!worldData) return;
-      rebuildTerrain(parseFloat(heightScaleEl.value));
+      const v = parseFloat(heightScaleEl.value);
+      if (streamingEnabled) resetStreaming(v); else rebuildTerrain(v);
     });
     resetCameraEl.addEventListener('click', frameCameraToTerrain);
+
+    toggleStreamingEl.addEventListener('change', () => {
+      streamingEnabled = !!toggleStreamingEl.checked;
+      if (!worldData) return;
+      const v = parseFloat(heightScaleEl.value);
+      if (streamingEnabled) resetStreaming(v); else rebuildTerrain(v);
+    });
 
     drawDistEl.addEventListener('input', () => {
       drawDistValEl.textContent = String(drawDistEl.value);
@@ -684,7 +1042,12 @@
     // Main loop
     renderer.setAnimationLoop(() => {
       controls.update();
-      if (waterUniforms) waterUniforms.uTime.value = performance.now() / 1000;
+      const _now = performance.now();
+      if (waterUniforms) waterUniforms.uTime.value = _now / 1000;
+      // Scroll water normal map for subtle motion
+      WATER_NORM_TEX.offset.x = (_now * 0.0002) % 1.0;
+      WATER_NORM_TEX.offset.y = (_now * 0.00015) % 1.0;
+      if (streamingEnabled) updateStreaming();
       updateChunkVisibility();
       renderer.render(scene, camera);
       // FPS
