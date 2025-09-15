@@ -19,7 +19,7 @@ def _blur_np_separable(img: np.ndarray, k: int = 7, passes: int = 2) -> np.ndarr
         for y in range(out.shape[0]):
             out[y, :] = np.convolve(hp[y, :], kernel, mode="valid")
         # vertical
-        vp = np.pad(out, ((pad, pad)), mode="edge")
+        vp = np.pad(out, ((pad, pad), (0, 0)), mode="edge")
         for x in range(out.shape[1]):
             out[:, x] = np.convolve(vp[:, x], kernel, mode="valid")
     return out

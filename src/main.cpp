@@ -32,6 +32,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageTypeFlagsEXT              messageTypes,
     const VkDebugUtilsMessengerCallbackDataEXT*  pCallbackData,
     void*                                        /*pUserData*/) {
+    (void)messageSeverity;
+    (void)messageTypes;
     std::cerr << "[VK] " << pCallbackData->pMessage << std::endl;
     return VK_FALSE;
 }
@@ -154,7 +156,6 @@ private:
         }
     }
 
-    // Declare (do not define/initialize) static function pointers here
     static PFN_vkCreateDebugUtilsMessengerEXT fpCreateDebug;
     static PFN_vkDestroyDebugUtilsMessengerEXT fpDestroyDebug;
 
@@ -170,6 +171,12 @@ private:
         populateDebugCreateInfo(ci);
         if (fpCreateDebug(instance, &ci, nullptr, &debugMessenger) != VK_SUCCESS) {
             std::cerr << "Warning: Failed to create debug messenger" << std::endl;
+        }
+    }
+
+    void createSurface() {
+        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create window surface");
         }
     }
 

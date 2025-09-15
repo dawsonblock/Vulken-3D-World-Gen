@@ -66,11 +66,10 @@ check_dependencies() {
             missing_deps=1
         fi
         
-        # Check for shader compilers
+        # Shader compilers optional for this project
         if ! command -v glslangValidator &> /dev/null && ! command -v glslc &> /dev/null; then
-            echo "Error: Vulkan shader compiler not found"
-            echo "  Install with: sudo apt install glslang-tools"
-            missing_deps=1
+            echo "Warning: Vulkan shader compiler not found (optional)"
+            echo "  To install: sudo apt install glslang-tools"
         fi
     fi
     
@@ -80,17 +79,14 @@ check_dependencies() {
         echo "  Install with: sudo apt install libglfw3-dev"
     fi
     
-    # Check for GLM
-    if [[ ! -f "/usr/include/glm/glm.hpp" ]] && [[ ! -f "/usr/local/include/glm/glm.hpp" ]]; then
-        echo "Error: GLM (OpenGL Mathematics) library not found"
-        echo "  Install with: sudo apt install libglm-dev"
-        missing_deps=1
-    fi
+    # GLM is not required by this scaffold
+    # if [[ ! -f "/usr/include/glm/glm.hpp" ]] && [[ ! -f "/usr/local/include/glm/glm.hpp" ]]; then
+    #     echo "Warning: GLM library not found (not required)"
+    # fi
     
-    # Check for VMA
+    # VMA optional
     if [[ ! -f "/usr/include/vk_mem_alloc.h" ]] && [[ ! -f "/usr/local/include/vk_mem_alloc.h" ]]; then
-        echo "Warning: VulkanMemoryAllocator not found"
-        echo "  Install with: sudo apt install libvulkan-memory-allocator-dev"
+        echo "Warning: VulkanMemoryAllocator not found (optional)"
     fi
     
     if [[ $missing_deps -eq 1 ]]; then

@@ -1,3 +1,4 @@
+# requirements for worldgen/viewer
 numpy>=1.26
 pillow>=10.0
 matplotlib>=3.8
