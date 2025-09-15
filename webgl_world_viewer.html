@@ -154,6 +154,7 @@
 
     // Optional PBR texture pack (albedo/normal/roughness) loader with fallback
     const texLoader = new THREE.TextureLoader();
+    texLoader.setCrossOrigin('anonymous');
     function loadTex(url, colorSpace) {
       return new Promise((resolve) => {
         texLoader.load(url, (t) => {
@@ -175,6 +176,15 @@
         return {
           grass: { map: grassAlbedo, normal: grassNormal, roughness: grassRough },
           stone: { map: stoneAlbedo, normal: stoneNormal, roughness: stoneRough },
+        };
+      }
+      // Remote fallback (small, CC-compatible samples from threejs.org)
+      const rGrass = await loadTex('https://threejs.org/examples/textures/terrain/grasslight-big.jpg', THREE.SRGBColorSpace);
+      const rStone = await loadTex('https://threejs.org/examples/textures/brick_diffuse.jpg', THREE.SRGBColorSpace);
+      if (rGrass && rStone) {
+        return {
+          grass: { map: rGrass, normal: null, roughness: null },
+          stone: { map: rStone, normal: null, roughness: null },
         };
       }
       return null;
