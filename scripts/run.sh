@@ -6,8 +6,10 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BIN="$PROJECT_ROOT/build/bin/vulken_viewer"
 
 HEADLESS=0
+ALL=0
 for arg in "$@"; do
   [[ "$arg" == "--headless" ]] && HEADLESS=1
+  [[ "$arg" == "--all" ]] && ALL=1
 done
 
 if [[ ! -x "$BIN" ]]; then
@@ -18,7 +20,7 @@ fi
 if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
   if [[ $HEADLESS -eq 0 ]]; then
     echo "Error: No X11/Wayland display found (DISPLAY/WAYLAND_DISPLAY not set)."
-    echo "Run from a desktop session, forward X/Wayland, or use: $0 --headless"
+    echo "Run from a desktop session, forward X/Wayland, or use: $0 --headless [--all]"
     exit 1
   fi
 fi
@@ -34,6 +36,19 @@ if [[ $HEADLESS -eq 1 ]]; then
   echo "Saved:"
   echo "  $OUT_IMG"
   echo "  $VIEW_IMG (and histogram alongside)"
+  exit 0
+fi
+
+if [[ $ALL -eq 1 ]]; then
+  OUT_IMG="$PROJECT_ROOT/heightmap.png"
+  echo "Launching Vulkan viewer in background..."
+  "$BIN" &
+  VK_PID=$!
+  echo "Generating heightmap and opening Python viewer..."
+  python3 "$PROJECT_ROOT/python/worldgen/heightmap.py" --out "$OUT_IMG"
+  python3 "$PROJECT_ROOT/python/viewer.py" --image "$OUT_IMG" --hist
+  echo "Waiting for Vulkan viewer to exit (pid=$VK_PID)..."
+  wait "$VK_PID"
   exit 0
 fi
 
