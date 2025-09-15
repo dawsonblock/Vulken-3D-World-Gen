@@ -1,0 +1,21 @@
+/* Shared styles for VoxelVK demo pages */
+
+/* Legend title and accent headings */
+.legend-title {
+  color: #00ff88;
+  margin-top: 0;
+}
+
+/* Color tokens for terrain types */
+.c-water { color: #66f; }
+.c-stone { color: #999; }
+.c-grass { color: #6f6; }
+.c-tree  { color: #f84; }
+.c-air   { color: #444; }
+
+/* Footer area */
+.footer {
+  text-align: center;
+  margin-top: 30px;
+  color: #666;
+}

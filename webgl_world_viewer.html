@@ -4,30 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>VoxelVK • 3D World Viewer (WebGL)</title>
-  <style>
-    :root { --bg:#0f1115; --fg:#dfe5ee; --muted:#94a3b8; --accent:#00ff88; }
-    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
-    .toolbar {
-      position: fixed; top: 12px; left: 12px; right: 12px;
-      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
-      background: rgba(11, 13, 18, 0.85); backdrop-filter: blur(6px);
-      border: 1px solid #1f2937; border-radius: 12px; padding: 10px 14px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
-    }
-    .toolbar h1 { font-size: 16px; margin: 0; color: var(--accent); }
-    .spacer { flex: 1 1 auto; }
-    .row { display: flex; align-items: center; gap: 8px; color: var(--muted); }
-    input[type=range] { width: 220px; }
-    .hint { color: var(--muted); font-size: 12px; }
-    #app { position: absolute; inset: 0; }
-    canvas { display: block; }
-    .hud {
-      position: fixed; left: 12px; bottom: 12px; min-width: 220px;
-      background: rgba(11,13,18,0.85); border: 1px solid #1f2937;
-      border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--muted);
-    }
-    .hud strong { color: var(--fg); }
-  </style>
+  <link rel="stylesheet" href="assets/css/viewer.css" />
 </head>
 <body>
   <div class="toolbar">
@@ -175,6 +152,34 @@
     const GRASS_TEX = makeProceduralTexture('grass');
     const STONE_TEX = makeProceduralTexture('stone');
 
+    // Optional PBR texture pack (albedo/normal/roughness) loader with fallback
+    const texLoader = new THREE.TextureLoader();
+    function loadTex(url, colorSpace) {
+      return new Promise((resolve) => {
+        texLoader.load(url, (t) => {
+          if (colorSpace) t.colorSpace = colorSpace;
+          t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4;
+          resolve(t);
+        }, undefined, () => resolve(null));
+      });
+    }
+    async function tryLoadPBRTextures() {
+      const base = 'assets/textures';
+      const grassAlbedo = await loadTex(`${base}/grass_albedo.jpg`, THREE.SRGBColorSpace);
+      const grassNormal = await loadTex(`${base}/grass_normal.jpg`, THREE.NoColorSpace);
+      const grassRough = await loadTex(`${base}/grass_roughness.jpg`, THREE.NoColorSpace);
+      const stoneAlbedo = await loadTex(`${base}/stone_albedo.jpg`, THREE.SRGBColorSpace);
+      const stoneNormal = await loadTex(`${base}/stone_normal.jpg`, THREE.NoColorSpace);
+      const stoneRough = await loadTex(`${base}/stone_roughness.jpg`, THREE.NoColorSpace);
+      if (grassAlbedo && stoneAlbedo) {
+        return {
+          grass: { map: grassAlbedo, normal: grassNormal, roughness: grassRough },
+          stone: { map: stoneAlbedo, normal: stoneNormal, roughness: stoneRough },
+        };
+      }
+      return null;
+    }
+
     // Procedural normal map for water ripples
     const WATER_UV_SCALE = 8.0;
     function makeWaterNormalTexture() {
@@ -255,6 +260,7 @@
     let worldData = null;
     let lastMinH = 0, lastHRange = 1;
     let terrainMaterial = null;
+    let TEX_PACK = null; // set on load() if assets are found
     // Streaming & LOD
     let streamingEnabled = false; // default off to keep current behavior
     let chunkMap = new Map(); // key -> { mesh, x0, z0, step }
@@ -288,11 +294,19 @@
 
       // Build chunk meshes
       const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0.0, side: THREE.DoubleSide });
-      // Attach base map to enable USE_MAP and blend two maps in shader
-      mat.map = GRASS_TEX;
+      // Attach base maps (either PBR pack or procedural) and blend albedos in shader
+      if (TEX_PACK && TEX_PACK.grass) {
+        mat.map = TEX_PACK.grass.map;
+        if (TEX_PACK.grass.normal) mat.normalMap = TEX_PACK.grass.normal;
+        if (TEX_PACK.grass.roughness) mat.roughnessMap = TEX_PACK.grass.roughness;
+      } else {
+        mat.map = GRASS_TEX;
+      }
       mat.onBeforeCompile = (shader) => {
-        shader.uniforms.uGrassMap = { value: GRASS_TEX };
-        shader.uniforms.uStoneMap = { value: STONE_TEX };
+        const grassMap = (TEX_PACK && TEX_PACK.grass) ? TEX_PACK.grass.map : GRASS_TEX;
+        const stoneMap = (TEX_PACK && TEX_PACK.stone) ? TEX_PACK.stone.map : STONE_TEX;
+        shader.uniforms.uGrassMap = { value: grassMap };
+        shader.uniforms.uStoneMap = { value: stoneMap };
         shader.uniforms.uTexScale = { value: TEX_SCALE };
         shader.fragmentShader = shader.fragmentShader.replace(
           '#include <map_pars_fragment>',
@@ -863,6 +877,8 @@
       data.types = data.types;
 
       worldData = data;
+      // Try to load a real texture pack; fallback to procedural if not found
+      try { TEX_PACK = await tryLoadPBRTextures(); } catch { TEX_PACK = null; }
       rebuildTerrain(parseFloat(heightScaleEl.value));
 
       // Frame camera to mesh
