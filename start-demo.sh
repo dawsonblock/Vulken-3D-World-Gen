@@ -74,6 +74,13 @@ start_cmake() {
   mkdir -p build
   cmake -S . -B build
   cmake --build build -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+
+  # If no GUI available, run automated headless pipeline (serve and refresh)
+  if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; then
+    log "No display detected; running automated headless viewer (scripts/run.sh --auto)"
+    exec bash "$ROOT_DIR/scripts/run.sh" --auto=2
+  fi
+
   local bin
   bin="$(find build -type f -perm -111 -exec file {} \; | grep -E 'ELF .* executable' | cut -d: -f1 | head -n1 || true)"
   if [ -n "$bin" ]; then

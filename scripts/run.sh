@@ -8,6 +8,8 @@ BIN="$PROJECT_ROOT/build/bin/vulken_viewer"
 HEADLESS=0
 ALL=0
 SAVE_VIEW=""
+AUTO=0
+AUTO_INTERVAL=2
 
 # Parse args (supports --save-view <path> or --save-view=path)
 SAVE_VIEW_NEXT=0
@@ -24,10 +26,24 @@ for arg in "$@"; do
     --save-view=*)
       SAVE_VIEW="${arg#--save-view=}"
       ;;
+    --auto) AUTO=1 ;;
+    --auto=*)
+      AUTO=1
+      AUTO_INTERVAL="${arg#--auto=}"
+      ;;
   esac
 done
 
-if [[ ! -x "$BIN" ]]; then
+# Decide if we actually need to build the Vulkan viewer binary
+NEED_BIN=1
+if [[ $HEADLESS -eq 1 || -n "$SAVE_VIEW" || $AUTO -eq 1 ]]; then
+  NEED_BIN=0
+fi
+if [[ $ALL -eq 1 ]]; then
+  NEED_BIN=1
+fi
+
+if [[ $NEED_BIN -eq 1 && ! -x "$BIN" ]]; then
   echo "Binary not found, building..."
 
   # Clean build dir if cache pins a missing toolchain or mismatched generator
@@ -46,7 +62,6 @@ if [[ ! -x "$BIN" ]]; then
 
   use_presets=0
   if [[ -x "$PROJECT_ROOT/scripts/build.sh" ]]; then
-    # Only use presets if Ninja is available and the expected toolchain file exists
     if command -v ninja >/dev/null 2>&1 && [[ -f "/scripts/buildsystems/vcpkg.cmake" ]]; then
       use_presets=1
     fi
@@ -55,7 +70,6 @@ if [[ ! -x "$BIN" ]]; then
   if [[ $use_presets -eq 1 ]]; then
     "$PROJECT_ROOT/scripts/build.sh"
   else
-    # Fallback: select a compatible generator and ensure no cache conflicts
     desired_gen=""
     if command -v ninja >/dev/null 2>&1; then desired_gen="Ninja"; else desired_gen="Unix Makefiles"; fi
 
@@ -76,8 +90,8 @@ if [[ ! -x "$BIN" ]]; then
   fi
 fi
 
-# Verify binary after build
-if [[ ! -x "$BIN" ]]; then
+# If we needed a binary, verify after build
+if [[ $NEED_BIN -eq 1 && ! -x "$BIN" ]]; then
   echo "Error: build finished but binary missing: $BIN"
   echo "Tip: run with: bash scripts/run.sh --headless"
   exit 1
@@ -92,7 +106,6 @@ if [[ -n "$SAVE_VIEW" ]]; then
   echo "Saved:"
   echo "  $OUT_IMG"
   echo "  $SAVE_VIEW (and histogram alongside)"
-  # Open in host browser if available
   if [[ -n "${BROWSER:-}" ]]; then
     MAIN_ABS="$(realpath "$SAVE_VIEW")"
     "$BROWSER" "file://$MAIN_ABS" >/dev/null 2>&1 || true
@@ -104,6 +117,47 @@ if [[ -n "$SAVE_VIEW" ]]; then
     fi
   fi
   exit 0
+fi
+
+# Automated mode: regenerate on an interval, serve via http.server, and open in browser
+if [[ $AUTO -eq 1 ]]; then
+  OUT_DIR="$PROJECT_ROOT/out"
+  mkdir -p "$OUT_DIR"
+  INDEX_HTML="$OUT_DIR/index.html"
+  cat > "$INDEX_HTML" <<EOF
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="refresh" content="$AUTO_INTERVAL"/>
+  <title>Heightmap Viewer (auto-refresh)</title>
+  <style>body{margin:0;background:#111;color:#eee;font-family:sans-serif} .wrap{padding:8px} img{max-width:100vw;height:auto;display:block}</style>
+</head>
+<body>
+  <div class="wrap">
+    <h3>Heightmap</h3>
+    <img src="heightmap_view.png?ts=\$(Date.now())" alt="heightmap"/>
+    <h3>Histogram</h3>
+    <img src="heightmap_view_hist.png?ts=\$(Date.now())" alt="histogram"/>
+  </div>
+</body>
+</html>
+EOF
+  echo "Starting static server on http://localhost:5173/"
+  ( cd "$OUT_DIR" && python3 -m http.server 5173 ) >/dev/null 2>&1 &
+  SRV_PID=$!
+  trap 'kill "$SRV_PID" >/dev/null 2>&1 || true' EXIT INT TERM
+  if [[ -n "${BROWSER:-}" ]]; then
+    "$BROWSER" "http://localhost:5173/" >/dev/null 2>&1 || true
+  fi
+
+  OUT_IMG="$OUT_DIR/heightmap.png"
+  VIEW_IMG="$OUT_DIR/heightmap_view.png"
+  while true; do
+    python3 "$PROJECT_ROOT/python/worldgen/heightmap.py" --out "$OUT_IMG" >/dev/null
+    MPLBACKEND=Agg python3 "$PROJECT_ROOT/python/viewer.py" --image "$OUT_IMG" --hist --save "$VIEW_IMG" >/dev/null
+    sleep "$AUTO_INTERVAL"
+  done
 fi
 
 if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
@@ -118,14 +172,11 @@ if [[ $HEADLESS -eq 1 ]]; then
   echo "Running headless fallback (Python heightmap + saved images)..."
   OUT_IMG="$PROJECT_ROOT/heightmap.png"
   VIEW_IMG="$PROJECT_ROOT/heightmap_view.png"
-  # Generate heightmap
   python3 "$PROJECT_ROOT/python/worldgen/heightmap.py" --out "$OUT_IMG"
-  # Save viewer output (uses Agg backend)
   MPLBACKEND=Agg python3 "$PROJECT_ROOT/python/viewer.py" --image "$OUT_IMG" --hist --save "$VIEW_IMG"
   echo "Saved:"
   echo "  $OUT_IMG"
   echo "  $VIEW_IMG (and histogram alongside)"
-  # Open in host browser if available
   if [[ -n "${BROWSER:-}" ]]; then
     MAIN_ABS="$(realpath "$VIEW_IMG")"
     "$BROWSER" "file://$MAIN_ABS" >/dev/null 2>&1 || true
