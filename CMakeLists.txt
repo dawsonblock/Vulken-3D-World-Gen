@@ -57,7 +57,10 @@ endif()
 
 find_package(Threads)
 if (Threads_FOUND)
-  target_link_libraries(vulken_viewer PRIVATE Threads::Threads dl)
+  target_link_libraries(vulken_viewer PRIVATE Threads::Threads)
+endif()
+if (UNIX AND NOT APPLE)
+  target_link_libraries(vulken_viewer PRIVATE dl)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
