@@ -22,7 +22,7 @@ def main():
     hist_fig = None
 
     if args.surface:
-        from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+        import mpl_toolkits.mplot3d  # noqa: F401
         h, w = arr.shape
         xs = np.linspace(0, 1, w)
         ys = np.linspace(0, 1, h)

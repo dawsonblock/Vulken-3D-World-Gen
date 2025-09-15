@@ -14,13 +14,14 @@
 static const uint32_t WIDTH = 1280;
 static const uint32_t HEIGHT = 720;
 
-#ifdef NDEBUG
-static const bool kEnableValidation = false;
-#else
+// Replace previous kEnableValidation/isValidationEnabled mix with a single helper
 static bool isValidationEnabled() {
+#ifdef NDEBUG
+    return false;
+#else
     return std::getenv("VULKAN_VALIDATION") != nullptr;
-}
 #endif
+}
 
 static const std::vector<const char*> kValidationLayers = {
     "VK_LAYER_KHRONOS_validation"
@@ -112,12 +113,12 @@ private:
         }
         return extensions;
     }
-        bool enableValidation = kEnableValidation;
+
+    void createInstance() {
+        bool enableValidation = isValidationEnabled();
         if (enableValidation && !checkValidationLayerSupport()) {
             std::cerr << "Warning: Validation layers requested but not available. Continuing without." << std::endl;
             enableValidation = false;
-        }
-            kEnableValidation = false;
         }
 
         VkApplicationInfo appInfo{};
@@ -135,6 +136,8 @@ private:
         ci.pApplicationInfo = &appInfo;
         ci.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         ci.ppEnabledExtensionNames = extensions.data();
+
+        VkDebugUtilsMessengerCreateInfoEXT debugCI{};
         if (enableValidation) {
             ci.enabledLayerCount = static_cast<uint32_t>(kValidationLayers.size());
             ci.ppEnabledLayerNames = kValidationLayers.data();
@@ -145,15 +148,14 @@ private:
             ci.ppEnabledLayerNames = nullptr;
             ci.pNext = nullptr;
         }
-            ci.pNext = nullptr;
-        }
 
         if (vkCreateInstance(&ci, nullptr, &instance) != VK_SUCCESS) {
             throw std::runtime_error("Failed to create Vulkan instance");
         }
     }
-    static PFN_vkCreateDebugUtilsMessengerEXT fpCreateDebug = nullptr;
-    static PFN_vkDestroyDebugUtilsMessengerEXT fpDestroyDebug = nullptr;
+
+    // Declare (do not define/initialize) static function pointers here
+    static PFN_vkCreateDebugUtilsMessengerEXT fpCreateDebug;
     static PFN_vkDestroyDebugUtilsMessengerEXT fpDestroyDebug;
 
     void setupDebugMessenger() {
@@ -168,12 +170,6 @@ private:
         populateDebugCreateInfo(ci);
         if (fpCreateDebug(instance, &ci, nullptr, &debugMessenger) != VK_SUCCESS) {
             std::cerr << "Warning: Failed to create debug messenger" << std::endl;
-        }
-    }
-
-    void createSurface() {
-        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
-            throw std::runtime_error("Failed to create window surface");
         }
     }
 
@@ -273,9 +269,10 @@ private:
     }
 
     void cleanup() {
+        if (device) vkDeviceWaitIdle(device);
         if (device) vkDestroyDevice(device, nullptr);
         if (surface) vkDestroySurfaceKHR(instance, surface, nullptr);
-        if (kEnableValidation && debugMessenger && fpDestroyDebug) {
+        if (debugMessenger && fpDestroyDebug) {
             fpDestroyDebug(instance, debugMessenger, nullptr);
         }
         if (instance) vkDestroyInstance(instance, nullptr);
@@ -286,8 +283,9 @@ private:
     }
 };
 
-PFN_vkCreateDebugUtilsMessengerEXT App::fpCreateDebug = nullptr; // Explicitly initialized to nullptr
-PFN_vkDestroyDebugUtilsMessengerEXT App::fpDestroyDebug = nullptr; // Explicitly initialized to nullptr
+// Define static function pointers once (outside the class)
+PFN_vkCreateDebugUtilsMessengerEXT App::fpCreateDebug = nullptr;
+PFN_vkDestroyDebugUtilsMessengerEXT App::fpDestroyDebug = nullptr;
 
 int main() {
     try {

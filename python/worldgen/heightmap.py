@@ -6,6 +6,24 @@ try:
 except ImportError:
     pnoise2 = None
 
+def _blur_np_separable(img: np.ndarray, k: int = 7, passes: int = 2) -> np.ndarray:
+    # Simple separable box blur using NumPy only
+    k = max(1, int(k) | 1)  # ensure odd >=1
+    kernel = np.ones(k, dtype=np.float32) / float(k)
+
+    out = img.astype(np.float32, copy=True)
+    for _ in range(max(1, int(passes))):
+        # horizontal
+        pad = k // 2
+        hp = np.pad(out, ((0, 0), (pad, pad)), mode="edge")
+        for y in range(out.shape[0]):
+            out[y, :] = np.convolve(hp[y, :], kernel, mode="valid")
+        # vertical
+        vp = np.pad(out, ((pad, pad)), mode="edge")
+        for x in range(out.shape[1]):
+            out[:, x] = np.convolve(vp[:, x], kernel, mode="valid")
+    return out
+
 def perlin_heightmap(w: int, h: int, scale: float = 100.0, octaves: int = 6, persistence: float = 0.5, lacunarity: float = 2.0, seed: int = 0):
     if scale <= 0:
         scale = 0.001
@@ -14,13 +32,9 @@ def perlin_heightmap(w: int, h: int, scale: float = 100.0, octaves: int = 6, per
     data = np.zeros((h, w), dtype=np.float32)
 
     if pnoise2 is None:
-        # Fallback: smooth random fields
+        # Fallback: smooth random fields (no SciPy required)
         base = rng.random((h, w), dtype=np.float32)
-        from scipy.ndimage import gaussian_filter  # optional
-        try:
-            data = gaussian_filter(base, sigma=scale/50.0)
-        except ValueError:  # Catch specific scipy-related exceptions
-            data = base
+        data = _blur_np_separable(base, k=max(3, int(scale // 25) | 1), passes=2)
     else:
         for y in range(h):
             for x in range(w):
