@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import http.server
+from http.server import SimpleHTTPRequestHandler
 import socketserver
 import mimetypes
 import os
@@ -13,7 +13,7 @@ mimetypes.add_type('application/json', '.json')
 
 
 
-class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header(
             'Cache-Control',
