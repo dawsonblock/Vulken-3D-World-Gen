@@ -34,6 +34,12 @@ for arg in "$@"; do
   esac
 done
 
+# Default to headless if no display and neither --headless nor --auto were requested
+if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" && $HEADLESS -eq 0 && $AUTO -eq 0 ]]; then
+  echo "No display detected; defaulting to headless mode. Use '--auto' for browser viewer or set DISPLAY/WAYLAND_DISPLAY."
+  HEADLESS=1
+fi
+
 # Decide if we actually need to build the Vulkan viewer binary
 NEED_BIN=1
 if [[ $HEADLESS -eq 1 || -n "$SAVE_VIEW" || $AUTO -eq 1 ]]; then
@@ -161,12 +167,9 @@ EOF
   done
 fi
 
+# Do not hard-fail on missing display; headless/auto below will handle it
 if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
-  if [[ $HEADLESS -eq 0 ]]; then
-    echo "Error: No X11/Wayland display found (DISPLAY/WAYLAND_DISPLAY not set)."
-    echo "Run from a desktop session, forward X/Wayland, or use: $0 --headless [--all]"
-    exit 1
-  fi
+  :
 fi
 
 if [[ $HEADLESS -eq 1 ]]; then
@@ -193,6 +196,12 @@ fi
 
 if [[ $ALL -eq 1 ]]; then
   OUT_IMG="$PROJECT_ROOT/heightmap.png"
+  if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
+    echo "No display detected; skipping Vulkan viewer. Running Python viewer only..."
+    python3 "$PROJECT_ROOT/python/worldgen/heightmap.py" --out "$OUT_IMG"
+    python3 "$PROJECT_ROOT/python/viewer.py" --image "$OUT_IMG" --hist
+    exit 0
+  fi
   echo "Launching Vulkan viewer in background..."
   "$BIN" &
   VK_PID=$!
@@ -201,7 +210,7 @@ if [[ $ALL -eq 1 ]]; then
   python3 "$PROJECT_ROOT/python/worldgen/heightmap.py" --out "$OUT_IMG"
   python3 "$PROJECT_ROOT/python/viewer.py" --image "$OUT_IMG" --hist
   echo "Waiting for Vulkan viewer to exit (pid=$VK_PID)..."
-  wait "$VK_PID"
+  wait "${VK_PID:-}"
   trap - EXIT INT TERM
   exit 0
 fi

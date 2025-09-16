@@ -4,7 +4,7 @@ from PIL import Image
 import numpy as np
 import matplotlib
 # Use non-interactive backend when no display is available
-if not os.environ.get("DISPLAY") and not os.environ.get("MPLBACKEND"):
+if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")) and not os.environ.get("MPLBACKEND"):
     matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 

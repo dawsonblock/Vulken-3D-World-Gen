@@ -84,6 +84,10 @@ static void glfwErrorCallback(int code, const char* desc) {
     std::cerr << "GLFW error " << code << ": " << (desc ? desc : "") << std::endl;
 }
 
+static bool hasDisplay() {
+    return std::getenv("DISPLAY") != nullptr || std::getenv("WAYLAND_DISPLAY") != nullptr;
+}
+
 class App {
 public:
     void run() {
@@ -121,6 +125,10 @@ private:
     size_t currentFrame = 0;
 
     void initWindow() {
+        if (!hasDisplay()) {
+            throw std::runtime_error(
+                "No X11/Wayland display detected. Use 'bash scripts/run.sh --headless' or '--auto'.");
+        }
         glfwSetErrorCallback(glfwErrorCallback);
         if (!glfwInit()) throw std::runtime_error("Failed to init GLFW");
         if (!glfwVulkanSupported()) throw std::runtime_error("Vulkan not supported by GLFW");
