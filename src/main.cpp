@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 static const uint32_t WIDTH = 1280;
 static const uint32_t HEIGHT = 720;

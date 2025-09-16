@@ -12,11 +12,25 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 find_package(Vulkan REQUIRED)
 
-# Try CMake GLFW first, then pkg-config fallback
+# Try CMake GLFW first, then pkg-config, then FetchContent fallback
 find_package(glfw3 3.3 QUIET)
+set(USE_FETCH_GLFW OFF)
 if (NOT glfw3_FOUND)
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(GLFW3 REQUIRED IMPORTED_TARGET glfw3)
+  find_package(PkgConfig QUIET)
+  if (PkgConfig_FOUND)
+    pkg_check_modules(GLFW3 glfw3 QUIET IMPORTED_TARGET)
+  endif()
+  if (NOT glfw3_FOUND AND NOT GLFW3_FOUND)
+    set(USE_FETCH_GLFW ON)
+    include(FetchContent)
+    FetchContent_Declare(
+      glfw
+      GIT_REPOSITORY https://github.com/glfw/glfw.git
+      GIT_TAG 3.3.9
+      GIT_SHALLOW TRUE
+    )
+    FetchContent_MakeAvailable(glfw)
+  endif()
 endif()
 
 include(FetchContent)
@@ -51,8 +65,12 @@ target_compile_definitions(vulken_viewer PRIVATE
 
 if (glfw3_FOUND)
   target_link_libraries(vulken_viewer PRIVATE glfw)
-else()
+elseif (GLFW3_FOUND)
   target_link_libraries(vulken_viewer PRIVATE PkgConfig::GLFW3)
+elseif (USE_FETCH_GLFW)
+  target_link_libraries(vulken_viewer PRIVATE glfw)
+else()
+  message(FATAL_ERROR "GLFW not found and could not be fetched")
 endif()
 
 find_package(Threads)
