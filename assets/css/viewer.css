@@ -15,7 +15,12 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
 input[type=range] { width: 220px; }
 .hint { color: var(--muted); font-size: 12px; }
 #app { position: absolute; inset: 0; }
-canvas { display: block; }
+  canvas {
+    display: block;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
 .hud {
   position: fixed; left: 12px; bottom: 12px; min-width: 220px;
   background: rgba(11,13,18,0.85); border: 1px solid #1f2937;

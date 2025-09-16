@@ -15,10 +15,11 @@ label { color:#a3b3c3; font-size:14px; }
 input[type=range] { width: 240px; }
 .canvas-wrap { display:flex; justify-content:center; overflow:auto; border: 1px solid #1f2937; border-radius: 10px; background:#0a0c10; padding: 12px;}
 canvas {
-  image-rendering: pixelated;
-  /* Edge/WebKit fallback */
+  /* Edge/WebKit fallback should come first */
   image-rendering: -webkit-optimize-contrast;
+  image-rendering: pixelated;
   touch-action: none;
+  -webkit-user-select: none;
   user-select: none;
   cursor: grab;
 }

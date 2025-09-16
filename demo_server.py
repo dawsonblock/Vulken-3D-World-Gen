@@ -60,10 +60,14 @@ def main():
         base_url = f"http://localhost:{port}"
         print(f"🌐 VoxelVK Demo Server running at {base_url}")
         print("📁 Available demos:")
-        print(f"   - {base_url}/test_viewer.html")
-        print(f"   - {base_url}/simple_world_demo.html")
-        print(f"   - {base_url}/world_viewer.html")
-        print(f"   - {base_url}/webgl_world_viewer.html")
+        pages = [
+            "test_viewer.html",
+            "simple_world_demo.html",
+            "world_viewer.html",
+            "webgl_world_viewer.html",
+        ]
+        for p in pages:
+            print(f"   - {base_url}/{p}")
         print("🔄 Use Ctrl+C to stop server")
         try:
             httpd.serve_forever()
