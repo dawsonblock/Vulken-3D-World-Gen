@@ -39,11 +39,11 @@
       <canvas id=\"mapCanvas\" width=\"256\" height=\"256\"></canvas>
     </div>
     <div class=\"legend\">
-      <span class=\"sw\" style=\"background:#111\"></span> Air
-      <span class=\"sw\" style=\"background:#888\"></span> Stone
-      <span class=\"sw\" style=\"background:#3ddc84\"></span> Grass
-      <span class=\"sw\" style=\"background:#3ec0ff\"></span> Water
-      <span class=\"sw\" style=\"background:#e88020\"></span> Tree
+      <span class=\"sw sw-air\"></span> Air
+      <span class=\"sw sw-stone\"></span> Stone
+      <span class=\"sw sw-grass\"></span> Grass
+      <span class=\"sw sw-water\"></span> Water
+      <span class=\"sw sw-tree\"></span> Tree
     </div>
   </div>
   <script>\nconst MAPW = 64;
@@ -180,16 +180,57 @@ const ELEV = [
   74,74,74,74,74,74,74,82,82,82,82,82,82,82,82,82,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,
   74,74,74,74,74,74,82,82,82,82,82,82,82,82,82,82,82,82,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74
 ];
-const COLORS = ["#111","#888","#3ddc84","#3ec0ff","#e88020"];
+const DEFAULT_COLORS = ["#111","#888","#3ddc84","#3ec0ff","#e88020"];
+let COLORS = DEFAULT_COLORS.slice();
 const canvas = document.getElementById('mapCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
 const zoom = document.getElementById('zoom');
+const zoomVal = document.getElementById('zoomVal');
+const gridToggle = document.getElementById('grid');
+const paletteSel = document.getElementById('palette');
+const resetBtn = document.getElementById('resetBtn');
+const exportBtn = document.getElementById('exportBtn');
 
 let offsetX = 0;
 let offsetY = 0;
 let isDragging = false;
 let lastX = 0;
 let lastY = 0;
+let gridEnabled = false;
+let isPinching = false;
+let lastPinchDist = 0;
+
+// Helpers
+function updateLegendSwatches() {
+  const sws = document.querySelectorAll('.legend .sw');
+  sws.forEach((el, idx) => {
+    if (COLORS[idx]) el.style.background = COLORS[idx];
+  });
+}
+
+async function loadPalette(name) {
+  if (name === 'default') {
+    COLORS = DEFAULT_COLORS.slice();
+    updateLegendSwatches();
+    render();
+    return;
+  }
+  try {
+    const res = await fetch(`assets/palettes/${name}.json`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    if (Array.isArray(data.colors) && data.colors.length >= 5) {
+      COLORS = data.colors.slice(0, 5);
+      updateLegendSwatches();
+      render();
+    }
+  } catch (e) {
+    console.warn('Failed to load palette, using default', e);
+    COLORS = DEFAULT_COLORS.slice();
+    updateLegendSwatches();
+    render();
+  }
+}
 
 function render() {
   const scale = parseInt(zoom.value, 10);
@@ -226,6 +267,26 @@ function render() {
       ctx.fillRect(x * scaleVal, y * scaleVal, scaleVal, scaleVal);
     }
   }
+
+  // Grid overlay
+  if (gridEnabled) {
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.strokeStyle = '#dfe5ee';
+    for (let y = 0; y <= MAPH; y++) {
+      ctx.beginPath();
+      ctx.moveTo(0, y * scaleVal);
+      ctx.lineTo(MAPW * scaleVal, y * scaleVal);
+      ctx.stroke();
+    }
+    for (let x = 0; x <= MAPW; x++) {
+      ctx.beginPath();
+      ctx.moveTo(x * scaleVal, 0);
+      ctx.lineTo(x * scaleVal, MAPH * scaleVal);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 }
 
 function clampOffsets() {
@@ -254,7 +315,10 @@ canvas.addEventListener('mousemove', (e) => {
   offsetX += dx;
   offsetY += dy;
   clampOffsets();
-  render();
+  // Init
+zoomVal.textContent = `${zoom.value}x`;
+updateLegendSwatches();
+render();
 });
 
 ['mouseup','mouseleave'].forEach(type => canvas.addEventListener(type, () => {
@@ -262,7 +326,114 @@ canvas.addEventListener('mousemove', (e) => {
   canvas.style.cursor = 'grab';
 }));
 
-zoom.addEventListener('input', () => { clampOffsets(); render(); });
+zoom.addEventListener('input', () => {
+  zoomVal.textContent = `${zoom.value}x`;
+  clampOffsets();
+  render();
+});
+
+// Grid toggle
+gridToggle.addEventListener('change', () => {
+  gridEnabled = gridToggle.checked;
+  render();
+});
+
+// Palette selector
+paletteSel.addEventListener('change', () => {
+  loadPalette(paletteSel.value);
+});
+
+// Reset & Export
+resetBtn.addEventListener('click', () => {
+  offsetX = 0; offsetY = 0; zoom.value = 8; zoomVal.textContent = '8x';
+  clampOffsets(); render();
+});
+exportBtn.addEventListener('click', () => {
+  const url = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url; a.download = 'world_map.png';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
+// Wheel zoom (zoom to cursor)
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left - offsetX;
+  const my = e.clientY - rect.top - offsetY;
+  const oldScale = parseInt(zoom.value, 10);
+  const worldX = mx / oldScale;
+  const worldY = my / oldScale;
+  const delta = Math.sign(e.deltaY);
+  let newScale = oldScale - delta; // wheel down -> zoom out
+  newScale = Math.max(parseInt(zoom.min,10), Math.min(parseInt(zoom.max,10), newScale));
+  if (newScale === oldScale) return;
+  zoom.value = String(newScale);
+  zoomVal.textContent = `${newScale}x`;
+  // keep cursor anchored
+  offsetX = (mx + offsetX) - worldX * newScale;
+  offsetY = (my + offsetY) - worldY * newScale;
+  clampOffsets();
+  render();
+}, { passive: false });
+
+// Touch pan & pinch zoom
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    isDragging = true; isPinching = false;
+    lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+  } else if (e.touches.length === 2) {
+    isDragging = false; isPinching = true;
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    lastPinchDist = Math.hypot(dx, dy);
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (isDragging && e.touches.length === 1) {
+    const t = e.touches[0];
+    const dx = t.clientX - lastX; const dy = t.clientY - lastY;
+    lastX = t.clientX; lastY = t.clientY;
+    offsetX += dx; offsetY += dy; clampOffsets(); render();
+  } else if (isPinching && e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.hypot(dx, dy);
+    const oldScale = parseInt(zoom.value, 10);
+    let newScale = oldScale + (dist > lastPinchDist ? 1 : -1);
+    newScale = Math.max(parseInt(zoom.min,10), Math.min(parseInt(zoom.max,10), newScale));
+    if (newScale !== oldScale) {
+      zoom.value = String(newScale);
+      zoomVal.textContent = `${newScale}x`;
+      clampOffsets(); render();
+    }
+    lastPinchDist = dist;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => {
+  isDragging = false; isPinching = false;
+}, { passive: false });
+
+// Keyboard pan and shortcuts
+window.addEventListener('keydown', (e) => {
+  const step = 24;
+  if (e.key === 'ArrowLeft') { offsetX += step; clampOffsets(); render(); }
+  else if (e.key === 'ArrowRight') { offsetX -= step; clampOffsets(); render(); }
+  else if (e.key === 'ArrowUp') { offsetY += step; clampOffsets(); render(); }
+  else if (e.key === 'ArrowDown') { offsetY -= step; clampOffsets(); render(); }
+  else if (e.key === '+' || e.key === '=') {
+    const v = Math.min(parseInt(zoom.max,10), parseInt(zoom.value,10) + 1);
+    zoom.value = String(v); zoomVal.textContent = `${v}x`; clampOffsets(); render();
+  } else if (e.key === '-' || e.key === '_') {
+    const v = Math.max(parseInt(zoom.min,10), parseInt(zoom.value,10) - 1);
+    zoom.value = String(v); zoomVal.textContent = `${v}x`; clampOffsets(); render();
+  } else if (e.key.toLowerCase() === 'g') { gridToggle.checked = !gridToggle.checked; gridEnabled = gridToggle.checked; render(); }
+  else if (e.key.toLowerCase() === 'r') { offsetX=0; offsetY=0; zoom.value='8'; zoomVal.textContent='8x'; clampOffsets(); render(); }
+  else if (e.key.toLowerCase() === 'e') { const url = canvas.toDataURL('image/png'); const a=document.createElement('a'); a.href=url; a.download='world_map.png'; a.click(); }
+});
 render();
 
 </script>
