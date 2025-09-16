@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   vulken3d:
@@ -104,6 +104,56 @@ services:
       - vulken3d-network
     profiles:
       - dev
+
+  worldgen-auto:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vulken-worldgen:auto
+    container_name: vulken-worldgen-auto
+    command: ["bash", "scripts/run.sh", "--auto=2"]
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "5173:5173"
+    environment:
+      - BROWSER
+
+  worldgen-headless:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vulken-worldgen:headless
+    container_name: vulken-worldgen-headless
+    command: ["bash", "scripts/run.sh", "--headless"]
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - BROWSER
+
+  worldgen-gui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vulken-worldgen:gui
+    container_name: vulken-worldgen-gui
+    command: ["bash", "scripts/run.sh"]
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      - DISPLAY
+      - WAYLAND_DISPLAY
+      - XDG_RUNTIME_DIR
+      - BROWSER
+    devices:
+      - "/dev/dri:/dev/dri"
+    gpus: all
+    # Uncomment if you need broader hardware access
+    # privileged: true
 
 volumes:
   vulken_cache:
