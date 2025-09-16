@@ -5,26 +5,7 @@
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
   <title>VoxelVK 3D World - Canvas Viewer</title>
   <link rel=\"stylesheet\" href=\"assets/css/world_viewer.css\" />
-  <style>
-    :root { --accent: #00ff88; }
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #0f1115; color: #dfe5ee; margin: 0; padding: 24px;
-    }
-    h1 { color: var(--accent); text-align: center; margin: 0 0 8px 0; }
-    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 16px; }
-    .panel {
-      background: #0b0d12; border: 1px solid #1f2937; border-radius: 12px;
-      padding: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); max-width: 1000px; margin: 16px auto;
-    }
-    .controls { display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
-    label { color:#a3b3c3; font-size:14px; }
-    input[type=range] { width: 240px; }
-    .canvas-wrap { display:flex; justify-content:center; overflow:auto; border: 1px solid #1f2937; border-radius: 10px; background:#0a0c10; padding: 12px;}
-    canvas { image-rendering: pixelated; image-rendering: crisp-edges; cursor: grab; }
-    .legend { text-align:center; margin-top: 12px; color:#a3b3c3; font-size:14px; }
-    .legend .sw { display:inline-block; width:12px; height:12px; border-radius:2px; margin:0 6px -1px 12px; }
-  </style>
+  <!-- styles moved to assets/css/world_viewer.css -->
 </head>
 <body>
   <h1>🌍 VoxelVK World Viewer</h1>
@@ -315,10 +296,7 @@ canvas.addEventListener('mousemove', (e) => {
   offsetX += dx;
   offsetY += dy;
   clampOffsets();
-  // Init
-zoomVal.textContent = `${zoom.value}x`;
-updateLegendSwatches();
-render();
+  render();
 });
 
 ['mouseup','mouseleave'].forEach(type => canvas.addEventListener(type, () => {
@@ -434,6 +412,8 @@ window.addEventListener('keydown', (e) => {
   else if (e.key.toLowerCase() === 'r') { offsetX=0; offsetY=0; zoom.value='8'; zoomVal.textContent='8x'; clampOffsets(); render(); }
   else if (e.key.toLowerCase() === 'e') { const url = canvas.toDataURL('image/png'); const a=document.createElement('a'); a.href=url; a.download='world_map.png'; a.click(); }
 });
+zoomVal.textContent = `${zoom.value}x`;
+updateLegendSwatches();
 render();
 
 </script>
