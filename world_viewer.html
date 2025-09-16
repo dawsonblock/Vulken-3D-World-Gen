@@ -14,7 +14,19 @@
     <div class=\"controls\">
       <label>Zoom
         <input id=\"zoom\" type=\"range\" min=\"4\" max=\"16\" step=\"1\" value=\"8\" />
+        <span id=\"zoomVal\">8x</span>
       </label>
+      <label><input id=\"grid\" type=\"checkbox\" /> Grid</label>
+      <label>Palette
+        <select id=\"palette\">
+          <option value=\"default\">Default</option>
+          <option value=\"forest\">Forest</option>
+          <option value=\"desert\">Desert</option>
+          <option value=\"arctic\">Arctic</option>
+        </select>
+      </label>
+      <button id=\"resetBtn\" type=\"button\">Reset View</button>
+      <button id=\"exportBtn\" type=\"button\">Export PNG</button>
     </div>
     <div class=\"canvas-wrap\">
       <canvas id=\"mapCanvas\" width=\"256\" height=\"256\"></canvas>
