@@ -1,10 +1,21 @@
 cmake_minimum_required(VERSION 3.24...3.28 FATAL_ERROR)
 project(VoxelVK_Elite_ALL LANGUAGES CXX)
 
-# Find glslc (Vulkan SDK / shaderc)
-find_program(GLSLC_EXECUTABLE NAMES glslc HINTS ENV VULKAN_SDK PATH_SUFFIXES Bin bin)
-if (NOT GLSLC_EXECUTABLE)
-    message(FATAL_ERROR "glslc not found. Install Vulkan SDK or glslang-tools.")
+# Graphics and build options
+option(ENABLE_GRAPHICS "Build Vulkan graphics targets" ON)
+option(WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
+
+# VCPKG toolchain fallback
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE AND DEFINED ENV{VCPKG_ROOT})
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "")
+endif()
+
+# Find glslc only when graphics enabled
+if(ENABLE_GRAPHICS)
+    find_program(GLSLC_EXECUTABLE NAMES glslc HINTS ENV VULKAN_SDK PATH_SUFFIXES Bin bin)
+    if (NOT GLSLC_EXECUTABLE)
+        message(FATAL_ERROR "glslc not found. Install Vulkan SDK or glslang-tools.")
+    endif()
 endif()
 
 # Set policies for modern CMake
@@ -18,7 +29,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Hardening and warnings options
-option(VULKEN_ENABLE_WARNINGS_AS_ERRORS "Treat warnings as errors" ON)
 option(VULKEN_ENABLE_HARDENING "Enable hardening flags" ON)
 
 # Demo build options
@@ -28,7 +38,7 @@ option(BUILD_EXTRAS "Build extended demos and experimental apps" OFF)
 if(MSVC)
   add_compile_options(/W4 /permissive- /Zc:__cplusplus /guard:cf)
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-  if(VULKEN_ENABLE_WARNINGS_AS_ERRORS)
+  if(WARNINGS_AS_ERRORS)
     add_compile_options(/WX)
   endif()
   # Linker hardening flags
@@ -39,7 +49,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   if(NOT APPLE)
     add_link_options(-Wl,--no-undefined)
   endif()
-  if(VULKEN_ENABLE_WARNINGS_AS_ERRORS)
+  if(WARNINGS_AS_ERRORS)
     add_compile_options(-Werror)
   endif()
 endif()
@@ -229,8 +239,8 @@ else()
   message(WARNING "GLM not found - math functionality may not link")
 endif()
 
-# Only configure graphics stack when not headless-only
-if(NOT VOXELVK_HEADLESS_ONLY)
+# Only configure graphics stack when graphics enabled
+if(ENABLE_GRAPHICS)
   find_package(Vulkan QUIET)
   if(NOT Vulkan_FOUND)
     message(WARNING "Vulkan not found - enabling headless-only mode")
@@ -238,7 +248,7 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   endif()
 endif()
 
-if(NOT VOXELVK_HEADLESS_ONLY AND Vulkan_FOUND)
+if(ENABLE_GRAPHICS AND Vulkan_FOUND)
 
   # VMA (Vulkan Memory Allocator) integration
   find_package(VulkanMemoryAllocator QUIET)

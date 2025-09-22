@@ -524,8 +524,9 @@ BufferResult createVertexBuffer(const void* data, size_t size, const char* name)
         bufferInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::GEOMETRY, name);
 
     if (data && result.isValid()) {
-        // TODO: Upload data via staging buffer
-        g_memLogger.Debug("Vertex buffer data upload would happen here");
+        // Note: Upload via staging buffer requires queue and command pool
+        // This will be handled by the caller using upload_to_buffer
+        g_memLogger.Debug("Vertex buffer created, upload via upload_to_buffer()");
     }
 
     return result;
@@ -542,8 +543,9 @@ BufferResult createIndexBuffer(const void* data, size_t size, const char* name) 
         bufferInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::GEOMETRY, name);
 
     if (data && result.isValid()) {
-        // TODO: Upload data via staging buffer
-        g_memLogger.Debug("Index buffer data upload would happen here");
+        // Note: Upload via staging buffer requires queue and command pool
+        // This will be handled by the caller using upload_to_buffer
+        g_memLogger.Debug("Index buffer created, upload via upload_to_buffer()");
     }
 
     return result;
@@ -588,6 +590,102 @@ BufferResult createWeatherBuffer(size_t size, const char* name) {
 
     return MemoryManager::instance().createBuffer(
         bufferInfo, VMA_MEMORY_USAGE_GPU_ONLY, MemoryCategory::WEATHER, name);
+}
+
+BufferResult create_device_buffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, const char* name) {
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    return MemoryManager::instance().createBuffer(
+        bufferInfo, memoryUsage, MemoryCategory::STAGING, name);
+}
+
+void upload_to_buffer(BufferResult dst, std::span<const std::byte> data, VkQueue queue, VkCommandPool pool) {
+    if (!dst.isValid() || data.empty()) {
+        g_memLogger.Warn("Invalid destination buffer or empty data for upload");
+        return;
+    }
+
+    auto& memMgr = MemoryManager::instance();
+
+    // Create staging buffer
+    VkBufferCreateInfo stagingInfo{};
+    stagingInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    stagingInfo.size = data.size();
+    stagingInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    stagingInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    auto stagingResult = memMgr.createBuffer(
+        stagingInfo, VMA_MEMORY_USAGE_CPU_ONLY, MemoryCategory::STAGING, "StagingUpload");
+
+    if (!stagingResult.isValid()) {
+        g_memLogger.Error("Failed to create staging buffer for upload");
+        return;
+    }
+
+    // Map and copy data
+    void* mapped = memMgr.map(stagingResult.allocation);
+    if (!mapped) {
+        g_memLogger.Error("Failed to map staging buffer");
+        memMgr.destroyBuffer(stagingResult.buffer, stagingResult.allocation);
+        return;
+    }
+
+    std::memcpy(mapped, data.data(), data.size());
+    memMgr.unmap(stagingResult.allocation);
+
+    // Record copy command
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = pool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer cmdBuffer;
+    VkResult result = vkAllocateCommandBuffers(memMgr.device_, &allocInfo, &cmdBuffer);
+    if (result != VK_SUCCESS) {
+        g_memLogger.Error("Failed to allocate command buffer for staging upload");
+        memMgr.destroyBuffer(stagingResult.buffer, stagingResult.allocation);
+        return;
+    }
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(cmdBuffer, &beginInfo);
+
+    VkBufferCopy copyRegion{};
+    copyRegion.srcOffset = 0;
+    copyRegion.dstOffset = 0;
+    copyRegion.size = data.size();
+    vkCmdCopyBuffer(cmdBuffer, stagingResult.buffer, dst.buffer, 1, &copyRegion);
+
+    vkEndCommandBuffer(cmdBuffer);
+
+    // Submit and wait
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &cmdBuffer;
+
+    VkFence fence;
+    VkFenceCreateInfo fenceInfo{};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    vkCreateFence(memMgr.device_, &fenceInfo, nullptr, &fence);
+
+    vkQueueSubmit(queue, 1, &submitInfo, fence);
+    vkWaitForFences(memMgr.device_, 1, &fence, VK_TRUE, UINT64_MAX);
+
+    // Cleanup
+    vkDestroyFence(memMgr.device_, fence, nullptr);
+    vkFreeCommandBuffers(memMgr.device_, pool, 1, &cmdBuffer);
+    memMgr.destroyBuffer(stagingResult.buffer, stagingResult.allocation);
+
+    g_memLogger.Debug("Successfully uploaded {} bytes to device buffer", data.size());
 }
 
 } // namespace memory
