@@ -397,14 +397,17 @@ set(VOXELVK_ENABLE_P2_PERFORMANCE ON CACHE BOOL "Enable P2 frame pacing and perf
 
 if(VOXELVK_ENABLE_P2_PERFORMANCE)
   # P2 frame pacing and performance sources
-  file(GLOB P2_PERFORMANCE_SRC
-    src/render/frame_graph.cpp
-    src/render/taa_system.cpp
-    src/render/screen_space_effects.cpp
-    src/core/performance_monitor.cpp
-  )
+  # Only add performance sources when graphics is enabled
+  if(ENABLE_GRAPHICS)
+    file(GLOB P2_PERFORMANCE_SRC
+      src/render/frame_graph.cpp
+      src/render/taa_system.cpp
+      src/render/screen_space_effects.cpp
+      src/core/performance_monitor.cpp
+    )
 
-  list(APPEND VOXELVK_ELITE_SOURCES ${P2_PERFORMANCE_SRC})
+    list(APPEND VOXELVK_ELITE_SOURCES ${P2_PERFORMANCE_SRC})
+  endif()
 
   # P2 performance shaders
   set(P2_SHADERS
@@ -506,14 +509,16 @@ set(VOXELVK_ENABLE_P0_RELIABILITY ON CACHE BOOL "Enable P0 production reliabilit
 
 if(VOXELVK_ENABLE_P0_RELIABILITY)
   # P0 reliability sources
-  file(GLOB P0_RELIABILITY_SRC
-    src/vk/device_caps.cpp
-    src/vk/error_handling.cpp
-    src/vk/swapchain_manager.cpp
-    src/vk/pipeline_cache_manager.cpp
-  )
+  if(ENABLE_GRAPHICS)
+    file(GLOB P0_RELIABILITY_SRC
+      src/vk/device_caps.cpp
+      src/vk/error_handling.cpp
+      src/vk/swapchain_manager.cpp
+      src/vk/pipeline_cache_manager.cpp
+    )
 
-  list(APPEND VOXELVK_ELITE_SOURCES ${P0_RELIABILITY_SRC})
+    list(APPEND VOXELVK_ELITE_SOURCES ${P0_RELIABILITY_SRC})
+  endif()
 
   # P0 demo application (simplified) - gated behind BUILD_EXTRAS
   if(NOT VOXELVK_HEADLESS_ONLY AND BUILD_EXTRAS)
@@ -576,8 +581,15 @@ if(VOXELVK_HEADLESS_ONLY)
   )
   add_executable(VoxelVK_Elite_ALL ${HEADLESS_SOURCES} src/core/headless_main.cpp)
 else()
+  # Add logger for both headless and graphics builds
+  list(APPEND VOXELVK_ELITE_SOURCES src/core/logger.cpp)
+
   # Full build with all sources
-  add_executable(VoxelVK_Elite_ALL ${VOXELVK_ELITE_SOURCES} apps/main_imgui_vulkan.cpp)
+  if(ENABLE_GRAPHICS)
+    add_executable(VoxelVK_Elite_ALL ${VOXELVK_ELITE_SOURCES} apps/main_imgui_vulkan.cpp)
+  else()
+    add_executable(VoxelVK_Elite_ALL ${VOXELVK_ELITE_SOURCES} src/core/headless_main.cpp)
+  endif()
 endif()
 
 target_compile_definitions(VoxelVK_Elite_ALL PRIVATE
@@ -593,7 +605,7 @@ if(NOT VOXELVK_HEADLESS_ONLY)
 endif()
 
 # Full engine target only when graphics stack is available
-if(NOT VOXELVK_HEADLESS_ONLY)
+if(ENABLE_GRAPHICS)
   # --- Build tagging sources ---
   list(APPEND VOXELVK_ELITE_SOURCES
     src/core/build_info_print.cpp
@@ -621,12 +633,26 @@ if(NOT VOXELVK_HEADLESS_ONLY)
   endif()
 
   # --- Core System Integration ---
-  list(APPEND VOXELVK_ELITE_SOURCES src/core/logger.cpp)
+  # Logger is needed for both headless and graphics builds
+  # (moved outside ENABLE_GRAPHICS block)
+
+  # Only add additional graphics sources when graphics is enabled
+  # (Vulkan sources are already added in the ENABLE_GRAPHICS block above)
 
   # Configure the main target
   add_dependencies(VoxelVK_Elite_ALL compile_shaders)
   target_include_directories(VoxelVK_Elite_ALL PRIVATE ${CMAKE_SOURCE_DIR}/src)
-  target_link_libraries(VoxelVK_Elite_ALL PRIVATE Vulkan::Vulkan Threads::Threads ${GLFW_LIB})
+  target_link_libraries(VoxelVK_Elite_ALL PRIVATE Threads::Threads)
+
+  # Only link graphics libraries when graphics is enabled
+  if(ENABLE_GRAPHICS)
+    if(TARGET Vulkan::Vulkan)
+      target_link_libraries(VoxelVK_Elite_ALL PRIVATE Vulkan::Vulkan)
+    endif()
+    if(GLFW_LIB)
+      target_link_libraries(VoxelVK_Elite_ALL PRIVATE ${GLFW_LIB})
+    endif()
+  endif()
   if(JSON_LIB)
     target_link_libraries(VoxelVK_Elite_ALL PRIVATE ${JSON_LIB})
   endif()
@@ -642,13 +668,15 @@ if(NOT VOXELVK_HEADLESS_ONLY)
     target_compile_definitions(VoxelVK_Elite_ALL PRIVATE VOXELVK_ENABLE_WEATHER=1)
   endif()
   # Demo: GUI fullscreen toggle (requires GLFW + OpenGL)
-  find_package(OpenGL QUIET)
-  if(OpenGL_FOUND)
-    add_executable(gui_fullscreen_demo apps/gui_fullscreen_demo.cpp ${AI_SRC})
-    target_link_libraries(gui_fullscreen_demo PRIVATE ${GLFW_LIB} OpenGL::GL)
-    add_dependencies(gui_fullscreen_demo compile_shaders)
-  else()
-    message(WARNING "OpenGL not found; gui_fullscreen_demo will be skipped")
+  if(ENABLE_GRAPHICS)
+    find_package(OpenGL QUIET)
+    if(OpenGL_FOUND)
+      add_executable(gui_fullscreen_demo apps/gui_fullscreen_demo.cpp ${AI_SRC})
+      target_link_libraries(gui_fullscreen_demo PRIVATE ${GLFW_LIB} OpenGL::GL)
+      add_dependencies(gui_fullscreen_demo compile_shaders)
+    else()
+      message(WARNING "OpenGL not found; gui_fullscreen_demo will be skipped")
+    endif()
   endif()
 
   # Weather system demo and integration test (extras)
@@ -678,6 +706,8 @@ if(NOT VOXELVK_HEADLESS_ONLY)
 
 endif() # NOT VOXELVK_HEADLESS_ONLY
 
+# Add logger for both headless and graphics builds (moved before target creation)
+
   # Optional RAG integrations (FAISS, ONNX Runtime) and GUI demos
   if(NOT VOXELVK_HEADLESS_ONLY)
     # Use soft-detection to avoid breaking builds if libs not available
@@ -706,7 +736,7 @@ endif() # NOT VOXELVK_HEADLESS_ONLY
 
     # Vulkan fullscreen demo (optional): GLFW Vulkan window + swapchain recreate on toggle
     option(VOXELVK_BUILD_VULKAN_FULLSCREEN_DEMO "Build the simple Vulkan fullscreen demo" ON)
-    if(VOXELVK_BUILD_VULKAN_FULLSCREEN_DEMO)
+    if(VOXELVK_BUILD_VULKAN_FULLSCREEN_DEMO AND ENABLE_GRAPHICS)
       add_executable(vulkan_fullscreen_demo apps/vulkan_fullscreen_demo.cpp ${AI_SRC})
       target_link_libraries(vulkan_fullscreen_demo PRIVATE ${GLFW_LIB} Vulkan::Vulkan)
     endif()
@@ -742,8 +772,11 @@ endif() # NOT VOXELVK_HEADLESS_ONLY
     endif()
   endif()
 
-# Add engine sublibrary
-add_subdirectory(src/engine)
+# Add engine sublibrary (only when graphics enabled)
+if(ENABLE_GRAPHICS)
+  add_subdirectory(src/engine)
+  target_link_libraries(vulken_engine PRIVATE Vulkan::Vulkan)
+endif()
 
 # Headless targets for CI and production
 if(VOXELVK_HEADLESS_ONLY)
@@ -762,6 +795,10 @@ endif()
 foreach(tgt IN LISTS VOXELVK_ELITE_SOURCES)
   if(TARGET ${tgt})
     target_link_libraries(${tgt} PRIVATE vulken_engine)
+    # Only link Vulkan for graphics targets
+    if(ENABLE_GRAPHICS AND TARGET Vulkan::Vulkan)
+      target_link_libraries(${tgt} PRIVATE Vulkan::Vulkan)
+    endif()
   endif()
 endforeach()
 

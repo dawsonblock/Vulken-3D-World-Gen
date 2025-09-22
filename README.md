@@ -10,6 +10,61 @@
 
 **VoxelVK** is a production-grade 3D world generation engine built on Vulkan 1.3, featuring procedural terrain generation, AI navigation, and real-time world visualization with multiple demo interfaces.
 
+## 🚀 **Quick Start**
+
+### **Build Instructions**
+
+#### **Prerequisites**
+- **C++20 compatible compiler** (GCC 11+, Clang 12+, MSVC 2022+)
+- **CMake 3.24+**
+- **Vulkan SDK 1.3+** (for graphics builds only)
+- **Python 3.8+** (for tooling)
+
+#### **Headless Build** (No Vulkan Required)
+```bash
+# Quick headless build
+./scripts/build.sh --type headless
+
+# Or with CMake directly
+cmake -S . -B build_headless -DENABLE_GRAPHICS=OFF
+cmake --build build_headless -j
+```
+
+#### **Graphics Build** (Full Vulkan Support)
+```bash
+# Graphics build with Vulkan
+./scripts/build.sh --type graphics
+
+# Or with CMake directly
+cmake -S . -B build_graphics -DENABLE_GRAPHICS=ON
+cmake --build build_graphics -j
+```
+
+#### **Build Presets**
+```bash
+# Use CMake presets for different configurations
+cmake --preset headless-debug      # Debug headless build
+cmake --preset headless            # Release headless build
+cmake --preset graphics-debug      # Debug graphics build
+cmake --preset graphics-release    # Optimized graphics build
+```
+
+#### **Testing**
+```bash
+# Run all tests
+./scripts/test.sh
+
+# Run specific test categories
+./scripts/test.sh --type unit      # Unit tests only
+./scripts/test.sh --type graphics  # Graphics tests only
+./scripts/test.sh --filter mesher  # Tests matching pattern
+```
+
+#### **Runtime Requirements**
+- **Headless**: No additional requirements
+- **Graphics**: Vulkan 1.3 compatible GPU and drivers
+- **Development**: glslc (Vulkan SDK) for shader compilation
+
 ## 🎬 **Live Demo**
 
 ### 🌍 **Procedural World Generation**
@@ -18,7 +73,7 @@
 ./world_generator
 # Output: 1,048,576 voxels with realistic terrain distribution
 
-# Create interactive visualizations  
+# Create interactive visualizations
 ./world_visualizer
 # Output: ASCII maps + HTML viewers with color-coded terrain
 
@@ -120,7 +175,7 @@ cd Vulken-3D-World-Gen
 
 # Or run individual components:
 ./world_generator      # Generate 1M+ voxel world
-./world_visualizer     # Create HTML/ASCII viewers  
+./world_visualizer     # Create HTML/ASCII viewers
 ./build_minimal/rl_nav_demo  # Train AI navigation
 python3 demo_server.py # Launch web interface
 ```
@@ -344,7 +399,7 @@ PORT=6080 scripts/stop_gui_web.sh
 ./world_visualizer
 # Outputs:
 #   - ASCII terrain maps (world_map.txt)
-#   - Interactive HTML viewer (world_viewer.html)  
+#   - Interactive HTML viewer (world_viewer.html)
 #   - Real-time statistics and color-coded terrain
 ```
 
@@ -363,7 +418,7 @@ PORT=6080 scripts/stop_gui_web.sh
 🎮 Total voxels generated: 1,048,576
 📊 Voxel distribution:
   Air: 915,550 (87.3%)
-  Stone: 114,581 (10.9%) 
+  Stone: 114,581 (10.9%)
   Grass: 8,548 (0.8%)
   Water: 7,836 (0.7%)
   Trees: 2,061 (0.2%)

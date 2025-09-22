@@ -11,6 +11,8 @@ set(VULKEN_ENGINE_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/storage/FileStorageBackend.cpp
     ${CMAKE_CURRENT_LIST_DIR}/meshing/MeshGenerator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/render/VulkanRenderer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/mesh/MarchingCubesGenerator.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/mesh/MarchingCubesTables.cpp
 )
 
 add_library(vulken_engine STATIC ${VULKEN_ENGINE_SOURCES})

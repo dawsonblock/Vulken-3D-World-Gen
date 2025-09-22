@@ -19,6 +19,59 @@ add_executable(test_headless_swapchain test_headless_swapchain.cpp)
 target_link_libraries(test_headless_swapchain PRIVATE GTest::gtest_main Vulkan::Vulkan)
 gtest_discover_tests(test_headless_swapchain)
 
+# Mesher tests
+add_executable(test_mesher_sphere test_mesher_sphere.cpp)
+target_compile_features(test_mesher_sphere PRIVATE cxx_std_20)
+target_include_directories(test_mesher_sphere PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(test_mesher_sphere PRIVATE GTest::gtest_main)
+
+# Link engine library if available
+if(TARGET vulken_engine)
+  target_link_libraries(test_mesher_sphere PRIVATE vulken_engine)
+endif()
+
+gtest_discover_tests(test_mesher_sphere)
+
+# Staging copy tests (only when graphics enabled)
+if(ENABLE_GRAPHICS)
+  add_executable(test_staging_copy test_staging_copy.cpp)
+  target_compile_features(test_staging_copy PRIVATE cxx_std_20)
+  target_include_directories(test_staging_copy PRIVATE ${CMAKE_SOURCE_DIR}/src)
+  target_link_libraries(test_staging_copy PRIVATE GTest::gtest_main Vulkan::Vulkan)
+
+  # Add VMA dependency if available
+  find_package(VulkanMemoryAllocator QUIET)
+  if(VulkanMemoryAllocator_FOUND)
+    target_link_libraries(test_staging_copy PRIVATE GPUOpen::VulkanMemoryAllocator)
+  else()
+    # Fallback: look for VMA header
+    find_path(VMA_INCLUDE_DIR vk_mem_alloc.h HINTS /usr/include ${CMAKE_SOURCE_DIR}/external/third_party)
+    if(VMA_INCLUDE_DIR)
+      target_include_directories(test_staging_copy PRIVATE ${VMA_INCLUDE_DIR})
+    endif()
+  endif()
+
+  gtest_discover_tests(test_staging_copy)
+
+  # Shader compile tests
+  add_executable(test_shader_compile test_shader_compile.cpp)
+  target_compile_features(test_shader_compile PRIVATE cxx_std_20)
+  target_link_libraries(test_shader_compile PRIVATE GTest::gtest_main)
+  gtest_discover_tests(test_shader_compile)
+
+  # Swapchain recreate tests
+  add_executable(test_swapchain_recreate test_swapchain_recreate.cpp)
+  target_compile_features(test_swapchain_recreate PRIVATE cxx_std_20)
+  target_link_libraries(test_swapchain_recreate PRIVATE GTest::gtest_main Vulkan::Vulkan)
+  find_package(glfw3 QUIET)
+  if(glfw3_FOUND)
+    target_link_libraries(test_swapchain_recreate PRIVATE glfw)
+  else()
+    target_compile_definitions(test_swapchain_recreate PRIVATE GLFW_NOT_FOUND)
+  endif()
+  gtest_discover_tests(test_swapchain_recreate)
+endif()
+
 add_executable(test_math_util test_math_util.cpp)
 target_compile_features(test_math_util PRIVATE cxx_std_20)
 target_include_directories(test_math_util PRIVATE ${CMAKE_SOURCE_DIR}/src)

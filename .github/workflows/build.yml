@@ -13,42 +13,71 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-2022]
+        include:
+          - os: ubuntu-22.04
+            build_type: headless
+            enable_graphics: false
+          - os: ubuntu-22.04
+            build_type: graphics
+            enable_graphics: true
+          - os: windows-2022
+            build_type: headless
+            enable_graphics: false
+          - os: windows-2022
+            build_type: graphics
+            enable_graphics: true
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Vulkan toolchain (Linux)
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.enable_graphics == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y glslang-tools shaderc vulkan-tools ninja-build
           echo "GLSLC=$(command -v glslc)" >> $GITHUB_ENV
 
       - name: Install Vulkan SDK (Windows)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && matrix.enable_graphics == 'true'
         shell: powershell
         run: |
           choco install vulkan-sdk --version=1.3.290.0 -y
           echo "GLSLC=$Env:VULKAN_SDK\Bin\glslc.exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           echo "PATH=$Env:VULKAN_SDK\Bin;$Env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+      - name: Install build tools
+        run: |
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y ninja-build
+          fi
+
       - name: Configure
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_GRAPHICS=${{ matrix.enable_graphics }} \
+            -DWARNINGS_AS_ERRORS=true \
+            -DENABLE_TESTS=true
 
       - name: Build
         run: cmake --build build -j
 
       - name: Compile shaders
+        if: matrix.enable_graphics == 'true'
         shell: bash
         run: |
           chmod +x scripts/compile_shaders.sh
           GLSLC="${{ env.GLSLC }}" scripts/compile_shaders.sh
 
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure
+
       - name: Headless smoke
-        if: runner.os == 'Linux' # typically easier to run headless
+        if: matrix.build_type == 'headless' && runner.os == 'Linux'
         run: |
           chmod +x tests/smoke/engine_headless.sh
           tests/smoke/engine_headless.sh

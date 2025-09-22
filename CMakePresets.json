@@ -93,11 +93,12 @@
   "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ENABLE_GRAPHICS": false,
         "ENABLE_IMGUI_OVERLAY": false,
         "ENABLE_VALIDATION_LAYERS": false,
         "ENABLE_VK_DEBUG_MARKERS": false,
         "ENABLE_TESTS": true,
-  "VOXELVK_DEMO_WERROR": true,
+        "WARNINGS_AS_ERRORS": true,
         "VOXELVK_ENABLE_CUDA": true,
         "VOXELVK_ENABLE_TENSORRT": true,
         "VOXELVK_HEADLESS_ONLY": true,
@@ -128,6 +129,62 @@
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "VCPKG_HOST_TRIPLET": "x64-linux",
         "VCPKG_VERBOSE": true
+      }
+    },
+    {
+      "name": "headless-debug",
+      "displayName": "Headless Debug",
+      "description": "Debug headless build for development",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_headless_debug",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_GRAPHICS": false,
+        "ENABLE_TESTS": true,
+        "WARNINGS_AS_ERRORS": false,
+        "VOXELVK_HEADLESS_ONLY": true,
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "graphics-debug",
+      "displayName": "Graphics Debug",
+      "description": "Debug build with full graphics support",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_graphics_debug",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_GRAPHICS": true,
+        "ENABLE_IMGUI_OVERLAY": true,
+        "ENABLE_VALIDATION_LAYERS": true,
+        "ENABLE_VK_DEBUG_MARKERS": true,
+        "ENABLE_TESTS": true,
+        "WARNINGS_AS_ERRORS": false,
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "graphics-release",
+      "displayName": "Graphics Release",
+      "description": "Optimized release build with graphics",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_graphics_release",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "ENABLE_GRAPHICS": true,
+        "ENABLE_IMGUI_OVERLAY": false,
+        "ENABLE_VALIDATION_LAYERS": false,
+        "ENABLE_VK_DEBUG_MARKERS": false,
+        "ENABLE_TESTS": true,
+        "WARNINGS_AS_ERRORS": true,
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": true,
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux"
       }
     }
     ,
