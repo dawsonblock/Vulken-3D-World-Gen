@@ -15,7 +15,7 @@ struct VoxelWorld {
 
     void setVoxel(int x, int y, int z, uint8_t type) {
         if (x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < depth) {
-            voxels[x + y * width + z * width * height] = type;
+            voxels[static_cast<size_t>(x + y * width + z * width * height)] = type;
         }
     }
 
@@ -26,18 +26,18 @@ struct VoxelWorld {
         // Generate heightmap
         for (int x = 0; x < width; x++) {
             for (int z = 0; z < depth; z++) {
-                float height = 0.0f;
+                float terrain_height = 0.0f;
                 float amplitude = 16.0f;
                 float frequency = 0.01f;
 
                 // Simple noise-based height generation
                 for (int octave = 0; octave < 4; octave++) {
-                    height += amplitude * std::sin(frequency * x) * std::cos(frequency * z);
+                    terrain_height += amplitude * std::sin(frequency * x) * std::cos(frequency * z);
                     amplitude *= 0.5f;
                     frequency *= 2.0f;
                 }
 
-                int terrainHeight = static_cast<int>(height + 32);
+                int terrainHeight = static_cast<int>(terrain_height + 32);
                 terrainHeight = std::max(0, std::min(terrainHeight, static_cast<int>(height) - 1));
 
                 // Fill voxels
@@ -89,7 +89,7 @@ struct VoxelWorld {
         file.write(reinterpret_cast<const char*>(&depth), sizeof(depth));
 
         // Write voxel data
-        file.write(reinterpret_cast<const char*>(voxels.data()), voxels.size());
+        file.write(reinterpret_cast<const char*>(voxels.data()), static_cast<std::streamsize>(voxels.size()));
 
         std::cout << "World exported to: " << filename << std::endl;
     }

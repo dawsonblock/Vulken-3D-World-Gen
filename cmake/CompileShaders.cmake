@@ -22,17 +22,22 @@ if(FALSE AND ENABLE_GRAPHICS)
   set(SPV_DIR "${CMAKE_BINARY_DIR}/.cache/spv")
   set(SPV_OUTPUTS)
 
-  # Only compile actual shader files, not include files
-  # These are the verified shader files that contain main() functions
-  set(ACTUAL_SHADERS
-    "${CMAKE_SOURCE_DIR}/shaders_vk/post/atmosphere.frag.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/post/clouds.frag.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/shadows/csm_depth.vert.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/shadows/csm_depth.frag.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/common/fullscreen.vert.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/ibl/brdf_lut.comp.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/ai/blockize.comp.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/lighting/use_csm_pcss_example.glsl"
+  # Only compile actual shader files with standard extensions
+  file(GLOB_RECURSE ACTUAL_SHADERS
+    "${CMAKE_SOURCE_DIR}/shaders/*.vert"
+    "${CMAKE_SOURCE_DIR}/shaders/*.frag"
+    "${CMAKE_SOURCE_DIR}/shaders/*.comp"
+    "${CMAKE_SOURCE_DIR}/shaders/*.geom"
+    "${CMAKE_SOURCE_DIR}/shaders/*.tesc"
+    "${CMAKE_SOURCE_DIR}/shaders/*.tese"
+    "${CMAKE_SOURCE_DIR}/shaders/*.mesh"
+    "${CMAKE_SOURCE_DIR}/shaders/*.task"
+    "${CMAKE_SOURCE_DIR}/shaders/*.rgen"
+    "${CMAKE_SOURCE_DIR}/shaders/*.rchit"
+    "${CMAKE_SOURCE_DIR}/shaders/*.rmiss"
+    "${CMAKE_SOURCE_DIR}/shaders/*.rahit"
+    "${CMAKE_SOURCE_DIR}/shaders/*.rcall"
+    "${CMAKE_SOURCE_DIR}/shaders/*.rint"
   )
 
   # Exclude include files (files without main() function)
@@ -45,18 +50,6 @@ if(FALSE AND ENABLE_GRAPHICS)
     "${CMAKE_SOURCE_DIR}/shaders_vk/lighting/csm_binding.glsl"
     "${CMAKE_SOURCE_DIR}/shaders_vk/material/weather_material.glsl"
   )
-
-  # Also include standard shader extensions
-  file(GLOB_RECURSE STANDARD_SHADERS
-    "${CMAKE_SOURCE_DIR}/shaders/*.vert"
-    "${CMAKE_SOURCE_DIR}/shaders/*.frag"
-    "${CMAKE_SOURCE_DIR}/shaders/*.comp"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/*.vert"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/*.frag"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/*.comp"
-  )
-
-  list(APPEND ACTUAL_SHADERS ${STANDARD_SHADERS})
 
   # Compile each shader
   foreach(src ${ACTUAL_SHADERS})

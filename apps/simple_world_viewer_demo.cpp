@@ -1,6 +1,7 @@
 #ifdef ENABLE_GRAPHICS
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
+#define GLU_SILENCE_DEPRECATION
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #else
@@ -32,20 +33,20 @@ struct VoxelRenderer {
         float velocity = camera.speed * deltaTime;
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            camera.x += velocity * sin(camera.yaw * M_PI / 180.0f);
-            camera.z -= velocity * cos(camera.yaw * M_PI / 180.0f);
+            camera.x += velocity * sinf(camera.yaw * 3.14159265f / 180.0f);
+            camera.z -= velocity * cosf(camera.yaw * 3.14159265f / 180.0f);
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            camera.x -= velocity * sin(camera.yaw * M_PI / 180.0f);
-            camera.z += velocity * cos(camera.yaw * M_PI / 180.0f);
+            camera.x -= velocity * sinf(camera.yaw * 3.14159265f / 180.0f);
+            camera.z += velocity * cosf(camera.yaw * 3.14159265f / 180.0f);
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            camera.x -= velocity * cos(camera.yaw * M_PI / 180.0f);
-            camera.z -= velocity * sin(camera.yaw * M_PI / 180.0f);
+            camera.x -= velocity * cosf(camera.yaw * 3.14159265f / 180.0f);
+            camera.z -= velocity * sinf(camera.yaw * 3.14159265f / 180.0f);
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            camera.x += velocity * cos(camera.yaw * M_PI / 180.0f);
-            camera.z += velocity * sin(camera.yaw * M_PI / 180.0f);
+            camera.x += velocity * cosf(camera.yaw * 3.14159265f / 180.0f);
+            camera.z += velocity * sinf(camera.yaw * 3.14159265f / 180.0f);
         }
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
             camera.y += velocity;
@@ -60,8 +61,8 @@ struct VoxelRenderer {
             firstMouse = false;
         }
 
-        float xoffset = xpos - lastX;
-        float yoffset = lastY - ypos;
+        float xoffset = static_cast<float>(xpos - lastX);
+        float yoffset = static_cast<float>(lastY - ypos);
         lastX = xpos;
         lastY = ypos;
 
@@ -128,9 +129,9 @@ struct VoxelRenderer {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 for (int z = 0; z < depth; z++) {
-                    if (world[x][y][z] != 0) {
+                    if (world[static_cast<size_t>(x)][static_cast<size_t>(y)][static_cast<size_t>(z)] != 0) {
                         float r, g, b;
-                        switch (world[x][y][z]) {
+                        switch (world[static_cast<size_t>(x)][static_cast<size_t>(y)][static_cast<size_t>(z)]) {
                             case 1: r = 0.5f; g = 0.5f; b = 0.5f; break; // Stone
                             case 2: r = 0.0f; g = 0.8f; b = 0.0f; break; // Grass
                             case 3: r = 0.0f; g = 0.0f; b = 0.8f; break; // Water
@@ -209,7 +210,7 @@ int main(int argc, char* argv[]) {
 
     // Generate simple world
     std::cout << "Generating world: " << width << "x" << height << "x" << depth << "\n";
-    std::vector<std::vector<std::vector<int>>> world(width, std::vector<std::vector<int>>(height, std::vector<int>(depth, 0)));
+    std::vector<std::vector<std::vector<int>>> world(static_cast<size_t>(width), std::vector<std::vector<int>>(static_cast<size_t>(height), std::vector<int>(static_cast<size_t>(depth), 0)));
 
     // Simple terrain generation
     for (int x = 0; x < width; x++) {
@@ -219,18 +220,18 @@ int main(int argc, char* argv[]) {
 
             for (int y = 0; y < terrainHeight; y++) {
                 if (y == terrainHeight - 1) {
-                    world[x][y][z] = 2; // Grass
+                    world[static_cast<size_t>(x)][static_cast<size_t>(y)][static_cast<size_t>(z)] = 2; // Grass
                 } else if (y < terrainHeight - 3) {
-                    world[x][y][z] = 1; // Stone
+                    world[static_cast<size_t>(x)][static_cast<size_t>(y)][static_cast<size_t>(z)] = 1; // Stone
                 } else {
-                    world[x][y][z] = 4; // Mountain
+                    world[static_cast<size_t>(x)][static_cast<size_t>(y)][static_cast<size_t>(z)] = 4; // Mountain
                 }
             }
 
             // Add some water
             if (terrainHeight < height * 0.2f) {
                 for (int y = terrainHeight; y < height * 0.2f; y++) {
-                    world[x][y][z] = 3; // Water
+                    world[static_cast<size_t>(x)][static_cast<size_t>(y)][static_cast<size_t>(z)] = 3; // Water
                 }
             }
         }
@@ -252,7 +253,7 @@ int main(int argc, char* argv[]) {
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        gluPerspective(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f);
+        gluPerspective(45.0, 1280.0 / 720.0, 0.1, 1000.0);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
