@@ -28,6 +28,10 @@
 /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/CMakeFiles/advanced_3d_terrain_demo.dir
 /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/CMakeFiles/advanced_texturing_demo.dir
 /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/CMakeFiles/gpu_terrain_demo.dir
+/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/CMakeFiles/marching_cubes_terrain_demo.dir
+/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/CMakeFiles/simple_marching_cubes_demo.dir
+/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/CMakeFiles/advanced_triplanar_demo.dir
+/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/CMakeFiles/gpu_compute_terrain_demo.dir
 /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/CMakeFiles/package.dir
 /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/CMakeFiles/package_source.dir
 /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/CMakeFiles/edit_cache.dir

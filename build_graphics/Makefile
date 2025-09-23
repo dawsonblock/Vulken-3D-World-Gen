@@ -363,6 +363,58 @@ gpu_terrain_demo/fast:
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_terrain_demo.dir/build.make apps/CMakeFiles/gpu_terrain_demo.dir/build
 .PHONY : gpu_terrain_demo/fast
 
+#=============================================================================
+# Target rules for targets named marching_cubes_terrain_demo
+
+# Build rule for target.
+marching_cubes_terrain_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 marching_cubes_terrain_demo
+.PHONY : marching_cubes_terrain_demo
+
+# fast build rule for target.
+marching_cubes_terrain_demo/fast:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/marching_cubes_terrain_demo.dir/build.make apps/CMakeFiles/marching_cubes_terrain_demo.dir/build
+.PHONY : marching_cubes_terrain_demo/fast
+
+#=============================================================================
+# Target rules for targets named simple_marching_cubes_demo
+
+# Build rule for target.
+simple_marching_cubes_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 simple_marching_cubes_demo
+.PHONY : simple_marching_cubes_demo
+
+# fast build rule for target.
+simple_marching_cubes_demo/fast:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/simple_marching_cubes_demo.dir/build.make apps/CMakeFiles/simple_marching_cubes_demo.dir/build
+.PHONY : simple_marching_cubes_demo/fast
+
+#=============================================================================
+# Target rules for targets named advanced_triplanar_demo
+
+# Build rule for target.
+advanced_triplanar_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 advanced_triplanar_demo
+.PHONY : advanced_triplanar_demo
+
+# fast build rule for target.
+advanced_triplanar_demo/fast:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_triplanar_demo.dir/build.make apps/CMakeFiles/advanced_triplanar_demo.dir/build
+.PHONY : advanced_triplanar_demo/fast
+
+#=============================================================================
+# Target rules for targets named gpu_compute_terrain_demo
+
+# Build rule for target.
+gpu_compute_terrain_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gpu_compute_terrain_demo
+.PHONY : gpu_compute_terrain_demo
+
+# fast build rule for target.
+gpu_compute_terrain_demo/fast:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_compute_terrain_demo.dir/build.make apps/CMakeFiles/gpu_compute_terrain_demo.dir/build
+.PHONY : gpu_compute_terrain_demo/fast
+
 apps/gui_fullscreen_demo.o: apps/gui_fullscreen_demo.cpp.o
 .PHONY : apps/gui_fullscreen_demo.o
 
@@ -1249,10 +1301,14 @@ help:
 	@echo "... advanced_3d_terrain_demo"
 	@echo "... advanced_terrain_demo"
 	@echo "... advanced_texturing_demo"
+	@echo "... advanced_triplanar_demo"
+	@echo "... gpu_compute_terrain_demo"
 	@echo "... gpu_terrain_demo"
 	@echo "... gui_fullscreen_demo"
+	@echo "... marching_cubes_terrain_demo"
 	@echo "... procedural_world_demo"
 	@echo "... rl_nav_demo"
+	@echo "... simple_marching_cubes_demo"
 	@echo "... simple_world_viewer_demo"
 	@echo "... vulkan_fullscreen_demo"
 	@echo "... vulken_engine"

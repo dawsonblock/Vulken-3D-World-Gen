@@ -346,5 +346,29 @@
   "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/gpu_terrain_demo.dir/gpu_terrain_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/gpu_terrain_demo.cpp",
   "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/gpu_terrain_demo.cpp",
   "output": "apps/CMakeFiles/gpu_terrain_demo.dir/gpu_terrain_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps",
+  "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/marching_cubes_terrain_demo.dir/marching_cubes_terrain_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/marching_cubes_terrain_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/marching_cubes_terrain_demo.cpp",
+  "output": "apps/CMakeFiles/marching_cubes_terrain_demo.dir/marching_cubes_terrain_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps",
+  "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/simple_marching_cubes_demo.dir/simple_marching_cubes_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/simple_marching_cubes_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/simple_marching_cubes_demo.cpp",
+  "output": "apps/CMakeFiles/simple_marching_cubes_demo.dir/simple_marching_cubes_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps",
+  "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/advanced_triplanar_demo.dir/advanced_triplanar_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/advanced_triplanar_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/advanced_triplanar_demo.cpp",
+  "output": "apps/CMakeFiles/advanced_triplanar_demo.dir/advanced_triplanar_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps",
+  "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/gpu_compute_terrain_demo.dir/gpu_compute_terrain_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/gpu_compute_terrain_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/gpu_compute_terrain_demo.cpp",
+  "output": "apps/CMakeFiles/gpu_compute_terrain_demo.dir/gpu_compute_terrain_demo.cpp.o"
 }
 ]

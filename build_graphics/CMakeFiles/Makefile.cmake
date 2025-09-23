@@ -109,4 +109,8 @@ set(CMAKE_DEPEND_INFO_FILES
   "apps/CMakeFiles/advanced_3d_terrain_demo.dir/DependInfo.cmake"
   "apps/CMakeFiles/advanced_texturing_demo.dir/DependInfo.cmake"
   "apps/CMakeFiles/gpu_terrain_demo.dir/DependInfo.cmake"
+  "apps/CMakeFiles/marching_cubes_terrain_demo.dir/DependInfo.cmake"
+  "apps/CMakeFiles/simple_marching_cubes_demo.dir/DependInfo.cmake"
+  "apps/CMakeFiles/advanced_triplanar_demo.dir/DependInfo.cmake"
+  "apps/CMakeFiles/gpu_compute_terrain_demo.dir/DependInfo.cmake"
   )

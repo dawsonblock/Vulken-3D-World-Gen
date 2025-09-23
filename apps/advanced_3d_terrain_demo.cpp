@@ -107,7 +107,7 @@ private:
                                         ny >= 0 && ny < config.height &&
                                         nz >= 0 && nz < config.depth) {
 
-                                        float dist = std::sqrt(dx*dx + dy*dy + dz*dz);
+                                        float dist = std::sqrt(static_cast<float>(dx*dx + dy*dy + dz*dz));
                                         if (dist <= caveSize) {
                                             voxels[static_cast<size_t>(nx)][static_cast<size_t>(ny)][static_cast<size_t>(nz)].type = 0; // Air
                                             voxels[static_cast<size_t>(nx)][static_cast<size_t>(ny)][static_cast<size_t>(nz)].isSolid = false;
