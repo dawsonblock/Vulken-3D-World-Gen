@@ -1,0 +1,1 @@
+/usr/bin/c++ -O2 -g -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/gpu_terrain_demo.dir/gpu_terrain_demo.cpp.o -o gpu_terrain_demo

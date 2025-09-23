@@ -298,6 +298,71 @@ simple_world_viewer_demo/fast:
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/simple_world_viewer_demo.dir/build.make apps/CMakeFiles/simple_world_viewer_demo.dir/build
 .PHONY : simple_world_viewer_demo/fast
 
+#=============================================================================
+# Target rules for targets named advanced_terrain_demo
+
+# Build rule for target.
+advanced_terrain_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 advanced_terrain_demo
+.PHONY : advanced_terrain_demo
+
+# fast build rule for target.
+advanced_terrain_demo/fast:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_terrain_demo.dir/build.make apps/CMakeFiles/advanced_terrain_demo.dir/build
+.PHONY : advanced_terrain_demo/fast
+
+#=============================================================================
+# Target rules for targets named procedural_world_demo
+
+# Build rule for target.
+procedural_world_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 procedural_world_demo
+.PHONY : procedural_world_demo
+
+# fast build rule for target.
+procedural_world_demo/fast:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/procedural_world_demo.dir/build.make apps/CMakeFiles/procedural_world_demo.dir/build
+.PHONY : procedural_world_demo/fast
+
+#=============================================================================
+# Target rules for targets named advanced_3d_terrain_demo
+
+# Build rule for target.
+advanced_3d_terrain_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 advanced_3d_terrain_demo
+.PHONY : advanced_3d_terrain_demo
+
+# fast build rule for target.
+advanced_3d_terrain_demo/fast:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_3d_terrain_demo.dir/build.make apps/CMakeFiles/advanced_3d_terrain_demo.dir/build
+.PHONY : advanced_3d_terrain_demo/fast
+
+#=============================================================================
+# Target rules for targets named advanced_texturing_demo
+
+# Build rule for target.
+advanced_texturing_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 advanced_texturing_demo
+.PHONY : advanced_texturing_demo
+
+# fast build rule for target.
+advanced_texturing_demo/fast:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_texturing_demo.dir/build.make apps/CMakeFiles/advanced_texturing_demo.dir/build
+.PHONY : advanced_texturing_demo/fast
+
+#=============================================================================
+# Target rules for targets named gpu_terrain_demo
+
+# Build rule for target.
+gpu_terrain_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gpu_terrain_demo
+.PHONY : gpu_terrain_demo
+
+# fast build rule for target.
+gpu_terrain_demo/fast:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_terrain_demo.dir/build.make apps/CMakeFiles/gpu_terrain_demo.dir/build
+.PHONY : gpu_terrain_demo/fast
+
 apps/gui_fullscreen_demo.o: apps/gui_fullscreen_demo.cpp.o
 .PHONY : apps/gui_fullscreen_demo.o
 
@@ -1181,7 +1246,12 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... compile_shaders"
 	@echo "... VoxelVK_Elite_ALL"
+	@echo "... advanced_3d_terrain_demo"
+	@echo "... advanced_terrain_demo"
+	@echo "... advanced_texturing_demo"
+	@echo "... gpu_terrain_demo"
 	@echo "... gui_fullscreen_demo"
+	@echo "... procedural_world_demo"
 	@echo "... rl_nav_demo"
 	@echo "... simple_world_viewer_demo"
 	@echo "... vulkan_fullscreen_demo"

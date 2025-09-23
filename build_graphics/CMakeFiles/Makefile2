@@ -106,12 +106,22 @@ clean: tools/clean
 apps/all: apps/CMakeFiles/world_generator_demo.dir/all
 apps/all: apps/CMakeFiles/world_visualizer_demo.dir/all
 apps/all: apps/CMakeFiles/simple_world_viewer_demo.dir/all
+apps/all: apps/CMakeFiles/advanced_terrain_demo.dir/all
+apps/all: apps/CMakeFiles/procedural_world_demo.dir/all
+apps/all: apps/CMakeFiles/advanced_3d_terrain_demo.dir/all
+apps/all: apps/CMakeFiles/advanced_texturing_demo.dir/all
+apps/all: apps/CMakeFiles/gpu_terrain_demo.dir/all
 .PHONY : apps/all
 
 # Recursive "codegen" directory target.
 apps/codegen: apps/CMakeFiles/world_generator_demo.dir/codegen
 apps/codegen: apps/CMakeFiles/world_visualizer_demo.dir/codegen
 apps/codegen: apps/CMakeFiles/simple_world_viewer_demo.dir/codegen
+apps/codegen: apps/CMakeFiles/advanced_terrain_demo.dir/codegen
+apps/codegen: apps/CMakeFiles/procedural_world_demo.dir/codegen
+apps/codegen: apps/CMakeFiles/advanced_3d_terrain_demo.dir/codegen
+apps/codegen: apps/CMakeFiles/advanced_texturing_demo.dir/codegen
+apps/codegen: apps/CMakeFiles/gpu_terrain_demo.dir/codegen
 .PHONY : apps/codegen
 
 # Recursive "preinstall" directory target.
@@ -122,6 +132,11 @@ apps/preinstall:
 apps/clean: apps/CMakeFiles/world_generator_demo.dir/clean
 apps/clean: apps/CMakeFiles/world_visualizer_demo.dir/clean
 apps/clean: apps/CMakeFiles/simple_world_viewer_demo.dir/clean
+apps/clean: apps/CMakeFiles/advanced_terrain_demo.dir/clean
+apps/clean: apps/CMakeFiles/procedural_world_demo.dir/clean
+apps/clean: apps/CMakeFiles/advanced_3d_terrain_demo.dir/clean
+apps/clean: apps/CMakeFiles/advanced_texturing_demo.dir/clean
+apps/clean: apps/CMakeFiles/gpu_terrain_demo.dir/clean
 .PHONY : apps/clean
 
 #=============================================================================
@@ -201,7 +216,7 @@ CMakeFiles/compile_shaders.dir/clean:
 CMakeFiles/rl_nav_demo.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rl_nav_demo.dir/build.make CMakeFiles/rl_nav_demo.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rl_nav_demo.dir/build.make CMakeFiles/rl_nav_demo.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=39,40,41,42,43 "Built target rl_nav_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=49,50,51,52,53 "Built target rl_nav_demo"
 .PHONY : CMakeFiles/rl_nav_demo.dir/all
 
 # Build rule for subdir invocation for target.
@@ -218,7 +233,7 @@ rl_nav_demo: CMakeFiles/rl_nav_demo.dir/rule
 # codegen rule for target.
 CMakeFiles/rl_nav_demo.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rl_nav_demo.dir/build.make CMakeFiles/rl_nav_demo.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=39,40,41,42,43 "Finished codegen for target rl_nav_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=49,50,51,52,53 "Finished codegen for target rl_nav_demo"
 .PHONY : CMakeFiles/rl_nav_demo.dir/codegen
 
 # clean rule for target.
@@ -265,7 +280,7 @@ CMakeFiles/VoxelVK_Elite_ALL.dir/clean:
 CMakeFiles/gui_fullscreen_demo.dir/all: CMakeFiles/compile_shaders.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gui_fullscreen_demo.dir/build.make CMakeFiles/gui_fullscreen_demo.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gui_fullscreen_demo.dir/build.make CMakeFiles/gui_fullscreen_demo.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=34,35,36,37,38 "Built target gui_fullscreen_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=42,43,44,45,46 "Built target gui_fullscreen_demo"
 .PHONY : CMakeFiles/gui_fullscreen_demo.dir/all
 
 # Build rule for subdir invocation for target.
@@ -282,7 +297,7 @@ gui_fullscreen_demo: CMakeFiles/gui_fullscreen_demo.dir/rule
 # codegen rule for target.
 CMakeFiles/gui_fullscreen_demo.dir/codegen: CMakeFiles/compile_shaders.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gui_fullscreen_demo.dir/build.make CMakeFiles/gui_fullscreen_demo.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=34,35,36,37,38 "Finished codegen for target gui_fullscreen_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=42,43,44,45,46 "Finished codegen for target gui_fullscreen_demo"
 .PHONY : CMakeFiles/gui_fullscreen_demo.dir/codegen
 
 # clean rule for target.
@@ -297,7 +312,7 @@ CMakeFiles/gui_fullscreen_demo.dir/clean:
 CMakeFiles/vulkan_fullscreen_demo.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/vulkan_fullscreen_demo.dir/build.make CMakeFiles/vulkan_fullscreen_demo.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/vulkan_fullscreen_demo.dir/build.make CMakeFiles/vulkan_fullscreen_demo.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=46,47,48,49,50 "Built target vulkan_fullscreen_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=56,57,58,59,60 "Built target vulkan_fullscreen_demo"
 .PHONY : CMakeFiles/vulkan_fullscreen_demo.dir/all
 
 # Build rule for subdir invocation for target.
@@ -314,7 +329,7 @@ vulkan_fullscreen_demo: CMakeFiles/vulkan_fullscreen_demo.dir/rule
 # codegen rule for target.
 CMakeFiles/vulkan_fullscreen_demo.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/vulkan_fullscreen_demo.dir/build.make CMakeFiles/vulkan_fullscreen_demo.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=46,47,48,49,50 "Finished codegen for target vulkan_fullscreen_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=56,57,58,59,60 "Finished codegen for target vulkan_fullscreen_demo"
 .PHONY : CMakeFiles/vulkan_fullscreen_demo.dir/codegen
 
 # clean rule for target.
@@ -329,7 +344,7 @@ CMakeFiles/vulkan_fullscreen_demo.dir/clean:
 src/engine/CMakeFiles/vulken_engine.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/engine/CMakeFiles/vulken_engine.dir/build.make src/engine/CMakeFiles/vulken_engine.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/engine/CMakeFiles/vulken_engine.dir/build.make src/engine/CMakeFiles/vulken_engine.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=51,52,53,54,55,56,57 "Built target vulken_engine"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=61,62,63,64,65,66,67 "Built target vulken_engine"
 .PHONY : src/engine/CMakeFiles/vulken_engine.dir/all
 
 # Build rule for subdir invocation for target.
@@ -346,7 +361,7 @@ vulken_engine: src/engine/CMakeFiles/vulken_engine.dir/rule
 # codegen rule for target.
 src/engine/CMakeFiles/vulken_engine.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f src/engine/CMakeFiles/vulken_engine.dir/build.make src/engine/CMakeFiles/vulken_engine.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=51,52,53,54,55,56,57 "Finished codegen for target vulken_engine"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=61,62,63,64,65,66,67 "Finished codegen for target vulken_engine"
 .PHONY : src/engine/CMakeFiles/vulken_engine.dir/codegen
 
 # clean rule for target.
@@ -361,7 +376,7 @@ src/engine/CMakeFiles/vulken_engine.dir/clean:
 apps/CMakeFiles/world_generator_demo.dir/all:
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/world_generator_demo.dir/build.make apps/CMakeFiles/world_generator_demo.dir/depend
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/world_generator_demo.dir/build.make apps/CMakeFiles/world_generator_demo.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=58,59 "Built target world_generator_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=68,69 "Built target world_generator_demo"
 .PHONY : apps/CMakeFiles/world_generator_demo.dir/all
 
 # Build rule for subdir invocation for target.
@@ -378,7 +393,7 @@ world_generator_demo: apps/CMakeFiles/world_generator_demo.dir/rule
 # codegen rule for target.
 apps/CMakeFiles/world_generator_demo.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/world_generator_demo.dir/build.make apps/CMakeFiles/world_generator_demo.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=58,59 "Finished codegen for target world_generator_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=68,69 "Finished codegen for target world_generator_demo"
 .PHONY : apps/CMakeFiles/world_generator_demo.dir/codegen
 
 # clean rule for target.
@@ -393,7 +408,7 @@ apps/CMakeFiles/world_generator_demo.dir/clean:
 apps/CMakeFiles/world_visualizer_demo.dir/all:
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/world_visualizer_demo.dir/build.make apps/CMakeFiles/world_visualizer_demo.dir/depend
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/world_visualizer_demo.dir/build.make apps/CMakeFiles/world_visualizer_demo.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=60,61 "Built target world_visualizer_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=70,71 "Built target world_visualizer_demo"
 .PHONY : apps/CMakeFiles/world_visualizer_demo.dir/all
 
 # Build rule for subdir invocation for target.
@@ -410,7 +425,7 @@ world_visualizer_demo: apps/CMakeFiles/world_visualizer_demo.dir/rule
 # codegen rule for target.
 apps/CMakeFiles/world_visualizer_demo.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/world_visualizer_demo.dir/build.make apps/CMakeFiles/world_visualizer_demo.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=60,61 "Finished codegen for target world_visualizer_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=70,71 "Finished codegen for target world_visualizer_demo"
 .PHONY : apps/CMakeFiles/world_visualizer_demo.dir/codegen
 
 # clean rule for target.
@@ -425,7 +440,7 @@ apps/CMakeFiles/world_visualizer_demo.dir/clean:
 apps/CMakeFiles/simple_world_viewer_demo.dir/all:
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/simple_world_viewer_demo.dir/build.make apps/CMakeFiles/simple_world_viewer_demo.dir/depend
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/simple_world_viewer_demo.dir/build.make apps/CMakeFiles/simple_world_viewer_demo.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=44,45 "Built target simple_world_viewer_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=54,55 "Built target simple_world_viewer_demo"
 .PHONY : apps/CMakeFiles/simple_world_viewer_demo.dir/all
 
 # Build rule for subdir invocation for target.
@@ -442,13 +457,173 @@ simple_world_viewer_demo: apps/CMakeFiles/simple_world_viewer_demo.dir/rule
 # codegen rule for target.
 apps/CMakeFiles/simple_world_viewer_demo.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/simple_world_viewer_demo.dir/build.make apps/CMakeFiles/simple_world_viewer_demo.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=44,45 "Finished codegen for target simple_world_viewer_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=54,55 "Finished codegen for target simple_world_viewer_demo"
 .PHONY : apps/CMakeFiles/simple_world_viewer_demo.dir/codegen
 
 # clean rule for target.
 apps/CMakeFiles/simple_world_viewer_demo.dir/clean:
 	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/simple_world_viewer_demo.dir/build.make apps/CMakeFiles/simple_world_viewer_demo.dir/clean
 .PHONY : apps/CMakeFiles/simple_world_viewer_demo.dir/clean
+
+#=============================================================================
+# Target rules for target apps/CMakeFiles/advanced_terrain_demo.dir
+
+# All Build rule for target.
+apps/CMakeFiles/advanced_terrain_demo.dir/all:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_terrain_demo.dir/build.make apps/CMakeFiles/advanced_terrain_demo.dir/depend
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_terrain_demo.dir/build.make apps/CMakeFiles/advanced_terrain_demo.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=36,37 "Built target advanced_terrain_demo"
+.PHONY : apps/CMakeFiles/advanced_terrain_demo.dir/all
+
+# Build rule for subdir invocation for target.
+apps/CMakeFiles/advanced_terrain_demo.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/advanced_terrain_demo.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles 0
+.PHONY : apps/CMakeFiles/advanced_terrain_demo.dir/rule
+
+# Convenience name for target.
+advanced_terrain_demo: apps/CMakeFiles/advanced_terrain_demo.dir/rule
+.PHONY : advanced_terrain_demo
+
+# codegen rule for target.
+apps/CMakeFiles/advanced_terrain_demo.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_terrain_demo.dir/build.make apps/CMakeFiles/advanced_terrain_demo.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=36,37 "Finished codegen for target advanced_terrain_demo"
+.PHONY : apps/CMakeFiles/advanced_terrain_demo.dir/codegen
+
+# clean rule for target.
+apps/CMakeFiles/advanced_terrain_demo.dir/clean:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_terrain_demo.dir/build.make apps/CMakeFiles/advanced_terrain_demo.dir/clean
+.PHONY : apps/CMakeFiles/advanced_terrain_demo.dir/clean
+
+#=============================================================================
+# Target rules for target apps/CMakeFiles/procedural_world_demo.dir
+
+# All Build rule for target.
+apps/CMakeFiles/procedural_world_demo.dir/all:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/procedural_world_demo.dir/build.make apps/CMakeFiles/procedural_world_demo.dir/depend
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/procedural_world_demo.dir/build.make apps/CMakeFiles/procedural_world_demo.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=47,48 "Built target procedural_world_demo"
+.PHONY : apps/CMakeFiles/procedural_world_demo.dir/all
+
+# Build rule for subdir invocation for target.
+apps/CMakeFiles/procedural_world_demo.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/procedural_world_demo.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles 0
+.PHONY : apps/CMakeFiles/procedural_world_demo.dir/rule
+
+# Convenience name for target.
+procedural_world_demo: apps/CMakeFiles/procedural_world_demo.dir/rule
+.PHONY : procedural_world_demo
+
+# codegen rule for target.
+apps/CMakeFiles/procedural_world_demo.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/procedural_world_demo.dir/build.make apps/CMakeFiles/procedural_world_demo.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=47,48 "Finished codegen for target procedural_world_demo"
+.PHONY : apps/CMakeFiles/procedural_world_demo.dir/codegen
+
+# clean rule for target.
+apps/CMakeFiles/procedural_world_demo.dir/clean:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/procedural_world_demo.dir/build.make apps/CMakeFiles/procedural_world_demo.dir/clean
+.PHONY : apps/CMakeFiles/procedural_world_demo.dir/clean
+
+#=============================================================================
+# Target rules for target apps/CMakeFiles/advanced_3d_terrain_demo.dir
+
+# All Build rule for target.
+apps/CMakeFiles/advanced_3d_terrain_demo.dir/all:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_3d_terrain_demo.dir/build.make apps/CMakeFiles/advanced_3d_terrain_demo.dir/depend
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_3d_terrain_demo.dir/build.make apps/CMakeFiles/advanced_3d_terrain_demo.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=34,35 "Built target advanced_3d_terrain_demo"
+.PHONY : apps/CMakeFiles/advanced_3d_terrain_demo.dir/all
+
+# Build rule for subdir invocation for target.
+apps/CMakeFiles/advanced_3d_terrain_demo.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/advanced_3d_terrain_demo.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles 0
+.PHONY : apps/CMakeFiles/advanced_3d_terrain_demo.dir/rule
+
+# Convenience name for target.
+advanced_3d_terrain_demo: apps/CMakeFiles/advanced_3d_terrain_demo.dir/rule
+.PHONY : advanced_3d_terrain_demo
+
+# codegen rule for target.
+apps/CMakeFiles/advanced_3d_terrain_demo.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_3d_terrain_demo.dir/build.make apps/CMakeFiles/advanced_3d_terrain_demo.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=34,35 "Finished codegen for target advanced_3d_terrain_demo"
+.PHONY : apps/CMakeFiles/advanced_3d_terrain_demo.dir/codegen
+
+# clean rule for target.
+apps/CMakeFiles/advanced_3d_terrain_demo.dir/clean:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_3d_terrain_demo.dir/build.make apps/CMakeFiles/advanced_3d_terrain_demo.dir/clean
+.PHONY : apps/CMakeFiles/advanced_3d_terrain_demo.dir/clean
+
+#=============================================================================
+# Target rules for target apps/CMakeFiles/advanced_texturing_demo.dir
+
+# All Build rule for target.
+apps/CMakeFiles/advanced_texturing_demo.dir/all:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_texturing_demo.dir/build.make apps/CMakeFiles/advanced_texturing_demo.dir/depend
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_texturing_demo.dir/build.make apps/CMakeFiles/advanced_texturing_demo.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=38,39 "Built target advanced_texturing_demo"
+.PHONY : apps/CMakeFiles/advanced_texturing_demo.dir/all
+
+# Build rule for subdir invocation for target.
+apps/CMakeFiles/advanced_texturing_demo.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/advanced_texturing_demo.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles 0
+.PHONY : apps/CMakeFiles/advanced_texturing_demo.dir/rule
+
+# Convenience name for target.
+advanced_texturing_demo: apps/CMakeFiles/advanced_texturing_demo.dir/rule
+.PHONY : advanced_texturing_demo
+
+# codegen rule for target.
+apps/CMakeFiles/advanced_texturing_demo.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_texturing_demo.dir/build.make apps/CMakeFiles/advanced_texturing_demo.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=38,39 "Finished codegen for target advanced_texturing_demo"
+.PHONY : apps/CMakeFiles/advanced_texturing_demo.dir/codegen
+
+# clean rule for target.
+apps/CMakeFiles/advanced_texturing_demo.dir/clean:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_texturing_demo.dir/build.make apps/CMakeFiles/advanced_texturing_demo.dir/clean
+.PHONY : apps/CMakeFiles/advanced_texturing_demo.dir/clean
+
+#=============================================================================
+# Target rules for target apps/CMakeFiles/gpu_terrain_demo.dir
+
+# All Build rule for target.
+apps/CMakeFiles/gpu_terrain_demo.dir/all:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_terrain_demo.dir/build.make apps/CMakeFiles/gpu_terrain_demo.dir/depend
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_terrain_demo.dir/build.make apps/CMakeFiles/gpu_terrain_demo.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=40,41 "Built target gpu_terrain_demo"
+.PHONY : apps/CMakeFiles/gpu_terrain_demo.dir/all
+
+# Build rule for subdir invocation for target.
+apps/CMakeFiles/gpu_terrain_demo.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/gpu_terrain_demo.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles 0
+.PHONY : apps/CMakeFiles/gpu_terrain_demo.dir/rule
+
+# Convenience name for target.
+gpu_terrain_demo: apps/CMakeFiles/gpu_terrain_demo.dir/rule
+.PHONY : gpu_terrain_demo
+
+# codegen rule for target.
+apps/CMakeFiles/gpu_terrain_demo.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_terrain_demo.dir/build.make apps/CMakeFiles/gpu_terrain_demo.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles --progress-num=40,41 "Finished codegen for target gpu_terrain_demo"
+.PHONY : apps/CMakeFiles/gpu_terrain_demo.dir/codegen
+
+# clean rule for target.
+apps/CMakeFiles/gpu_terrain_demo.dir/clean:
+	$(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_terrain_demo.dir/build.make apps/CMakeFiles/gpu_terrain_demo.dir/clean
+.PHONY : apps/CMakeFiles/gpu_terrain_demo.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

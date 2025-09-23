@@ -1,0 +1,1 @@
+/usr/bin/c++ -O2 -g -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/advanced_terrain_demo.dir/advanced_terrain_demo.cpp.o -o advanced_terrain_demo

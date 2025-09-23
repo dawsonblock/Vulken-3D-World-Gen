@@ -223,6 +223,196 @@ simple_world_viewer_demo/fast:
 	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/simple_world_viewer_demo.dir/build.make apps/CMakeFiles/simple_world_viewer_demo.dir/build
 .PHONY : simple_world_viewer_demo/fast
 
+# Convenience name for target.
+apps/CMakeFiles/advanced_terrain_demo.dir/rule:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/advanced_terrain_demo.dir/rule
+.PHONY : apps/CMakeFiles/advanced_terrain_demo.dir/rule
+
+# Convenience name for target.
+advanced_terrain_demo: apps/CMakeFiles/advanced_terrain_demo.dir/rule
+.PHONY : advanced_terrain_demo
+
+# fast build rule for target.
+advanced_terrain_demo/fast:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_terrain_demo.dir/build.make apps/CMakeFiles/advanced_terrain_demo.dir/build
+.PHONY : advanced_terrain_demo/fast
+
+# Convenience name for target.
+apps/CMakeFiles/procedural_world_demo.dir/rule:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/procedural_world_demo.dir/rule
+.PHONY : apps/CMakeFiles/procedural_world_demo.dir/rule
+
+# Convenience name for target.
+procedural_world_demo: apps/CMakeFiles/procedural_world_demo.dir/rule
+.PHONY : procedural_world_demo
+
+# fast build rule for target.
+procedural_world_demo/fast:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/procedural_world_demo.dir/build.make apps/CMakeFiles/procedural_world_demo.dir/build
+.PHONY : procedural_world_demo/fast
+
+# Convenience name for target.
+apps/CMakeFiles/advanced_3d_terrain_demo.dir/rule:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/advanced_3d_terrain_demo.dir/rule
+.PHONY : apps/CMakeFiles/advanced_3d_terrain_demo.dir/rule
+
+# Convenience name for target.
+advanced_3d_terrain_demo: apps/CMakeFiles/advanced_3d_terrain_demo.dir/rule
+.PHONY : advanced_3d_terrain_demo
+
+# fast build rule for target.
+advanced_3d_terrain_demo/fast:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_3d_terrain_demo.dir/build.make apps/CMakeFiles/advanced_3d_terrain_demo.dir/build
+.PHONY : advanced_3d_terrain_demo/fast
+
+# Convenience name for target.
+apps/CMakeFiles/advanced_texturing_demo.dir/rule:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/advanced_texturing_demo.dir/rule
+.PHONY : apps/CMakeFiles/advanced_texturing_demo.dir/rule
+
+# Convenience name for target.
+advanced_texturing_demo: apps/CMakeFiles/advanced_texturing_demo.dir/rule
+.PHONY : advanced_texturing_demo
+
+# fast build rule for target.
+advanced_texturing_demo/fast:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_texturing_demo.dir/build.make apps/CMakeFiles/advanced_texturing_demo.dir/build
+.PHONY : advanced_texturing_demo/fast
+
+# Convenience name for target.
+apps/CMakeFiles/gpu_terrain_demo.dir/rule:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 apps/CMakeFiles/gpu_terrain_demo.dir/rule
+.PHONY : apps/CMakeFiles/gpu_terrain_demo.dir/rule
+
+# Convenience name for target.
+gpu_terrain_demo: apps/CMakeFiles/gpu_terrain_demo.dir/rule
+.PHONY : gpu_terrain_demo
+
+# fast build rule for target.
+gpu_terrain_demo/fast:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_terrain_demo.dir/build.make apps/CMakeFiles/gpu_terrain_demo.dir/build
+.PHONY : gpu_terrain_demo/fast
+
+advanced_3d_terrain_demo.o: advanced_3d_terrain_demo.cpp.o
+.PHONY : advanced_3d_terrain_demo.o
+
+# target to build an object file
+advanced_3d_terrain_demo.cpp.o:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_3d_terrain_demo.dir/build.make apps/CMakeFiles/advanced_3d_terrain_demo.dir/advanced_3d_terrain_demo.cpp.o
+.PHONY : advanced_3d_terrain_demo.cpp.o
+
+advanced_3d_terrain_demo.i: advanced_3d_terrain_demo.cpp.i
+.PHONY : advanced_3d_terrain_demo.i
+
+# target to preprocess a source file
+advanced_3d_terrain_demo.cpp.i:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_3d_terrain_demo.dir/build.make apps/CMakeFiles/advanced_3d_terrain_demo.dir/advanced_3d_terrain_demo.cpp.i
+.PHONY : advanced_3d_terrain_demo.cpp.i
+
+advanced_3d_terrain_demo.s: advanced_3d_terrain_demo.cpp.s
+.PHONY : advanced_3d_terrain_demo.s
+
+# target to generate assembly for a file
+advanced_3d_terrain_demo.cpp.s:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_3d_terrain_demo.dir/build.make apps/CMakeFiles/advanced_3d_terrain_demo.dir/advanced_3d_terrain_demo.cpp.s
+.PHONY : advanced_3d_terrain_demo.cpp.s
+
+advanced_terrain_demo.o: advanced_terrain_demo.cpp.o
+.PHONY : advanced_terrain_demo.o
+
+# target to build an object file
+advanced_terrain_demo.cpp.o:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_terrain_demo.dir/build.make apps/CMakeFiles/advanced_terrain_demo.dir/advanced_terrain_demo.cpp.o
+.PHONY : advanced_terrain_demo.cpp.o
+
+advanced_terrain_demo.i: advanced_terrain_demo.cpp.i
+.PHONY : advanced_terrain_demo.i
+
+# target to preprocess a source file
+advanced_terrain_demo.cpp.i:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_terrain_demo.dir/build.make apps/CMakeFiles/advanced_terrain_demo.dir/advanced_terrain_demo.cpp.i
+.PHONY : advanced_terrain_demo.cpp.i
+
+advanced_terrain_demo.s: advanced_terrain_demo.cpp.s
+.PHONY : advanced_terrain_demo.s
+
+# target to generate assembly for a file
+advanced_terrain_demo.cpp.s:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_terrain_demo.dir/build.make apps/CMakeFiles/advanced_terrain_demo.dir/advanced_terrain_demo.cpp.s
+.PHONY : advanced_terrain_demo.cpp.s
+
+advanced_texturing_demo.o: advanced_texturing_demo.cpp.o
+.PHONY : advanced_texturing_demo.o
+
+# target to build an object file
+advanced_texturing_demo.cpp.o:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_texturing_demo.dir/build.make apps/CMakeFiles/advanced_texturing_demo.dir/advanced_texturing_demo.cpp.o
+.PHONY : advanced_texturing_demo.cpp.o
+
+advanced_texturing_demo.i: advanced_texturing_demo.cpp.i
+.PHONY : advanced_texturing_demo.i
+
+# target to preprocess a source file
+advanced_texturing_demo.cpp.i:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_texturing_demo.dir/build.make apps/CMakeFiles/advanced_texturing_demo.dir/advanced_texturing_demo.cpp.i
+.PHONY : advanced_texturing_demo.cpp.i
+
+advanced_texturing_demo.s: advanced_texturing_demo.cpp.s
+.PHONY : advanced_texturing_demo.s
+
+# target to generate assembly for a file
+advanced_texturing_demo.cpp.s:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/advanced_texturing_demo.dir/build.make apps/CMakeFiles/advanced_texturing_demo.dir/advanced_texturing_demo.cpp.s
+.PHONY : advanced_texturing_demo.cpp.s
+
+gpu_terrain_demo.o: gpu_terrain_demo.cpp.o
+.PHONY : gpu_terrain_demo.o
+
+# target to build an object file
+gpu_terrain_demo.cpp.o:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_terrain_demo.dir/build.make apps/CMakeFiles/gpu_terrain_demo.dir/gpu_terrain_demo.cpp.o
+.PHONY : gpu_terrain_demo.cpp.o
+
+gpu_terrain_demo.i: gpu_terrain_demo.cpp.i
+.PHONY : gpu_terrain_demo.i
+
+# target to preprocess a source file
+gpu_terrain_demo.cpp.i:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_terrain_demo.dir/build.make apps/CMakeFiles/gpu_terrain_demo.dir/gpu_terrain_demo.cpp.i
+.PHONY : gpu_terrain_demo.cpp.i
+
+gpu_terrain_demo.s: gpu_terrain_demo.cpp.s
+.PHONY : gpu_terrain_demo.s
+
+# target to generate assembly for a file
+gpu_terrain_demo.cpp.s:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/gpu_terrain_demo.dir/build.make apps/CMakeFiles/gpu_terrain_demo.dir/gpu_terrain_demo.cpp.s
+.PHONY : gpu_terrain_demo.cpp.s
+
+procedural_world_demo.o: procedural_world_demo.cpp.o
+.PHONY : procedural_world_demo.o
+
+# target to build an object file
+procedural_world_demo.cpp.o:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/procedural_world_demo.dir/build.make apps/CMakeFiles/procedural_world_demo.dir/procedural_world_demo.cpp.o
+.PHONY : procedural_world_demo.cpp.o
+
+procedural_world_demo.i: procedural_world_demo.cpp.i
+.PHONY : procedural_world_demo.i
+
+# target to preprocess a source file
+procedural_world_demo.cpp.i:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/procedural_world_demo.dir/build.make apps/CMakeFiles/procedural_world_demo.dir/procedural_world_demo.cpp.i
+.PHONY : procedural_world_demo.cpp.i
+
+procedural_world_demo.s: procedural_world_demo.cpp.s
+.PHONY : procedural_world_demo.s
+
+# target to generate assembly for a file
+procedural_world_demo.cpp.s:
+	cd /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics && $(MAKE) $(MAKESILENT) -f apps/CMakeFiles/procedural_world_demo.dir/build.make apps/CMakeFiles/procedural_world_demo.dir/procedural_world_demo.cpp.s
+.PHONY : procedural_world_demo.cpp.s
+
 simple_world_viewer_demo.o: simple_world_viewer_demo.cpp.o
 .PHONY : simple_world_viewer_demo.o
 
@@ -309,9 +499,29 @@ help:
 	@echo "... package"
 	@echo "... package_source"
 	@echo "... rebuild_cache"
+	@echo "... advanced_3d_terrain_demo"
+	@echo "... advanced_terrain_demo"
+	@echo "... advanced_texturing_demo"
+	@echo "... gpu_terrain_demo"
+	@echo "... procedural_world_demo"
 	@echo "... simple_world_viewer_demo"
 	@echo "... world_generator_demo"
 	@echo "... world_visualizer_demo"
+	@echo "... advanced_3d_terrain_demo.o"
+	@echo "... advanced_3d_terrain_demo.i"
+	@echo "... advanced_3d_terrain_demo.s"
+	@echo "... advanced_terrain_demo.o"
+	@echo "... advanced_terrain_demo.i"
+	@echo "... advanced_terrain_demo.s"
+	@echo "... advanced_texturing_demo.o"
+	@echo "... advanced_texturing_demo.i"
+	@echo "... advanced_texturing_demo.s"
+	@echo "... gpu_terrain_demo.o"
+	@echo "... gpu_terrain_demo.i"
+	@echo "... gpu_terrain_demo.s"
+	@echo "... procedural_world_demo.o"
+	@echo "... procedural_world_demo.i"
+	@echo "... procedural_world_demo.s"
 	@echo "... simple_world_viewer_demo.o"
 	@echo "... simple_world_viewer_demo.i"
 	@echo "... simple_world_viewer_demo.s"

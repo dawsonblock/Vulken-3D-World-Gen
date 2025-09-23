@@ -22,8 +22,8 @@ if(FALSE AND ENABLE_GRAPHICS)
   set(SPV_DIR "${CMAKE_BINARY_DIR}/.cache/spv")
   set(SPV_OUTPUTS)
 
-  # Only compile actual shader files with standard extensions
-  file(GLOB_RECURSE ACTUAL_SHADERS
+  # Find all shader files with standard extensions
+  file(GLOB_RECURSE ALL_SHADER_FILES
     "${CMAKE_SOURCE_DIR}/shaders/*.vert"
     "${CMAKE_SOURCE_DIR}/shaders/*.frag"
     "${CMAKE_SOURCE_DIR}/shaders/*.comp"
@@ -40,25 +40,36 @@ if(FALSE AND ENABLE_GRAPHICS)
     "${CMAKE_SOURCE_DIR}/shaders/*.rint"
   )
 
-  # Exclude include files (files without main() function)
-  set(EXCLUDE_FILES
-    "${CMAKE_SOURCE_DIR}/shaders_vk/shadows/csm_common.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/shadows/csm_debug.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/common/weather_ubo.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/lighting/pbr_common.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/lighting/pcss.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/lighting/csm_binding.glsl"
-    "${CMAKE_SOURCE_DIR}/shaders_vk/material/weather_material.glsl"
+  # Known include files that should not be compiled
+  set(INCLUDE_FILES
+    "csm_common.glsl"
+    "csm_debug.glsl"
+    "weather_ubo.glsl"
+    "pbr_common.glsl"
+    "pcss.glsl"
+    "csm_binding.glsl"
+    "weather_material.glsl"
   )
+
+  # Filter out include files
+  set(ACTUAL_SHADERS)
+  foreach(shader_file ${ALL_SHADER_FILES})
+    get_filename_component(filename ${shader_file} NAME)
+    set(is_include FALSE)
+    foreach(include_file ${INCLUDE_FILES})
+      if(filename STREQUAL ${include_file})
+        set(is_include TRUE)
+        break()
+      endif()
+    endforeach()
+    if(NOT is_include)
+      list(APPEND ACTUAL_SHADERS ${shader_file})
+    endif()
+  endforeach()
 
   # Compile each shader
   foreach(src ${ACTUAL_SHADERS})
     if(NOT EXISTS ${src})
-      continue()
-    endif()
-
-    # Skip exclude files
-    if(src IN_LIST EXCLUDE_FILES)
       continue()
     endif()
 
@@ -83,15 +94,34 @@ if(FALSE AND ENABLE_GRAPHICS)
       set(SHADER_STAGE_FLAGS "-fshader-stage=tesscontrol")
     elseif(name MATCHES "\\.tese$" OR name MATCHES "tese\\.glsl$")
       set(SHADER_STAGE_FLAGS "-fshader-stage=tesseval")
+    elseif(name MATCHES "\\.mesh$" OR name MATCHES "mesh\\.glsl$")
+      set(SHADER_STAGE_FLAGS "-fshader-stage=mesh")
+    elseif(name MATCHES "\\.task$" OR name MATCHES "task\\.glsl$")
+      set(SHADER_STAGE_FLAGS "-fshader-stage=task")
+    elseif(name MATCHES "\\.rgen$" OR name MATCHES "rgen\\.glsl$")
+      set(SHADER_STAGE_FLAGS "-fshader-stage=rgen")
+    elseif(name MATCHES "\\.rchit$" OR name MATCHES "rchit\\.glsl$")
+      set(SHADER_STAGE_FLAGS "-fshader-stage=rchit")
+    elseif(name MATCHES "\\.rmiss$" OR name MATCHES "rmiss\\.glsl$")
+      set(SHADER_STAGE_FLAGS "-fshader-stage=rmiss")
+    elseif(name MATCHES "\\.rahit$" OR name MATCHES "rahit\\.glsl$")
+      set(SHADER_STAGE_FLAGS "-fshader-stage=rahit")
+    elseif(name MATCHES "\\.rcall$" OR name MATCHES "rcall\\.glsl$")
+      set(SHADER_STAGE_FLAGS "-fshader-stage=rcall")
+    elseif(name MATCHES "\\.rint$" OR name MATCHES "rint\\.glsl$")
+      set(SHADER_STAGE_FLAGS "-fshader-stage=rint")
     else()
       # Skip files that don't match known shader patterns
       continue()
     endif()
 
+    # Add include path for shader dependencies
+    set(INCLUDE_PATHS "-I${CMAKE_SOURCE_DIR}/shaders_vk")
+
     add_custom_command(
       OUTPUT ${out}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${out_dir}
-      COMMAND ${GLSLC} ${SHADER_STAGE_FLAGS} ${src} -o ${out}
+      COMMAND ${GLSLC} ${SHADER_STAGE_FLAGS} ${INCLUDE_PATHS} ${src} -o ${out}
       DEPENDS ${src}
       COMMENT "Compiling shader ${rel_path}"
       VERBATIM

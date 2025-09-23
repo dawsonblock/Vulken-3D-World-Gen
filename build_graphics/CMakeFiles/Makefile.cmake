@@ -104,4 +104,9 @@ set(CMAKE_DEPEND_INFO_FILES
   "apps/CMakeFiles/world_generator_demo.dir/DependInfo.cmake"
   "apps/CMakeFiles/world_visualizer_demo.dir/DependInfo.cmake"
   "apps/CMakeFiles/simple_world_viewer_demo.dir/DependInfo.cmake"
+  "apps/CMakeFiles/advanced_terrain_demo.dir/DependInfo.cmake"
+  "apps/CMakeFiles/procedural_world_demo.dir/DependInfo.cmake"
+  "apps/CMakeFiles/advanced_3d_terrain_demo.dir/DependInfo.cmake"
+  "apps/CMakeFiles/advanced_texturing_demo.dir/DependInfo.cmake"
+  "apps/CMakeFiles/gpu_terrain_demo.dir/DependInfo.cmake"
   )

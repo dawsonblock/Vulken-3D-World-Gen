@@ -316,5 +316,35 @@
   "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -isystem /opt/homebrew/include -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/simple_world_viewer_demo.dir/simple_world_viewer_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/simple_world_viewer_demo.cpp",
   "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/simple_world_viewer_demo.cpp",
   "output": "apps/CMakeFiles/simple_world_viewer_demo.dir/simple_world_viewer_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps",
+  "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/advanced_terrain_demo.dir/advanced_terrain_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/advanced_terrain_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/advanced_terrain_demo.cpp",
+  "output": "apps/CMakeFiles/advanced_terrain_demo.dir/advanced_terrain_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps",
+  "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/procedural_world_demo.dir/procedural_world_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/procedural_world_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/procedural_world_demo.cpp",
+  "output": "apps/CMakeFiles/procedural_world_demo.dir/procedural_world_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps",
+  "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/advanced_3d_terrain_demo.dir/advanced_3d_terrain_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/advanced_3d_terrain_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/advanced_3d_terrain_demo.cpp",
+  "output": "apps/CMakeFiles/advanced_3d_terrain_demo.dir/advanced_3d_terrain_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps",
+  "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/advanced_texturing_demo.dir/advanced_texturing_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/advanced_texturing_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/advanced_texturing_demo.cpp",
+  "output": "apps/CMakeFiles/advanced_texturing_demo.dir/advanced_texturing_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps",
+  "command": "/usr/bin/c++ -DENABLE_GRAPHICS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/gpu_terrain_demo.dir/gpu_terrain_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/gpu_terrain_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/gpu_terrain_demo.cpp",
+  "output": "apps/CMakeFiles/gpu_terrain_demo.dir/gpu_terrain_demo.cpp.o"
 }
 ]
