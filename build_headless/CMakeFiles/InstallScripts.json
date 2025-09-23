@@ -1,0 +1,9 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/cmake_install.cmake",
+		"/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/apps/cmake_install.cmake",
+		"/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/tools/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

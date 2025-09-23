@@ -1,4 +1,3 @@
-
 #version 450
 layout(location=0) out vec2 vUV;
 void main(){

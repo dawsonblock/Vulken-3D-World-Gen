@@ -11,13 +11,15 @@ find_package(glm CONFIG QUIET)
 
 # Individual test executables for better isolation
 add_executable(test_smoke_init test_smoke_init.cpp)
-target_link_libraries(test_smoke_init PRIVATE GTest::gtest_main Vulkan::Vulkan)
+target_link_libraries(test_smoke_init PRIVATE GTest::gtest_main)
 gtest_discover_tests(test_smoke_init)
 
-# Enhanced headless swapchain test
-add_executable(test_headless_swapchain test_headless_swapchain.cpp)
-target_link_libraries(test_headless_swapchain PRIVATE GTest::gtest_main Vulkan::Vulkan)
-gtest_discover_tests(test_headless_swapchain)
+# Enhanced headless swapchain test (only when graphics enabled)
+if(ENABLE_GRAPHICS)
+  add_executable(test_headless_swapchain test_headless_swapchain.cpp)
+  target_link_libraries(test_headless_swapchain PRIVATE GTest::gtest_main Vulkan::Vulkan)
+  gtest_discover_tests(test_headless_swapchain)
+endif()
 
 # Mesher tests
 add_executable(test_mesher_sphere test_mesher_sphere.cpp)

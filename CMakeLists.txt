@@ -584,6 +584,25 @@ else()
   # Add logger for both headless and graphics builds
   list(APPEND VOXELVK_ELITE_SOURCES src/core/logger.cpp)
 
+  # --- Weather System Integration ---
+  if(VOXELVK_ENABLE_WEATHER AND ENABLE_GRAPHICS)
+    list(APPEND VOXELVK_ELITE_SOURCES ${WEATHER_SRC})
+  endif()
+
+  # --- AI System Integration ---
+  if(VOXELVK_ENABLE_AI AND ENABLE_GRAPHICS)
+    list(APPEND VOXELVK_ELITE_SOURCES ${AI_SRC})
+  endif()
+
+  # --- Build tagging sources (graphics only) ---
+  if(ENABLE_GRAPHICS)
+    list(APPEND VOXELVK_ELITE_SOURCES
+      src/core/build_info_print.cpp
+      src/core/runtime_debug.cpp
+      src/core/gpu_compat.cpp
+      src/core/vma_impl.cpp)
+  endif()
+
   # Full build with all sources
   if(ENABLE_GRAPHICS)
     add_executable(VoxelVK_Elite_ALL ${VOXELVK_ELITE_SOURCES} apps/main_imgui_vulkan.cpp)
@@ -606,13 +625,6 @@ endif()
 
 # Full engine target only when graphics stack is available
 if(ENABLE_GRAPHICS)
-  # --- Build tagging sources ---
-  list(APPEND VOXELVK_ELITE_SOURCES
-    src/core/build_info_print.cpp
-    src/core/runtime_debug.cpp
-    src/core/gpu_compat.cpp
-    src/core/vma_impl.cpp)
-
   # --- CSM+PCSS integration sources ---
   list(APPEND VOXELVK_ELITE_SOURCES src/render/csm_pass.cpp)
 
@@ -621,16 +633,6 @@ if(ENABLE_GRAPHICS)
 
   # --- CSM descriptor layout helper ---
   list(APPEND VOXELVK_ELITE_SOURCES src/render/csm_layout.cpp)
-
-  # --- Weather System Integration ---
-  if(VOXELVK_ENABLE_WEATHER)
-    list(APPEND VOXELVK_ELITE_SOURCES ${WEATHER_SRC})
-  endif()
-
-  # --- AI System Integration ---
-  if(VOXELVK_ENABLE_AI)
-    list(APPEND VOXELVK_ELITE_SOURCES ${AI_SRC})
-  endif()
 
   # --- Core System Integration ---
   # Logger is needed for both headless and graphics builds
@@ -666,6 +668,11 @@ if(ENABLE_GRAPHICS)
   if(VOXELVK_ENABLE_WEATHER AND WEATHER_YAML_LIB)
     target_link_libraries(VoxelVK_Elite_ALL PRIVATE ${WEATHER_YAML_LIB})
     target_compile_definitions(VoxelVK_Elite_ALL PRIVATE VOXELVK_ENABLE_WEATHER=1)
+  endif()
+
+  # Link AI system dependencies
+  if(VOXELVK_ENABLE_AI)
+    target_compile_definitions(VoxelVK_Elite_ALL PRIVATE VOXELVK_ENABLE_AI=1)
   endif()
   # Demo: GUI fullscreen toggle (requires GLFW + OpenGL)
   if(ENABLE_GRAPHICS)
@@ -847,7 +854,10 @@ if(ENABLE_TESTS)
     if(NOT VOXELVK_HEADLESS_ONLY)
       add_executable(test_performance_monitoring tests/test_performance_monitoring.cpp src/core/logger.cpp src/core/performance_monitor.cpp src/core/nvtx_profiler.cpp)
       target_include_directories(test_performance_monitoring PRIVATE ${CMAKE_SOURCE_DIR}/src)
-      target_link_libraries(test_performance_monitoring PRIVATE Threads::Threads Vulkan::Vulkan)
+      target_link_libraries(test_performance_monitoring PRIVATE Threads::Threads)
+      if(ENABLE_GRAPHICS AND TARGET Vulkan::Vulkan)
+        target_link_libraries(test_performance_monitoring PRIVATE Vulkan::Vulkan)
+      endif()
       if(JSON_LIB)
         target_link_libraries(test_performance_monitoring PRIVATE ${JSON_LIB})
       endif()
@@ -861,7 +871,10 @@ if(ENABLE_TESTS)
   if(NOT VOXELVK_HEADLESS_ONLY)
     add_executable(test_integration tests/test_integration.cpp ${WEATHER_SRC} src/core/logger.cpp src/core/performance_monitor.cpp src/core/nvtx_profiler.cpp)
     target_include_directories(test_integration PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(test_integration PRIVATE Threads::Threads Vulkan::Vulkan)
+    target_link_libraries(test_integration PRIVATE Threads::Threads)
+    if(ENABLE_GRAPHICS AND TARGET Vulkan::Vulkan)
+      target_link_libraries(test_integration PRIVATE Vulkan::Vulkan)
+    endif()
     if(JSON_LIB)
       target_link_libraries(test_integration PRIVATE ${JSON_LIB})
     endif()
@@ -880,6 +893,9 @@ if(ENABLE_TESTS)
   # Also include tests/ subdirectory once
   add_subdirectory(tests)
 endif()
+
+# Apps
+add_subdirectory(apps)
 
 message(STATUS "=== Build Summary ===")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")

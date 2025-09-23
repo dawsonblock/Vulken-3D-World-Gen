@@ -1,4 +1,3 @@
-
 #version 450
 #ifndef CSM_COMMON_GLSL
 #define CSM_COMMON_GLSL

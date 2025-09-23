@@ -1,4 +1,3 @@
-
 #version 450
 #ifndef PBR_COMMON_GLSL
 #define PBR_COMMON_GLSL

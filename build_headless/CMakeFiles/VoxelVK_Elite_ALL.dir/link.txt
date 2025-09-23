@@ -1,0 +1,1 @@
+/usr/bin/c++ -O2 -g -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/VoxelVK_Elite_ALL.dir/src/rl/rl_backend_dummy.cpp.o CMakeFiles/VoxelVK_Elite_ALL.dir/src/rl/rl_backend_minimal.cpp.o CMakeFiles/VoxelVK_Elite_ALL.dir/src/core/logger.cpp.o CMakeFiles/VoxelVK_Elite_ALL.dir/src/core/headless_main.cpp.o -o VoxelVK_Elite_ALL

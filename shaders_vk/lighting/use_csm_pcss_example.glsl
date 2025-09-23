@@ -1,4 +1,3 @@
-
 #version 450
 // Example usage in your main lighting shader:
 

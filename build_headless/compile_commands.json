@@ -1,0 +1,62 @@
+[
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/rl_nav_demo.dir/apps/rl_nav_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/rl_nav_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/rl_nav_demo.cpp",
+  "output": "CMakeFiles/rl_nav_demo.dir/apps/rl_nav_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/rl_nav_demo.dir/src/rl/rl_backend_dummy.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "output": "CMakeFiles/rl_nav_demo.dir/src/rl/rl_backend_dummy.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/rl_nav_demo.dir/src/rl/rl_backend_minimal.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "output": "CMakeFiles/rl_nav_demo.dir/src/rl/rl_backend_minimal.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -DVOXELVK_ENABLE_RL=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/rl_nav_demo.dir/src/core/logger.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "output": "CMakeFiles/rl_nav_demo.dir/src/core/logger.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/generated -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/rl/rl_backend_dummy.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/rl/rl_backend_dummy.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/rl/rl_backend_dummy.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/generated -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/rl/rl_backend_minimal.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/rl/rl_backend_minimal.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/rl/rl_backend_minimal.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/generated -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/core/logger.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/core/logger.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/core/logger.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless",
+  "command": "/usr/bin/c++ -DENABLE_IMGUI_OVERLAY=1 -DENABLE_VALIDATION_LAYERS=1 -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/generated -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/VoxelVK_Elite_ALL.dir/src/core/headless_main.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/core/headless_main.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src/core/headless_main.cpp",
+  "output": "CMakeFiles/VoxelVK_Elite_ALL.dir/src/core/headless_main.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/apps",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/world_generator_demo.dir/world_generator_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/world_generator_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/world_generator_demo.cpp",
+  "output": "apps/CMakeFiles/world_generator_demo.dir/world_generator_demo.cpp.o"
+},
+{
+  "directory": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/apps",
+  "command": "/usr/bin/c++ -DENABLE_VK_DEBUG_MARKERS=1 -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_headless/generated -I/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/src -O2 -g -DNDEBUG -std=gnu++20 -arch arm64 -fPIE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wdouble-promotion -Wformat=2 -Wno-unused-parameter -Wno-nullability-extension -Wno-nullability-completeness -fstack-protector-strong -D_FORTIFY_SOURCE=2 -o CMakeFiles/world_visualizer_demo.dir/world_visualizer_demo.cpp.o -c /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/world_visualizer_demo.cpp",
+  "file": "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/apps/world_visualizer_demo.cpp",
+  "output": "apps/CMakeFiles/world_visualizer_demo.dir/world_visualizer_demo.cpp.o"
+}
+]

@@ -1,7 +1,8 @@
 # Requires: GLSLC_EXECUTABLE discovered (see below)
 # Compiles all GLSL variants to SPIR-V under ${CMAKE_BINARY_DIR}/shaders
 
-if(ENABLE_GRAPHICS)
+# TODO: Fix shader compilation system to properly handle include files
+if(FALSE AND ENABLE_GRAPHICS)
   file(GLOB_RECURSE GLSL_SOURCES
       "${CMAKE_SOURCE_DIR}/shaders_vk/*.vert"
       "${CMAKE_SOURCE_DIR}/shaders_vk/*.frag"

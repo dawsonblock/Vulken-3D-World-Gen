@@ -314,6 +314,64 @@
         "VULKEN_ENABLE_HARDENING": "ON",
         "VCPKG_FEATURE_FLAGS": "manifest"
       }
+    },
+    {
+      "name": "vulkan-1.4",
+      "displayName": "Vulkan 1.4 Features",
+      "description": "Build with Vulkan 1.4+ features and modern extensions",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_vulkan14",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ENABLE_GRAPHICS": true,
+        "ENABLE_IMGUI_OVERLAY": true,
+        "ENABLE_VALIDATION_LAYERS": true,
+        "ENABLE_VK_DEBUG_MARKERS": true,
+        "ENABLE_TESTS": true,
+        "WARNINGS_AS_ERRORS": true,
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "performance-optimized",
+      "displayName": "Performance Optimized",
+      "description": "Maximum performance build with PGO and LTO",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_perf",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "ENABLE_GRAPHICS": true,
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": true,
+        "CMAKE_CXX_FLAGS": "-O3 -march=native -flto",
+        "CMAKE_EXE_LINKER_FLAGS": "-flto",
+        "ENABLE_TESTS": false,
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "development",
+      "displayName": "Development",
+      "description": "Development build with all debugging and analysis tools",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_dev",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_GRAPHICS": true,
+        "ENABLE_IMGUI_OVERLAY": true,
+        "ENABLE_VALIDATION_LAYERS": true,
+        "ENABLE_VK_DEBUG_MARKERS": true,
+        "ENABLE_TESTS": true,
+        "WARNINGS_AS_ERRORS": false,
+        "VOXELVK_ENABLE_ASAN": true,
+        "VOXELVK_ENABLE_UBSAN": true,
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_HOST_TRIPLET": "x64-linux"
+      }
     }
   ],
   "buildPresets": [
@@ -328,7 +386,10 @@
     { "name": "macos-default", "configurePreset": "macos-default" },
     { "name": "macos-debug", "configurePreset": "macos-debug" },
     { "name": "build-ci-linux", "configurePreset": "ci-linux"},
-    { "name": "build-ci-windows", "configurePreset": "ci-windows"}
+    { "name": "build-ci-windows", "configurePreset": "ci-windows"},
+    { "name": "vulkan-1.4", "configurePreset": "vulkan-1.4"},
+    { "name": "performance-optimized", "configurePreset": "performance-optimized"},
+    { "name": "development", "configurePreset": "development"}
   ],
   "testPresets": [
     { "name": "default", "configurePreset": "default", "output": {"outputOnFailure": true} },
@@ -342,6 +403,9 @@
     { "name": "macos-default", "configurePreset": "macos-default", "output": {"outputOnFailure": true} },
     { "name": "macos-debug", "configurePreset": "macos-debug", "output": {"outputOnFailure": true} },
     {"name": "test-ci-linux", "configurePreset": "ci-linux"},
-    {"name": "test-ci-windows", "configurePreset": "ci-windows"}
+    {"name": "test-ci-windows", "configurePreset": "ci-windows"},
+    {"name": "vulkan-1.4", "configurePreset": "vulkan-1.4", "output": {"outputOnFailure": true}},
+    {"name": "performance-optimized", "configurePreset": "performance-optimized", "output": {"outputOnFailure": true}},
+    {"name": "development", "configurePreset": "development", "output": {"outputOnFailure": true}}
   ]
 }

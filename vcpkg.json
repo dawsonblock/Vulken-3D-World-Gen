@@ -1,33 +1,74 @@
 {
-  "name": "voxelvk",
-  "version-string": "2025.09",
-  "description": "VoxelVK - High-performance voxel engine with Vulkan rendering, weather systems, and RL training",
-  "builtin-baseline": "2024.12.12",
+  "name": "vulken-3d-world-gen",
+  "version": "0.1.0",
+  "description": "High-performance voxel rendering engine with Vulkan graphics",
+  "homepage": "https://github.com/dawsonblock/Vulken-3D-World-Gen",
   "dependencies": [
-    "glfw3",
-    "glm",
-    "yaml-cpp",
-    "shaderc",
-  "gtest",
-  { "name": "imgui", "features": ["glfw-binding", "vulkan-binding"] },
-  "vulkan-memory-allocator",
-  "vulkan-loader",
-    "nlohmann-json",
-    "curl",
-  "hiredis",
-  "redis-plus-plus",
-  "stb"
+    {
+      "name": "glm",
+      "version>=": "0.9.9.8"
+    },
+    {
+      "name": "yaml-cpp",
+      "version>=": "0.8.0"
+    },
+    {
+      "name": "nlohmann-json",
+      "version>=": "3.11.2"
+    },
+    {
+      "name": "glfw3",
+      "version>=": "3.3.8"
+    },
+    {
+      "name": "imgui",
+      "version>=": "1.89.9"
+    },
+    {
+      "name": "stb",
+      "version>=": "1.0.0"
+    },
+    {
+      "name": "gtest",
+      "version>=": "1.14.0"
+    }
   ],
   "features": {
-    "rl": {
-      "description": "Reinforcement Learning support",
-      "dependencies": []
-    },
-    "tests": {
-      "description": "Testing framework",
+    "vulkan": {
+      "description": "Enable Vulkan graphics support",
       "dependencies": [
-        "gtest"
+        {
+          "name": "vulkan-headers",
+          "version>=": "1.3.268.0"
+        },
+        {
+          "name": "vulkan-memory-allocator",
+          "version>=": "3.0.1"
+        }
+      ]
+    },
+    "cuda": {
+      "description": "Enable CUDA acceleration",
+      "dependencies": [
+        {
+          "name": "cuda",
+          "version>=": "12.0"
+        }
+      ]
+    },
+    "redis": {
+      "description": "Enable Redis support for asset management",
+      "dependencies": [
+        {
+          "name": "redis-plus-plus",
+          "version>=": "1.3.7"
+        },
+        {
+          "name": "hiredis",
+          "version>=": "1.1.0"
+        }
       ]
     }
-  }
+  },
+  "builtin-baseline": "2024.01.12"
 }

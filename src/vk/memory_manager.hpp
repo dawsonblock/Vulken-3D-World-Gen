@@ -166,6 +166,9 @@ public:
     static MemoryManager& instance() { return *s_instance; }
     static void setGlobalInstance(MemoryManager* instance) { s_instance = instance; }
 
+    // Accessors for internal use
+    VkDevice getDevice() const { return device_; }
+
 private:
     VkInstance instance_;
     VkDevice device_;

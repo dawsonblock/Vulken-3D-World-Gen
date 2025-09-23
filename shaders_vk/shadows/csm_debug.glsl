@@ -1,4 +1,3 @@
-
 #version 450
 #ifndef CSM_DEBUG_GLSL
 #define CSM_DEBUG_GLSL

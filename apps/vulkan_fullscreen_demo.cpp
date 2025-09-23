@@ -19,6 +19,23 @@
 #include <iostream>
 
 static VkPipelineCache g_pipelineCache = VK_NULL_HANDLE;
+static bool g_disable_redis = false;
+
+void parseCommandLineArgs(int argc, char* argv[]) {
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg == "--no-redis") {
+            g_disable_redis = true;
+            std::cout << "Redis disabled via command line flag" << std::endl;
+        } else if (arg == "--help" || arg == "-h") {
+            std::cout << "Usage: " << argv[0] << " [options]\n";
+            std::cout << "Options:\n";
+            std::cout << "  --no-redis    Disable Redis asset store\n";
+            std::cout << "  --help, -h    Show this help message\n";
+            exit(0);
+        }
+    }
+}
 
 #include "../src/ai/ai_palette_config_io.hpp"
 #include "../src/ai/rag_runtime_bridge.hpp"
@@ -130,6 +147,11 @@ static void framebuffer_size_cb(GLFWwindow* w, int, int){ (void)w; g_resize_requ
 std::unique_ptr<RedisAssetStore> redis_store;
 
 void init_redis() {
+    if (g_disable_redis) {
+        std::cout << "Redis initialization skipped (disabled via --no-redis flag)" << std::endl;
+        return;
+    }
+
     try {
         redis_store = std::make_unique<RedisAssetStore>("config/redis.yaml");
         redis_store->set_reload_callback([](const std::string& asset_id) {
@@ -138,13 +160,18 @@ void init_redis() {
             std::cout << "Hot-reload triggered for asset: " << asset_id << std::endl;
             // Example: add asset_id to a concurrent queue to be processed in the main loop
         });
+        std::cout << "Redis asset store initialized successfully" << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Failed to initialize RedisAssetStore: " << e.what() << std::endl;
+        std::cerr << "Continuing without Redis support" << std::endl;
     }
 }
 #endif
 
-int main(){
+int main(int argc, char* argv[]){
+    // Parse command line arguments
+    parseCommandLineArgs(argc, argv);
+
     if(!glfwInit()){ std::fprintf(stderr, "Failed to init GLFW\n"); return 1; }
     if(!glfwVulkanSupported()){ std::fprintf(stderr, "Vulkan not supported by GLFW\n"); return 2; }
 

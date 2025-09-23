@@ -645,7 +645,7 @@ void upload_to_buffer(BufferResult dst, std::span<const std::byte> data, VkQueue
     allocInfo.commandBufferCount = 1;
 
     VkCommandBuffer cmdBuffer;
-    VkResult result = vkAllocateCommandBuffers(memMgr.device_, &allocInfo, &cmdBuffer);
+    VkResult result = vkAllocateCommandBuffers(memMgr.getDevice(), &allocInfo, &cmdBuffer);
     if (result != VK_SUCCESS) {
         g_memLogger.Error("Failed to allocate command buffer for staging upload");
         memMgr.destroyBuffer(stagingResult.buffer, stagingResult.allocation);
@@ -675,14 +675,14 @@ void upload_to_buffer(BufferResult dst, std::span<const std::byte> data, VkQueue
     VkFence fence;
     VkFenceCreateInfo fenceInfo{};
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    vkCreateFence(memMgr.device_, &fenceInfo, nullptr, &fence);
+    vkCreateFence(memMgr.getDevice(), &fenceInfo, nullptr, &fence);
 
     vkQueueSubmit(queue, 1, &submitInfo, fence);
-    vkWaitForFences(memMgr.device_, 1, &fence, VK_TRUE, UINT64_MAX);
+    vkWaitForFences(memMgr.getDevice(), 1, &fence, VK_TRUE, UINT64_MAX);
 
     // Cleanup
-    vkDestroyFence(memMgr.device_, fence, nullptr);
-    vkFreeCommandBuffers(memMgr.device_, pool, 1, &cmdBuffer);
+    vkDestroyFence(memMgr.getDevice(), fence, nullptr);
+    vkFreeCommandBuffers(memMgr.getDevice(), pool, 1, &cmdBuffer);
     memMgr.destroyBuffer(stagingResult.buffer, stagingResult.allocation);
 
     g_memLogger.Debug("Successfully uploaded {} bytes to device buffer", data.size());

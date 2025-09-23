@@ -1,4 +1,3 @@
-
 #version 450
 layout(location=0) in vec3 inPosition;      // world-space position preferred (or model space with external model matrix)
 layout(push_constant) uniform Push { int uCascadeIndex; } pc;
