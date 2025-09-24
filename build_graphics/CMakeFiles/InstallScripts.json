@@ -1,10 +1,11 @@
 {
 	"InstallScripts" : 
 	[
-		"/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/cmake_install.cmake",
-		"/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/src/engine/cmake_install.cmake",
-		"/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/cmake_install.cmake",
-		"/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/tools/cmake_install.cmake"
+		"/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/cmake_install.cmake",
+		"/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/src/engine/cmake_install.cmake",
+		"/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/tests/cmake_install.cmake",
+		"/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/apps/cmake_install.cmake",
+		"/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/tools/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

@@ -1,9 +1,0 @@
-# Hashes of file build rules.
-daff01984b3495b1073082fe1009f606 shaders/advanced_lighting.frag.spv
-af3379f6d95ecf8a1151730b59e6d388 shaders/advanced_post_processing.frag.spv
-6345fcf34c5cd520775827f5b4ffe01b shaders/ai_compute.comp.spv
-1e9b3f5d50859944ea5810d9e09e97f8 shaders/bloom.frag.spv
-3e04902fdbc590c9ff2dbb5e77afd5c6 shaders/clouds/clouds_fullscreen.frag.spv
-d5996b8434873201819dbc8e18dfe368 shaders/frustum_cull_simple.comp.spv
-fe3233154f0fa33de14d91d2cea76e98 shaders/global_illumination.frag.spv
-eed2de9298962f6dc859fbd14bfbc257 shaders/instanced_cube.vert.spv

@@ -1,4 +1,4 @@
-# Install script for directory: /Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen
+# Install script for directory: /Users/dawsonblock/Vulken-3D-World-Gen-4
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -12,7 +12,7 @@ if(NOT DEFINED CMAKE_INSTALL_CONFIG_NAME)
     string(REGEX REPLACE "^[^A-Za-z0-9_]+" ""
            CMAKE_INSTALL_CONFIG_NAME "${BUILD_TYPE}")
   else()
-    set(CMAKE_INSTALL_CONFIG_NAME "RelWithDebInfo")
+    set(CMAKE_INSTALL_CONFIG_NAME "Release")
   endif()
   message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
 endif()
@@ -39,24 +39,32 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/src/engine/cmake_install.cmake")
+  include("/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/src/engine/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/apps/cmake_install.cmake")
+  include("/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/tests/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/tools/cmake_install.cmake")
+  include("/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/apps/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/tools/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Runtime" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/VoxelVK_Elite_ALL")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/VoxelVK_Elite_ALL")
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/VoxelVK_Elite_ALL" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/VoxelVK_Elite_ALL")
     execute_process(COMMAND /usr/bin/install_name_tool
+      -delete_rpath "/Users/dawsonblock/VulkanSDK/1.4.321.0/macOS/lib"
+      -delete_rpath "/opt/homebrew/opt/glfw/lib"
+      -delete_rpath "/opt/homebrew/opt/glm/lib"
       -delete_rpath "/opt/homebrew/lib"
       "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/VoxelVK_Elite_ALL")
     if(CMAKE_INSTALL_DO_STRIP)
@@ -66,29 +74,29 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Runtime" OR NOT CMAKE_INSTALL_COMPONENT)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Runtime" OR NOT CMAKE_INSTALL_COMPONENT)
-  include("/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/CMakeFiles/VoxelVK_Elite_ALL.dir/install-cxx-module-bmi-RelWithDebInfo.cmake" OPTIONAL)
+  include("/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/CMakeFiles/VoxelVK_Elite_ALL.dir/install-cxx-module-bmi-Release.cmake" OPTIONAL)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Assets" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/assets" TYPE DIRECTORY FILES "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/assets/")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/assets" TYPE DIRECTORY FILES "/Users/dawsonblock/Vulken-3D-World-Gen-4/assets/")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Config" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/config" TYPE DIRECTORY FILES "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/config/")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/config" TYPE DIRECTORY FILES "/Users/dawsonblock/Vulken-3D-World-Gen-4/config/")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Documentation" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/." TYPE FILE FILES
-    "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/README.md"
-    "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/LICENSE"
-    "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/CHANGELOG.md"
+    "/Users/dawsonblock/Vulken-3D-World-Gen-4/README.md"
+    "/Users/dawsonblock/Vulken-3D-World-Gen-4/LICENSE"
+    "/Users/dawsonblock/Vulken-3D-World-Gen-4/CHANGELOG.md"
     )
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/install_local_manifest.txt"
+  file(WRITE "/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -104,6 +112,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/Users/dawsonblock/Vulken-3D-World-Gen/Vulken-3D-World-Gen/build_graphics/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "/Users/dawsonblock/Vulken-3D-World-Gen-4/build_graphics/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

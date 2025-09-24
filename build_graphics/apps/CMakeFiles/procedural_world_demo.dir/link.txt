@@ -1,1 +1,0 @@
-/usr/bin/c++ -O2 -g -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/procedural_world_demo.dir/procedural_world_demo.cpp.o -o procedural_world_demo
